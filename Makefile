@@ -6,5 +6,5 @@ build:
 .PHONY: test
 test:
 	g++ $(CFLAGS) src/main.cpp -o main.out
-	g++ $(CFLAGS) src/out_verifier.cpp -o out_verifier
+	g++ $(CFLAGS) src/out_verifier.cpp -o out_verifier.out
 	@ ./test.sh

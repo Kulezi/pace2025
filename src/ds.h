@@ -18,10 +18,15 @@ struct Exact {
     std::vector<int> cur_ds;
     Exact(Graph _g, vector<RRules::Rule> _rules) : g(_g), rules(_rules) {
     // Graph preprocessing.
+
+    std::cerr << "n = " << g.n_nodes << ", " << "m = " << g.n_edges <<" -> ";
     _start:
         for (auto f : rules) {
             if (f(g, cur_ds)) goto _start;
         }
+
+    std::cerr << "n = " << g.n_nodes << ", " << "m = " << g.n_edges <<std::endl;
+
     }
 
     void solve(std::ostream &out) {
@@ -31,12 +36,12 @@ struct Exact {
 
     std::vector<int> best_ds;
     void take(int v) {
-        int old_color = g.color[v];
+        int old_color = g.get_color(v);
         g.set_color(v, TAKEN);
         cur_ds.push_back(v);
         vector<int> untake;
         for (auto u : g.adj[v]) {
-            if (g.color[u] == UNDOMINATED) {
+            if (g.get_color(u) == UNDOMINATED) {
                 g.set_color(u, DOMINATED);
                 untake.push_back(u);
             }
@@ -70,7 +75,7 @@ struct Exact {
     int min_deg_undominated_node() {
         int best_v = -1;
         for (auto v : g.nodes)
-            if (g.color[v] == UNDOMINATED && (best_v == -1 || g.deg(v) < g.deg(best_v))) best_v = v;
+            if (g.get_color(v) == UNDOMINATED && (best_v == -1 || g.deg(v) < g.deg(best_v))) best_v = v;
 
         return best_v;
     }

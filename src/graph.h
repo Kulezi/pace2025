@@ -11,7 +11,6 @@ using std::vector;
 // Undirected graph, with colors assigned to nodes.
 // Assumes that vertex numbers are assigned incrementally, without id reusage.
 struct Graph {
-    enum { UNDOMINATED, DOMINATED, TAKEN };
     int n_nodes;
     int n_edges;
     int next_free_id;
@@ -58,6 +57,7 @@ struct Graph {
     }
 
     void set_color(int v, int c) { color[v] = c; }
+    int get_color(int v) { return color[v]; }
 
     int deg(int v) { return (int)adj[v].size(); }
 
@@ -81,6 +81,12 @@ struct Graph {
         adj[v].clear();
 
         nodes.remove(v);
+    }
+
+    void remove_edge(int v, int w) {
+        n_edges--;
+        adj[v].remove(w);
+        adj[w].remove(v);
     }
 
     // Creates and returns the id of the created node.
