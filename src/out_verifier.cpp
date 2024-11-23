@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+
 #include "graph.h"
 using namespace std;
 
@@ -10,11 +11,13 @@ int32_t main(int argc, char* argv[]) {
     Graph g(test);
 
     int n;
-    ds >> n;
-
+    if (!(ds >> n)) {
+        cerr << "DOMINATING SET NOT FOUND!" << endl;
+        exit(1);
+    }
 
     vector<int> dominated(g.n_nodes + 1, 0);
-    while (n--) {
+    for (int i = 1; i <= n; i++) {
         int v;
         ds >> v;
 
@@ -23,6 +26,11 @@ int32_t main(int argc, char* argv[]) {
     }
 
     for (int i = 1; i <= g.n_nodes; i++) {
-        assert(dominated[i]);
+        if (!dominated[i]) {
+            cerr << "node " << i << " undominated" << endl;
+            exit(1);
+        }
     }
+
+    cout << "OK |D| = " << n << "\n";
 }

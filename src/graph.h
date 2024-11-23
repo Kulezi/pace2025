@@ -57,6 +57,7 @@ struct Graph {
     }
 
     void set_color(int v, int c) { color[v] = c; }
+    
     int get_color(int v) { return color[v]; }
 
     int deg(int v) { return (int)adj[v].size(); }
@@ -73,6 +74,7 @@ struct Graph {
     // Removes the node with given id.
     // Complexity: O(deg(v) + sum over deg(v) of neighbours)
     void remove_node(int v) {
+        assert(find(nodes.begin(), nodes.end(), v) != nodes.end());
         n_edges -= (int)adj[v].size();
         n_nodes--;
         for (auto u : adj[v]) {
@@ -81,6 +83,15 @@ struct Graph {
         adj[v].clear();
 
         nodes.remove(v);
+    }
+
+    void remove_nodes(std::list<int> &l) {
+        for (auto &v : l) remove_node(v);
+    }
+
+    
+    void remove_nodes(std::list<int> &&l) {
+        for (auto &v : l) remove_node(v);
     }
 
     void remove_edge(int v, int w) {

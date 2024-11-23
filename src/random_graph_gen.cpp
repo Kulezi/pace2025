@@ -7,18 +7,18 @@ int R(int a, int b) {
 int32_t main() {
     srand(R(1, 123891213));
     cout << "p ds ";
-    int n = R(1, 10);
-    int m = R(1, (n * (n - 1) / 2));
+    int n = R(1, 16);
+    int m = R(0, (n * (n - 1) / 2));
     cout << n << " " << m << "\n";
-    vector<pair<int,int>> v;
+    vector<pair<int, int>> v;
     for (int i = 1; i <= n; i++) {
-        for (int j = i+1; j <= n; j++) {
+        for (int j = i + 1; j <= n; j++) {
             v.emplace_back(i, j);
         }
     }
 
     random_shuffle(v.begin(), v.end());
-    while (v.size() > m) v.pop_back();
+    while ((int)v.size() > m) v.pop_back();
     for (auto [a, b] : v) {
         if (R(0, 1)) swap(a, b);
         cout << a << " " << b << "\n";

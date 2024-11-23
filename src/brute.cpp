@@ -5,13 +5,13 @@
 #include "rrules.h"
 int main() {
     std::vector<RRules::Rule> reduction_rules = {
-        RRules::AlberMainRule1,
-        RRules::AlberMainRule2,
-        RRules::AlberSimpleRule1,
-        RRules::AlberSimpleRule2,
+        // RRules::AlberMainRule1,
+        // RRules::AlberMainRule2,
+        // RRules::AlberSimpleRule1,
+        // RRules::AlberSimpleRule2,
     };
 
     DomSet::Exact ds(Graph(std::cin), reduction_rules);
 
-    ds.solve(std::cout);
+    ds.solve_bruteforce(std::cout);
 }

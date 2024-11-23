@@ -17,16 +17,25 @@ struct Exact {
     std::vector<RRules::Rule> rules;
     std::vector<int> cur_ds;
     Exact(Graph _g, vector<RRules::Rule> _rules) : g(_g), rules(_rules) {
-    // Graph preprocessing.
-
-    std::cerr << "n = " << g.n_nodes << ", " << "m = " << g.n_edges <<" -> ";
+        std::cerr << dbg(g.n_nodes) << dbg(g.n_edges) << std::endl;
+        int init_n = g.n_nodes, init_m = g.n_edges;
+        // Graph preprocessing.
     _start:
-        for (auto f : rules) {
-            if (f(g, cur_ds)) goto _start;
+
+        for (size_t i = 0; i < rules.size(); i++) {
+            auto f = rules[i];
+            bool reduced = f(g, cur_ds);
+            if (reduced) {
+                std::cerr << "Rule " << i << " - applied -> " << dbg(g.n_nodes) << " "
+                          << dbg(g.n_edges) << "\n";
+                goto _start;
+            } else {
+                std::cerr << "Rule " << i << " - skip \n";
+            }
         }
 
-    std::cerr << "n = " << g.n_nodes << ", " << "m = " << g.n_edges <<std::endl;
-
+        std::cerr << "n: " << init_n << " -> " << g.n_nodes << ", "
+                  << "m: " << init_m << " -> " << g.n_edges << "\n";
     }
 
     void solve(std::ostream &out) {
@@ -57,25 +66,26 @@ struct Exact {
         int v = min_deg_undominated_node();
         if (cur_ds.size() >= best_ds.size() && !best_ds.empty()) return;
         if (v == -1) {
-            // Hura, mamy dominating set.
+            // Hooray, we have a dominating set.
             best_ds = cur_ds;
             return;
         }
 
-        // Branch 0: v należy do DS -> zdominuj n(v)
+        // Branch 0: v belongs to DS -> dominate N(v)
         take(v);
 
-        // Branche 1, ..., deg(v): v nie należy do DS -> weź jakiegokolwiek sąsiada do DS.
+        // Branches 1, ..., deg(v): v doesn't belong to DS -> take any neighbour to DS.
         for (auto u : g.adj[v]) {
             take(u);
         }
-        // (najlepsza heura to chyba tego o max liczbie niezdominowanych sasiadow).
+        // TODO: maybe take neighbours in order of decreasing degree?
     }
 
     int min_deg_undominated_node() {
         int best_v = -1;
         for (auto v : g.nodes)
-            if (g.get_color(v) == UNDOMINATED && (best_v == -1 || g.deg(v) < g.deg(best_v))) best_v = v;
+            if (g.get_color(v) == UNDOMINATED && (best_v == -1 || g.deg(v) < g.deg(best_v)))
+                best_v = v;
 
         return best_v;
     }
@@ -87,57 +97,42 @@ struct Exact {
             out << i << "\n";
         }
     }
-    // void solve_bruteforce(Graph &g, std::ostream &out) {
-    //     int n = g.n_nodes;
 
-    //     vector<int> best_ds;
-    //     assert(g.n_nodes == (int)g.nodes.size());
-    //     for (int mask = 0; mask < (1 << n); mask++) {
-    //         vector<int> dominated(g.next_free_id, false);
-    //         auto node = g.nodes.begin();
+    void solve_bruteforce(std::ostream &out) {
+        int n = g.n_nodes;
 
-    //         vector<int> ds;
-    //         for (int i = 0; i < n; i++) {
-    //             int v = *node;
-    //             if (mask >> i & 1) {
-    //                 ds.push_back(v);
-    //                 dominated[v] = true;
-    //                 for (auto u : g.adj[v]) dominated[u] = true;
-    //             }
+        assert(g.n_nodes == (int)g.nodes.size());
+        for (int mask = 0; mask < (1 << n); mask++) {
+            vector<int> dominated(g.next_free_id, false);
+            auto node = g.nodes.begin();
 
-    //             ++node;
-    //         }
+            vector<int> ds;
+            for (int i = 0; i < n; i++) {
+                int v = *node;
+                if (mask >> i & 1) {
+                    ds.push_back(v);
+                    dominated[v] = true;
+                    for (auto u : g.adj[v]) dominated[u] = true;
+                }
 
-    //         std::cerr << mask << "\n";
-    //         bool is_domset = true;
-    //         for (auto v : g.nodes) {
-    //             if (!dominated[v]) {
-    //                 is_domset = false;
-    //                 break;
-    //             }
-    //         }
+                ++node;
+            }
 
-    //         if (is_domset && (best_ds.empty() || ds.size() < best_ds.size())) {
-    //             best_ds = ds;
-    //         }
-    //     }
+            bool is_domset = true;
+            for (auto v : g.nodes) {
+                if (!dominated[v]) {
+                    is_domset = false;
+                    break;
+                }
+            }
 
-    //     out << best_ds.size() << "\n";
-    //     for (auto i : best_ds) out << i << "\n";
-    // }
+            if (is_domset && (best_ds.empty() || ds.size() < best_ds.size())) {
+                best_ds = ds;
+            }
+        }
 
-    // void solve_branching(Graph &g, std::ostream &out) {
-    //     int v = min_deg_node(g);
-
-    //     // Branch 0: v należy do DS -> zdominuj n(v)
-    //     // Branche 1, ..., deg(v): v nie należy do DS -> weź jakiegokolwiek sąsiada do DS.
-    //     // (najlepsza heura to chyba tego o max liczbie niezdominowanych sasiadow).
-    //     vector<int> taken;
-    //     for (auto u : g.adj[v]) {
-    //     }
-    // }
-
-    // void solve(Graph &g, std::ostream &out) { solve_bruteforce(g, out); }
+        print(out);
+    }
 };
 }  // namespace DomSet
 #endif  // DS_H
