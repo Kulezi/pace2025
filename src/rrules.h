@@ -89,10 +89,14 @@ bool AlberMainRule2(Graph &g, std::vector<int> &ds) {
                 bool can_be_dominated_by_just_v = contains(N_v_without, N_prison_intersect_B);
                 bool can_be_dominated_by_just_w = contains(N_w_without, N_prison_intersect_B);
 
-                // TODO: Maybe it's better to annotate that the one of {v, w} needs to be in the domset.
+                // TODO: Maybe it's better to annotate that the one of {v, w} needs to be in the
+                // domset.
                 if (can_be_dominated_by_just_v && can_be_dominated_by_just_w) {
                     // Don't apply the reduction if it doesn't reduce the size of the graph
-                    if (N_prison.size() + intersect(intersect(N_guard, N_v_without), N_w_without).size() <= 3) continue;
+                    if (N_prison.size() +
+                            intersect(intersect(N_guard, N_v_without), N_w_without).size() <=
+                        3)
+                        continue;
                     std::cerr << __func__ << dbg(v) << " " << dbg(w) " 1.1\n";
                     // Case 1.1
                     int z1 = g.add_node();
@@ -134,7 +138,7 @@ bool AlberMainRule2(Graph &g, std::vector<int> &ds) {
                     std::cerr << __func__ << dbg(v) << " " << dbg(w) << " 2\n";
                     ds.push_back(v);
                     ds.push_back(w);
-            
+
                     for (auto u : N_vw_without) g.set_color(u, DOMINATED);
                     g.set_color(v, TAKEN);
                     g.set_color(w, TAKEN);
@@ -180,6 +184,60 @@ bool AlberSimpleRule2(Graph &g, std::vector<int> &) {
     for (auto v : to_remove) g.remove_node(v);
     return !to_remove.empty();
 }
+
+// Naive implementation of Simple Rule 3 - DOI 10.1007/s10479-006-0045-4, p. 6
+// ~ O(|V|^2 * (# removed nodes)) depending on the remove_node operation complexity.
+bool AlberSimpleRule3(Graph &g, std::vector<int> &) {
+    std::vector<int> to_remove;
+    for (auto v : g.nodes) {
+        if (g.get_color(v) != UNDOMINATED && g.deg(v) == 2) {
+            int u_1 = g.adj[v].front();
+            int u_2 = *++g.adj[v].begin();
+            if (g.get_color(u_1) == UNDOMINATED && g.get_color(u_2) == UNDOMINATED) {
+                if (g.has_edge(u_1, u_2)) {
+                    // 3.1
+                    to_remove.push_back(v);
+                } else {
+                    // 3.2
+                    for (auto u : g.adj[u_1]) {
+                        if (g.has_edge(u, u_2)) {
+                            to_remove.push_back(v);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    for (auto v : to_remove) g.remove_node(v);
+    return !to_remove.empty();
+}
+
+// Naive implementation of Simple Rule 4 - DOI 10.1007/s10479-006-0045-4, p. 6
+// ~ O(|V| * (# removed nodes)) depending on the remove_node operation complexity.
+bool AlberSimpleRule4(Graph &g, std::vector<int> &) {
+    std::vector<int> to_remove;
+    for (auto v : g.nodes) {
+        if (g.get_color(v) != UNDOMINATED && g.deg(v) == 3) {
+            auto it = g.adj[v].begin();
+            int u_1 = *it;
+            int u_2 = *++it;
+            int u_3 = *++it;
+
+            if (g.get_color(u_1) == UNDOMINATED && g.get_color(u_2) == UNDOMINATED && g.get_color(u_3) == UNDOMINATED) {
+                int n_edges = (g.has_edge(u_1, u_2) + g.has_edge(u_2, u_3) + g.has_edge(u_1, u_3));
+                if (n_edges >= 2) {
+                    to_remove.push_back(v);
+                } 
+            }
+        }
+    }
+
+    for (auto v : to_remove) g.remove_node(v);
+    return !to_remove.empty();
+}
+
 
 }  // namespace RRules
 

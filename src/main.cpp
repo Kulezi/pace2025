@@ -9,6 +9,8 @@ int main() {
         RRules::AlberMainRule2,
         RRules::AlberSimpleRule1,
         RRules::AlberSimpleRule2,
+        RRules::AlberSimpleRule3,
+        RRules::AlberSimpleRule4,
     };
 
     DomSet::Exact ds(Graph(std::cin), reduction_rules);

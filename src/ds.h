@@ -63,11 +63,12 @@ struct Exact {
     }
 
     void solve_branching() {
-        int v = min_deg_undominated_node();
+        int v = max_deg_undominated_node();
         if (cur_ds.size() >= best_ds.size() && !best_ds.empty()) return;
         if (v == -1) {
             // Hooray, we have a dominating set.
             best_ds = cur_ds;
+            std::cerr << " -> " << best_ds.size();
             return;
         }
 
@@ -75,16 +76,19 @@ struct Exact {
         take(v);
 
         // Branches 1, ..., deg(v): v doesn't belong to DS -> take any neighbour to DS.
-        for (auto u : g.adj[v]) {
+
+        vector<int> N = {std::begin(g.adj[v]), std::end(g.adj[v])};
+        std::sort(N.begin(), N.end(), [&](int lhs, int rhs) { return g.deg(lhs) > g.deg(rhs); });
+        for (auto u : N) {
             take(u);
         }
         // TODO: maybe take neighbours in order of decreasing degree?
     }
 
-    int min_deg_undominated_node() {
+    int max_deg_undominated_node() {
         int best_v = -1;
         for (auto v : g.nodes)
-            if (g.get_color(v) == UNDOMINATED && (best_v == -1 || g.deg(v) < g.deg(best_v)))
+            if (g.get_color(v) == UNDOMINATED && (best_v == -1 || g.deg(v) > g.deg(best_v)))
                 best_v = v;
 
         return best_v;

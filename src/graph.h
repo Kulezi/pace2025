@@ -116,7 +116,12 @@ struct Graph {
         return res;
     }
 
+
     std::list<int> neighbourhood_excluding(int v) { return adj[v]; }
+
+    bool has_edge(int u, int v) {
+        return std::find(adj[u].begin(), adj[u].end(), v) != adj[u].end();
+    }
 
     void print() {
         std::cerr << "n = " << n_nodes << ",\tm = " << n_edges << "\n";
