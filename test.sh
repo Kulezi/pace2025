@@ -6,10 +6,13 @@
 #     diff brute.ans main.ans || exit 1
 # done
 
+sol_dir=".solutions"
+
 for test in in/tiny/testset/*; do
     echo "Running $test:"
-    timeout 600 ./main.out <$test >ds.ans
-    ./out_verifier.out $test ds.ans
+    name=$(basename $test)
+    timeout 600 ./main.out <$test >$sol_dir/$name.sol 2>$sol_dir/$name.log
+    ./out_verifier.out $test $sol_dir/$name.sol
 done
 
 make clean
