@@ -13,57 +13,27 @@ namespace DomSet {
 // Może regułki albera w branchingu monza na biezaco.
 
 struct Exact {
-    Graph g;
     std::vector<RRules::Rule> rules;
-    std::vector<int> cur_ds;
-    Exact(Graph _g, vector<RRules::Rule> _rules) : g(_g), rules(_rules) {
-        std::cerr << dbg(g.n_nodes) << dbg(g.n_edges) << std::endl;
-        int init_n = g.n_nodes, init_m = g.n_edges;
-        // Graph preprocessing.
-    _start:
+    Exact(vector<RRules::Rule> _rules) : rules(_rules) {}
 
-        for (size_t i = 0; i < rules.size(); i++) {
-            auto f = rules[i];
-            bool reduced = f(g, cur_ds);
-            if (reduced) {
-                std::cerr << "Rule " << i << " - applied -> " << dbg(g.n_nodes) << " "
-                          << dbg(g.n_edges) << "\n";
-                goto _start;
-            } else {
-                std::cerr << "Rule " << i << " - skip \n";
-            }
-        }
-
-        std::cerr << "n: " << init_n << " -> " << g.n_nodes << ", "
-                  << "m: " << init_m << " -> " << g.n_edges << "\n";
-    }
-
-    void solve(std::ostream &out) {
-        solve_branching();
+    void solve(Graph g, std::ostream &out) {
+        solve_branching(g, {});
         print(out);
     }
 
     std::vector<int> best_ds;
-    void take(int v) {
-        int old_color = g.get_color(v);
-        g.set_color(v, TAKEN);
-        cur_ds.push_back(v);
-        vector<int> untake;
-        for (auto u : g.adj[v]) {
-            if (g.get_color(u) == UNDOMINATED) {
-                g.set_color(u, DOMINATED);
-                untake.push_back(u);
-            }
-        }
+    void take(Graph &g, vector<int> &ds, int v) {
+        auto n_g = g;
+        n_g.set_color(v, TAKEN);
+        auto n_ds = ds;
+        n_ds.push_back(v);
 
-        solve_branching();
-        for (auto u : untake) g.set_color(u, UNDOMINATED);
-        cur_ds.pop_back();
-        g.set_color(v, old_color);
+        RRules::reduce(g, n_ds, rules);
+        solve_branching(n_g, n_ds);
     }
 
-    void solve_branching() {
-        int v = max_deg_undominated_node();
+    void solve_branching(Graph g, vector<int> cur_ds) {
+        int v = g.min_deg_node_of_color(UNDOMINATED);
         if (cur_ds.size() >= best_ds.size() && !best_ds.empty()) return;
         if (v == -1) {
             // Hooray, we have a dominating set.
@@ -73,26 +43,18 @@ struct Exact {
         }
 
         // Branch 0: v belongs to DS -> dominate N(v)
-        take(v);
+        take(g, cur_ds, v);
 
         // Branches 1, ..., deg(v): v doesn't belong to DS -> take any neighbour to DS.
 
         vector<int> N = {std::begin(g.adj[v]), std::end(g.adj[v])};
         std::sort(N.begin(), N.end(), [&](int lhs, int rhs) { return g.deg(lhs) > g.deg(rhs); });
         for (auto u : N) {
-            take(u);
+            take(g, cur_ds, u);
         }
         // TODO: maybe take neighbours in order of decreasing degree?
     }
 
-    int max_deg_undominated_node() {
-        int best_v = -1;
-        for (auto v : g.nodes)
-            if (g.get_color(v) == UNDOMINATED && (best_v == -1 || g.deg(v) > g.deg(best_v)))
-                best_v = v;
-
-        return best_v;
-    }
 
     void print(std::ostream &out) {
         out << best_ds.size() << "\n";
@@ -102,7 +64,7 @@ struct Exact {
         }
     }
 
-    void solve_bruteforce(std::ostream &out) {
+    void solve_bruteforce(Graph g, std::ostream &out) {
         int n = g.n_nodes;
 
         assert(g.n_nodes == (int)g.nodes.size());

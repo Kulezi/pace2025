@@ -11,7 +11,7 @@ int main() {
         // RRules::AlberSimpleRule2,
     };
 
-    DomSet::Exact ds(Graph(std::cin), reduction_rules);
+    DomSet::Exact ds(reduction_rules);
 
-    ds.solve_bruteforce(std::cout);
+    ds.solve_bruteforce(Graph(std::cin), std::cout);
 }

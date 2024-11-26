@@ -13,7 +13,7 @@ int main() {
         RRules::AlberSimpleRule4,
     };
 
-    DomSet::Exact ds(Graph(std::cin), reduction_rules);
+    DomSet::Exact ds(reduction_rules);
 
-    ds.solve(std::cout);
+    ds.solve(Graph(std::cin), std::cout);
 }

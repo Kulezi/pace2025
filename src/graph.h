@@ -132,6 +132,15 @@ struct Graph {
             }
         }
     }
+
+    int min_deg_node_of_color(const int c) {
+        int best_v = -1;
+        for (auto v : nodes)
+            if (get_color(v) == c && (best_v == -1 || deg(v) < deg(best_v)))
+                best_v = v;
+
+        return best_v;
+    }
 };
 
 #endif  // GRAPH_H

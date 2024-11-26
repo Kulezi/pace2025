@@ -7,6 +7,21 @@ enum { UNDOMINATED, DOMINATED, TAKEN };
 namespace RRules {
 using Rule = std::function<bool(Graph &, std::vector<int> &)>;
 
+void reduce(Graph &g, std::vector<int> &ds, std::vector<Rule> rules) {
+_start:
+    for (size_t i = 0; i < rules.size(); i++) {
+        auto f = rules[i];
+        bool reduced = f(g, ds);
+        if (reduced) {
+            std::cerr << "Rule " << i << " - applied -> " << dbg(g.n_nodes) << " " << dbg(g.n_edges)
+                      << "\n";
+            goto _start;
+        } else {
+            std::cerr << "Rule " << i << " - skip \n";
+        }
+    }
+}
+
 bool has_undominated_node(Graph &g, std::list<int> nodes) {
     for (auto v : nodes)
         if (g.get_color(v) == UNDOMINATED) return true;
@@ -225,11 +240,12 @@ bool AlberSimpleRule4(Graph &g, std::vector<int> &) {
             int u_2 = *++it;
             int u_3 = *++it;
 
-            if (g.get_color(u_1) == UNDOMINATED && g.get_color(u_2) == UNDOMINATED && g.get_color(u_3) == UNDOMINATED) {
+            if (g.get_color(u_1) == UNDOMINATED && g.get_color(u_2) == UNDOMINATED &&
+                g.get_color(u_3) == UNDOMINATED) {
                 int n_edges = (g.has_edge(u_1, u_2) + g.has_edge(u_2, u_3) + g.has_edge(u_1, u_3));
                 if (n_edges >= 2) {
                     to_remove.push_back(v);
-                } 
+                }
             }
         }
     }
@@ -237,7 +253,6 @@ bool AlberSimpleRule4(Graph &g, std::vector<int> &) {
     for (auto v : to_remove) g.remove_node(v);
     return !to_remove.empty();
 }
-
 
 }  // namespace RRules
 
