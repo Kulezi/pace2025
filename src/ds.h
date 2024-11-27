@@ -48,13 +48,11 @@ struct Exact {
         take(g, cur_ds, v);
 
         // Branches 1, ..., deg(v): v doesn't belong to DS -> take any neighbour to DS.
-
         vector<int> N = {std::begin(g.adj[v]), std::end(g.adj[v])};
         std::sort(N.begin(), N.end(), [&](int lhs, int rhs) { return g.deg(lhs) > g.deg(rhs); });
         for (auto u : N) {
             take(g, cur_ds, u);
         }
-        // TODO: maybe take neighbours in order of decreasing degree?
     }
 
     void print(std::ostream &out) {

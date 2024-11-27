@@ -35,7 +35,6 @@ struct Graph {
             if (s[0] == 'c') continue;
             if (s[0] == 'p') {
                 tokens >> problem >> n_nodes >> E;
-                // std::cerr << "N: " << n_nodes << " M: " << E << "\n";
                 adj = vector(n_nodes + 1, std::list<int>());
                 color = vector(n_nodes + 1, 0);
                 for (int i = 1; i <= n_nodes; i++) {
@@ -52,7 +51,6 @@ struct Graph {
             }
         }
 
-        // std::cerr << E << " " << n_edges << std::endl;
         assert(E == n_edges);
     }
 
@@ -65,7 +63,6 @@ struct Graph {
     // Adds an edge between nodes with id's u and v.
     // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
     void add_edge(int u, int v) {
-        // std::cerr << __func__ << " " << u << " " << v << std::endl;
         n_edges++;
         adj[u].merge({v});
         adj[v].merge({u});

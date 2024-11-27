@@ -10,12 +10,6 @@ std::list<int> intersect(std::list<int> a, std::list<int> b) {
     return res;
 }
 
-// std::list<int> intersect(std::list<int> a, std::list<int> b) {
-//     std::list<int> res;
-//     std::set_intersection(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(res));
-//     return res;
-// }
-
 std::list<int> unite(std::list<int> &a, std::list<int> &b) {
     std::list<int> res;
     std::set_union(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(res));
