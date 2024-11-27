@@ -4,8 +4,6 @@
 #include <algorithm>
 #include <string>
 
-// TODO: Flamegraph.
-
 std::list<int> intersect(std::list<int> a, std::list<int> b) {
     std::list<int> res;
     std::set_intersection(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(res));

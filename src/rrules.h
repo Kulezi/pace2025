@@ -13,11 +13,11 @@ _start:
         auto f = rules[i];
         bool reduced = f(g, ds);
         if (reduced) {
-            std::cerr << "Rule " << i << " - applied -> " << dbg(g.n_nodes) << " " << dbg(g.n_edges)
-                      << "\n";
+            // std::cerr << "Rule " << i << " - applied -> " << dbg(g.n_nodes) << " " << dbg(g.n_edges)
+            //           << "\n";
             goto _start;
         } else {
-            std::cerr << "Rule " << i << " - skip \n";
+            // std::cerr << "Rule " << i << " - skip \n";
         }
     }
 }
@@ -112,7 +112,7 @@ bool AlberMainRule2(Graph &g, std::vector<int> &ds) {
                             intersect(intersect(N_guard, N_v_without), N_w_without).size() <=
                         3)
                         continue;
-                    std::cerr << __func__ << dbg(v) << " " << dbg(w) " 1.1\n";
+                    // std::cerr << __func__ << dbg(v) << " " << dbg(w) " 1.1\n";
                     // Case 1.1
                     int z1 = g.add_node();
                     int z2 = g.add_node();
@@ -130,7 +130,7 @@ bool AlberMainRule2(Graph &g, std::vector<int> &ds) {
                     g.remove_nodes(intersect(intersect(N_guard, N_v_without), N_w_without));
                 } else if (can_be_dominated_by_just_v) {
                     // Case 1.2
-                    std::cerr << __func__ << dbg(v) << " " << dbg(w) << " 1.2\n";
+                    // std::cerr << __func__ << dbg(v) << " " << dbg(w) << " 1.2\n";
                     ds.push_back(v);
                     for (auto u : N_v_without) g.set_color(u, DOMINATED);
 
@@ -140,7 +140,7 @@ bool AlberMainRule2(Graph &g, std::vector<int> &ds) {
                     g.remove_nodes(intersect(N_v_without, N_guard));
                 } else if (can_be_dominated_by_just_w) {
                     // Case 1.3
-                    std::cerr << __func__ << dbg(v) << " " << dbg(w) << " 1.3\n";
+                    // std::cerr << __func__ << dbg(v) << " " << dbg(w) << " 1.3\n";
                     ds.push_back(w);
                     for (auto u : N_w_without) g.set_color(u, DOMINATED);
 
@@ -150,7 +150,7 @@ bool AlberMainRule2(Graph &g, std::vector<int> &ds) {
                     g.remove_nodes(intersect(N_w_without, N_guard));
                 } else {
                     // Case 2:
-                    std::cerr << __func__ << dbg(v) << " " << dbg(w) << " 2\n";
+                    // std::cerr << __func__ << dbg(v) << " " << dbg(w) << " 2\n";
                     ds.push_back(v);
                     ds.push_back(w);
 

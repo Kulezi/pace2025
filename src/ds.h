@@ -24,11 +24,13 @@ struct Exact {
     std::vector<int> best_ds;
     void take(Graph &g, vector<int> &ds, int v) {
         auto n_g = g;
-        n_g.set_color(v, TAKEN);
         auto n_ds = ds;
         n_ds.push_back(v);
 
-        RRules::reduce(g, n_ds, rules);
+        for (auto w : n_g.neighbourhood_excluding(v)) n_g.set_color(w, DOMINATED);
+        n_g.remove_node(v);
+
+        RRules::reduce(n_g, n_ds, rules);
         solve_branching(n_g, n_ds);
     }
 
@@ -54,7 +56,6 @@ struct Exact {
         }
         // TODO: maybe take neighbours in order of decreasing degree?
     }
-
 
     void print(std::ostream &out) {
         out << best_ds.size() << "\n";
