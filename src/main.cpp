@@ -15,5 +15,15 @@ int main() {
 
     DomSet::Exact ds(reduction_rules);
 
-    ds.solve(Graph(std::cin), std::cout);
+
+    Graph g(std::cin);
+    ds.solve(g, std::cout);
+    std::cout << std::endl;
+    
+    auto ans = ds.best_ds;
+    for (auto u : ans) {
+        for (auto v : g.neighbourhood_including(u)) g.set_color(v, DOMINATED);
+    }
+
+    for (auto u : g.nodes) assert(g.get_color(u) == DOMINATED);
 }
