@@ -12,12 +12,15 @@ namespace DomSet {
 // Bonus: jak jakąs heura umiesz to zrobić dużo wczesniej to zrob.
 // Może regułki albera w branchingu monza na biezaco.
 
+
 struct Exact {
     std::vector<RRules::Rule> rules;
     Exact(vector<RRules::Rule> _rules) : rules(_rules) {}
 
     void solve(Graph g, std::ostream &out) {
-        solve_branching(g, {});
+        vector<int> ds;
+        RRules::reduce(g, ds, rules);
+        solve_branching(g, ds);
         print(out);
     }
 
@@ -40,17 +43,15 @@ struct Exact {
         if (v == -1) {
             // Hooray, we have a dominating set.
             best_ds = cur_ds;
-            std::cerr << " -> " << best_ds.size();
+            std::cerr << "-> <" << best_ds.size() << "> ";
             return;
         }
 
         // Branch 0: v belongs to DS -> dominate N(v)
-        take(g, cur_ds, v);
+        if (g.deg(v) != 1) take(g, cur_ds, v);
 
         // Branches 1, ..., deg(v): v doesn't belong to DS -> take any neighbour to DS.
-        vector<int> N = {std::begin(g.adj[v]), std::end(g.adj[v])};
-        std::sort(N.begin(), N.end(), [&](int lhs, int rhs) { return g.deg(lhs) > g.deg(rhs); });
-        for (auto u : N) {
+        for (auto u : g.adj[v]) {
             take(g, cur_ds, u);
         }
     }
