@@ -9,7 +9,7 @@ test_dir=$1
 for test in $test_dir/*; do
     echo "Running $test:"
     name=$(basename $test)
-    timeout 600 ./main.out <$test >$sol_dir/$name.sol 2>$sol_dir/$name.log
+    timeout 30 ./main.out <$test >$sol_dir/$name.sol 2>$sol_dir/$name.log
     ./out_verifier.out $test $sol_dir/$name.sol
 done
 

@@ -8,7 +8,7 @@ build:
 .PHONY: test
 test: build
 	g++ $(CFLAGS) src/out_verifier.cpp -o out_verifier.out
-	@ ./test.sh
+	@ ./test.sh in/tiny/testset
 
 .PHONY: stresstest
 stresstest: build

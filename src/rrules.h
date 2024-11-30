@@ -13,9 +13,6 @@ _start:
         auto f = rules[i];
         bool reduced = f(g, ds);
         if (reduced) {
-            std::cerr << "Applied rule " << i << " [";
-            for (auto j : ds) std::cerr << j << " ";
-            std::cerr << "]\n";
             goto _start;
         }
     }
