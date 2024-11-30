@@ -123,6 +123,9 @@ struct Graph {
     void print() {
         std::cerr << "n = " << n_nodes << ",\tm = " << n_edges << "\n";
         for (int i = 1; i < next_free_id; i++) {
+            std::cerr << i << " color: " << get_color(i) << "\n";
+        }
+        for (int i = 1; i < next_free_id; i++) {
             for (auto j : adj[i]) {
                 if (j > i) continue;
                 std::cerr << i << " " << j << "\n";
