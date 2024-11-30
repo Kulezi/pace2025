@@ -6,12 +6,13 @@ build:
 	g++ $(CFLAGS) src/random_graph_gen.cpp -o rg.out
 
 .PHONY: test
-test:
-	g++ $(CFLAGS) src/main.cpp -o main.out
-	g++ $(CFLAGS) src/brute.cpp -o brute.out
-	g++ $(CFLAGS) src/random_graph_gen.cpp -o rg.out
+test: build
 	g++ $(CFLAGS) src/out_verifier.cpp -o out_verifier.out
 	@ ./test.sh
+
+.PHONY: stresstest
+stresstest: build
+	@ ./stresstest.sh
 
 clean:
 	rm *.out
