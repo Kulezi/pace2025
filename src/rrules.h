@@ -13,6 +13,9 @@ _start:
         auto f = rules[i];
         bool reduced = f(g, ds);
         if (reduced) {
+            std::cerr << "Applied rule " << i << " [";
+            for (auto j : ds) std::cerr << j << " ";
+            std::cerr << "]\n";
             goto _start;
         }
     }
@@ -203,13 +206,14 @@ bool AlberSimpleRule3(Graph &g, std::vector<int> &) {
             if (g.get_color(u_1) == UNDOMINATED && g.get_color(u_2) == UNDOMINATED) {
                 if (g.has_edge(u_1, u_2)) {
                     // 3.1
-                    to_remove.push_back(v);
+                    g.remove_node(v);
+                    return true;
                 } else {
                     // 3.2
                     for (auto u : g.adj[u_1]) {
                         if (g.has_edge(u, u_2)) {
-                            to_remove.push_back(v);
-                            break;
+                            g.remove_node(v);
+                            return true;
                         }
                     }
                 }
@@ -217,8 +221,7 @@ bool AlberSimpleRule3(Graph &g, std::vector<int> &) {
         }
     }
 
-    for (auto v : to_remove) g.remove_node(v);
-    return !to_remove.empty();
+    return false;
 }
 
 // Naive implementation of Simple Rule 4 - DOI 10.1007/s10479-006-0045-4, p. 6
