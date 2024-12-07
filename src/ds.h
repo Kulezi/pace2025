@@ -33,7 +33,7 @@ struct Exact {
     }
 
     void solve_branching(Instance g) {
-        int v = g.min_deg_node_of_color(UNDOMINATED);
+        int v = g.min_deg_node_of_status(UNDOMINATED);
         if (g.ds.size() >= best_ds.size() && !best_ds.empty()) return;
         if (v == -1) {
             // Hooray, we have a dominating set.

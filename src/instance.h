@@ -28,6 +28,10 @@ struct Instance {
     vector<std::list<int>> adj;
     std::vector<Status> status;
 
+    // Extra vertices cannot be taken into the dominating set, we assume they mean if we take them
+    // we should take all their neighbours instead.
+    std::vector<bool> is_extra;
+
     // Nodes in the currently considered dominating set candidate.
     std::vector<int> ds;
 
@@ -45,6 +49,7 @@ struct Instance {
                 assert(problem == "ds");
                 adj = vector(n_nodes + 1, std::list<int>());
                 status = vector(n_nodes + 1, UNDOMINATED);
+                is_extra = vector(n_nodes + 1, false);
                 for (int i = 1; i <= n_nodes; i++) {
                     nodes.push_back(i);
                 }
@@ -68,6 +73,14 @@ struct Instance {
 
     void take(int v) {
         assert(status[v] != TAKEN);
+        if (is_extra[v]) {
+            for (auto u : neighbourhood_excluding(v)) {
+                assert(get_status(u) != TAKEN);
+                take(u);
+            }
+
+            return;
+        }
         status[v] = TAKEN;
 
         ds.push_back(v);
@@ -123,6 +136,7 @@ struct Instance {
         adj.push_back({});
         nodes.push_back(next_free_id);
         status.push_back(UNDOMINATED);
+        is_extra.push_back(true);
         n_nodes++;
         return next_free_id++;
     }
@@ -152,10 +166,10 @@ struct Instance {
         }
     }
 
-    int min_deg_node_of_color(const int c) {
+    int min_deg_node_of_status(Status s) {
         int best_v = -1;
         for (auto v : nodes)
-            if (get_status(v) == c && (best_v == -1 || deg(v) < deg(best_v))) best_v = v;
+            if (get_status(v) == s && (best_v == -1 || deg(v) < deg(best_v))) best_v = v;
 
         return best_v;
     }
