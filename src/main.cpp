@@ -7,10 +7,10 @@ int main() {
     std::vector<RRules::Rule> reduction_rules = {
         RRules::AlberMainRule1,
         RRules::AlberMainRule2,
-        RRules::AlberSimpleRule1,
-        RRules::AlberSimpleRule2,
-        RRules::AlberSimpleRule3,
-        RRules::AlberSimpleRule4,
+        // RRules::AlberSimpleRule1,
+        // RRules::AlberSimpleRule2,
+        // RRules::AlberSimpleRule3,
+        // RRules::AlberSimpleRule4,
     };
 
     DomSet::Exact ds(reduction_rules);
@@ -25,5 +25,5 @@ int main() {
         for (auto v : g.neighbourhood_including(u)) g.set_status(v, DOMINATED);
     }
 
-    for (auto u : g.nodes) assert(g.set_status(u) == DOMINATED);
+    for (auto u : g.nodes) assert(g.get_status(u) == DOMINATED);
 }

@@ -19,40 +19,35 @@ struct Exact {
 
     void solve(Instance g, std::ostream &out) {
         vector<int> ds;
-        RRules::reduce(g, ds, rules);
-        solve_branching(g, ds);
+        RRules::reduce(g, rules);
+        solve_branching(g);
         print(out);
     }
 
     std::vector<int> best_ds;
-    void take(Instance &g, vector<int> &ds, int v) {
-        auto n_g = g;
-        auto n_ds = ds;
-        n_ds.push_back(v);
+    void take(Instance g, int v) {
+        g.take(v);
 
-        for (auto w : n_g.neighbourhood_excluding(v)) n_g.set_status(w, DOMINATED);
-        n_g.remove_node(v);
-
-        RRules::reduce(n_g, n_ds, rules);
-        solve_branching(n_g, n_ds);
+        RRules::reduce(g, rules);
+        solve_branching(g);
     }
 
-    void solve_branching(Instance g, vector<int> cur_ds) {
+    void solve_branching(Instance g) {
         int v = g.min_deg_node_of_color(UNDOMINATED);
-        if (cur_ds.size() >= best_ds.size() && !best_ds.empty()) return;
+        if (g.ds.size() >= best_ds.size() && !best_ds.empty()) return;
         if (v == -1) {
             // Hooray, we have a dominating set.
-            best_ds = cur_ds;
+            best_ds = g.ds;
             std::cerr << "-> <" << best_ds.size() << "> ";
             return;
         }
 
         // Branch 0: v belongs to DS -> dominate N(v)
-        if (g.deg(v) != 1) take(g, cur_ds, v);
+        if (g.deg(v) != 1) take(g, v);
 
         // Branches 1, ..., deg(v): v doesn't belong to DS -> take any neighbour to DS.
         for (auto u : g.adj[v]) {
-            take(g, cur_ds, u);
+            take(g, u);
         }
     }
 

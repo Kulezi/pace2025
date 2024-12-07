@@ -2,11 +2,11 @@
 #define _INSTANCE_H
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 #include <list>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <iostream>
 using std::vector;
 
 enum Status { UNDOMINATED, DOMINATED, TAKEN };
@@ -27,9 +27,12 @@ struct Instance {
     // Order is maintained to make set union/intersection possible in O(|A| + |B|).
     vector<std::list<int>> adj;
     std::vector<Status> status;
-    
+
+    // Nodes in the currently considered dominating set candidate.
+    std::vector<int> ds;
+
     // Constructs graph from input stream assuming DIMACS-like .gr format.
-    Instance(std::istream &in) : n_edges(0) {
+    Instance(std::istream &in) : n_edges(0), ds{} {
         std::string line;
         int E = 0;
         while (std::getline(in, line)) {
@@ -60,8 +63,21 @@ struct Instance {
     }
 
     void set_status(int v, Status c) { status[v] = c; }
-    
-    Status set_status(int v) { return status[v]; }
+
+    Status get_status(int v) { return status[v]; }
+
+    void take(int v) {
+        assert(status[v] != TAKEN);
+        status[v] = TAKEN;
+
+        ds.push_back(v);
+        for (auto u : neighbourhood_excluding(v)) {
+            assert(get_status(u) != TAKEN);
+            set_status(u, DOMINATED);
+        }
+
+        remove_node(v);
+    }
 
     int deg(int v) { return (int)adj[v].size(); }
 
@@ -76,7 +92,7 @@ struct Instance {
     // Removes the node with given id.
     // Complexity: O(deg(v) + sum over deg(v) of neighbours)
     void remove_node(int v) {
-        assert(find(nodes.begin(), nodes.end(), v) != nodes.end());
+        if (find(nodes.begin(), nodes.end(), v) == nodes.end()) return;
         n_edges -= (int)adj[v].size();
         n_nodes--;
         for (auto u : adj[v]) {
@@ -91,7 +107,6 @@ struct Instance {
         for (auto &v : l) remove_node(v);
     }
 
-    
     void remove_nodes(std::list<int> &&l) {
         for (auto &v : l) remove_node(v);
     }
@@ -118,7 +133,6 @@ struct Instance {
         return res;
     }
 
-
     std::list<int> neighbourhood_excluding(int v) { return adj[v]; }
 
     bool has_edge(int u, int v) {
@@ -128,7 +142,7 @@ struct Instance {
     void print() {
         std::cerr << "n = " << n_nodes << ",\tm = " << n_edges << "\n";
         for (int i = 1; i < next_free_id; i++) {
-            std::cerr << i << " color: " << set_status(i) << "\n";
+            std::cerr << i << " color: " << get_status(i) << "\n";
         }
         for (int i = 1; i < next_free_id; i++) {
             for (auto j : adj[i]) {
@@ -141,8 +155,7 @@ struct Instance {
     int min_deg_node_of_color(const int c) {
         int best_v = -1;
         for (auto v : nodes)
-            if (set_status(v) == c && (best_v == -1 || deg(v) < deg(best_v)))
-                best_v = v;
+            if (get_status(v) == c && (best_v == -1 || deg(v) < deg(best_v))) best_v = v;
 
         return best_v;
     }

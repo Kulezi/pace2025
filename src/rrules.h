@@ -4,13 +4,13 @@
 #include "setops.h"
 #define dbg(x) #x << " = " << x << " "
 namespace RRules {
-using Rule = std::function<bool(Instance &, std::vector<int> &)>;
+using Rule = std::function<bool(Instance &)>;
 
-void reduce(Instance &g, std::vector<int> &ds, std::vector<Rule> rules) {
+void reduce(Instance &g, std::vector<Rule> rules) {
 _start:
     for (size_t i = 0; i < rules.size(); i++) {
         auto f = rules[i];
-        bool reduced = f(g, ds);
+        bool reduced = f(g);
         if (reduced) {
             goto _start;
         }
@@ -19,13 +19,13 @@ _start:
 
 bool has_undominated_node(Instance &g, std::list<int> nodes) {
     for (auto v : nodes)
-        if (g.set_status(v) == UNDOMINATED) return true;
+        if (g.get_status(v) == UNDOMINATED) return true;
     return false;
 }
 
 // Naive implementation of Main Rule 1 - DOI 10.1007/s10479-006-0045-4, p. 4
 // ~ O(|V|^2) or O(|V|^3) depending on the remove_node operation complexity.
-bool AlberMainRule1(Instance &g, std::vector<int> &ds) {
+bool AlberMainRule1(Instance &g) {
     for (auto v : g.nodes) {
         auto N_v_with = g.neighbourhood_including(v);
         auto N_v_without = g.neighbourhood_excluding(v);
@@ -48,10 +48,7 @@ bool AlberMainRule1(Instance &g, std::vector<int> &ds) {
             for (auto u : N_prison) g.remove_node(u);
             for (auto u : N_guard) g.remove_node(u);
 
-            for (auto u : g.adj[v]) g.set_status(u, DOMINATED);
-            ds.push_back(v);
-
-            g.remove_node(v);
+            g.take(v);
             return true;
         }
     }
@@ -61,7 +58,7 @@ bool AlberMainRule1(Instance &g, std::vector<int> &ds) {
 
 // Naive implementation of Main Rule 2 - DOI 10.1007/s10479-006-0045-4, p. 4
 // ~ O(|V|^2) or O(|V|^3) depending on the remove_node operation complexity.
-bool AlberMainRule2(Instance &g, std::vector<int> &ds) {
+bool AlberMainRule2(Instance &g) {
     for (auto v : g.nodes) {
         for (auto w : g.nodes) {
             if (v == w) continue;
@@ -85,7 +82,7 @@ bool AlberMainRule2(Instance &g, std::vector<int> &ds) {
 
             N_prison = remove(remove(N_vw_without, N_exit), N_guard);
             auto N_prison_intersect_B = N_prison;
-            N_prison_intersect_B.remove_if([&](int u) { return g.set_status(u) != UNDOMINATED; });
+            N_prison_intersect_B.remove_if([&](int u) { return g.get_status(u) != UNDOMINATED; });
 
             auto intersection_can_be_dominated_by_single_from = [&](std::list<int> &nodes) {
                 for (auto x : nodes)
@@ -124,30 +121,23 @@ bool AlberMainRule2(Instance &g, std::vector<int> &ds) {
                     g.remove_nodes(intersect(intersect(N_guard, N_v_without), N_w_without));
                 } else if (can_be_dominated_by_just_v) {
                     // Case 1.2
-                    ds.push_back(v);
-                    for (auto u : N_v_without) g.set_status(u, DOMINATED);
-
-                    // TODO: Order of those operations can be changed to reduce reduntant ops.
-                    g.remove_node(v);
+                    g.take(v);
                     g.remove_nodes(N_prison);
                     g.remove_nodes(intersect(N_v_without, N_guard));
                 } else if (can_be_dominated_by_just_w) {
                     // Case 1.3
-                    ds.push_back(w);
-                    for (auto u : N_w_without) g.set_status(u, DOMINATED);
-
+                    g.take(w);
                     // TODO: Order of those operations can be changed to reduce reduntant ops.
                     g.remove_node(w);
                     g.remove_nodes(N_prison);
                     g.remove_nodes(intersect(N_w_without, N_guard));
                 } else {
-                    // Case 2:
-                    ds.push_back(v);
-                    ds.push_back(w);
-
+                    // Case 2
+                    // w might get removed when taking v, so we need to set statuses before taking v and w.
                     for (auto u : N_vw_without) g.set_status(u, DOMINATED);
-                    g.set_status(v, TAKEN);
-                    g.set_status(w, TAKEN);
+                    g.take(v);
+                    g.take(w);
+
                     g.remove_nodes(N_prison);
                     g.remove_nodes(N_guard);
                 }
@@ -162,12 +152,12 @@ bool AlberMainRule2(Instance &g, std::vector<int> &ds) {
 
 // Naive implementation of Simple Rule 1 - DOI 10.1007/s10479-006-0045-4, p. 6
 // ~ O(|E| + |V| * (# removed edges)) depending on the remove_node operation complexity.
-bool AlberSimpleRule1(Instance &g, std::vector<int> &) {
+bool AlberSimpleRule1(Instance &g) {
     std::vector<std::pair<int, int>> to_remove;
     for (auto v : g.nodes) {
         for (auto w : g.adj[v]) {
             if (v > w) continue;
-            if (g.set_status(v) == DOMINATED && g.set_status(w) == DOMINATED) {
+            if (g.get_status(v) == DOMINATED && g.get_status(w) == DOMINATED) {
                 to_remove.emplace_back(v, w);
             }
         }
@@ -179,10 +169,10 @@ bool AlberSimpleRule1(Instance &g, std::vector<int> &) {
 
 // Naive implementation of Simple Rule 2 - DOI 10.1007/s10479-006-0045-4, p. 6
 // ~ O(|V| * (# removed nodes)) depending on the remove_node operation complexity.
-bool AlberSimpleRule2(Instance &g, std::vector<int> &) {
+bool AlberSimpleRule2(Instance &g) {
     std::vector<int> to_remove;
     for (auto v : g.nodes) {
-        if (g.set_status(v) == DOMINATED && g.deg(v) <= 1) {
+        if (g.get_status(v) == DOMINATED && g.deg(v) <= 1) {
             to_remove.push_back(v);
         }
     }
@@ -193,13 +183,13 @@ bool AlberSimpleRule2(Instance &g, std::vector<int> &) {
 
 // Naive implementation of Simple Rule 3 - DOI 10.1007/s10479-006-0045-4, p. 6
 // ~ O(|V|^2 * (# removed nodes)) depending on the remove_node operation complexity.
-bool AlberSimpleRule3(Instance &g, std::vector<int> &) {
+bool AlberSimpleRule3(Instance &g) {
     std::vector<int> to_remove;
     for (auto v : g.nodes) {
-        if (g.set_status(v) != UNDOMINATED && g.deg(v) == 2) {
+        if (g.get_status(v) != UNDOMINATED && g.deg(v) == 2) {
             int u_1 = g.adj[v].front();
             int u_2 = *++g.adj[v].begin();
-            if (g.set_status(u_1) == UNDOMINATED && g.set_status(u_2) == UNDOMINATED) {
+            if (g.get_status(u_1) == UNDOMINATED && g.get_status(u_2) == UNDOMINATED) {
                 if (g.has_edge(u_1, u_2)) {
                     // 3.1
                     g.remove_node(v);
@@ -222,17 +212,17 @@ bool AlberSimpleRule3(Instance &g, std::vector<int> &) {
 
 // Naive implementation of Simple Rule 4 - DOI 10.1007/s10479-006-0045-4, p. 6
 // ~ O(|V| * (# removed nodes)) depending on the remove_node operation complexity.
-bool AlberSimpleRule4(Instance &g, std::vector<int> &) {
+bool AlberSimpleRule4(Instance &g) {
     std::vector<int> to_remove;
     for (auto v : g.nodes) {
-        if (g.set_status(v) != UNDOMINATED && g.deg(v) == 3) {
+        if (g.get_status(v) != UNDOMINATED && g.deg(v) == 3) {
             auto it = g.adj[v].begin();
             int u_1 = *it;
             int u_2 = *++it;
             int u_3 = *++it;
 
-            if (g.set_status(u_1) == UNDOMINATED && g.set_status(u_2) == UNDOMINATED &&
-                g.set_status(u_3) == UNDOMINATED) {
+            if (g.get_status(u_1) == UNDOMINATED && g.get_status(u_2) == UNDOMINATED &&
+                g.get_status(u_3) == UNDOMINATED) {
                 int n_edges = (g.has_edge(u_1, u_2) + g.has_edge(u_2, u_3) + g.has_edge(u_1, u_3));
                 if (n_edges >= 2) {
                     to_remove.push_back(v);

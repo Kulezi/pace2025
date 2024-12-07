@@ -1,5 +1,5 @@
 TESTS = src/in
-CFLAGS = -O3 -Wall -Wextra -pedantic -Wshadow -Wformat=2 -Wconversion -Wlogical-op -Wshift-overflow=2 -Wduplicated-cond -Wcast-qual -Wcast-align -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_FORTIFY_SOURCE=2 -fsanitize=address -fsanitize=undefined -fno-sanitize-recover -fstack-protector
+CFLAGS = -O3 -g -Wall -Wextra -pedantic -Wshadow -Wformat=2 -Wconversion -Wlogical-op -Wshift-overflow=2 -Wduplicated-cond -Wcast-qual -Wcast-align -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_FORTIFY_SOURCE=2 -fsanitize=address -fsanitize=undefined -fno-sanitize-recover -fstack-protector
 build:
 	g++ $(CFLAGS) src/main.cpp -o main.out
 	g++ $(CFLAGS) src/brute.cpp -o brute.out
