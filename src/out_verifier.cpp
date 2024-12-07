@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 
-#include "graph.h"
+#include "instance.h"
 using namespace std;
 
 int32_t main(int argc, char* argv[]) {
@@ -8,7 +8,7 @@ int32_t main(int argc, char* argv[]) {
     ifstream test(argv[1]);
     ifstream ds(argv[2]);
 
-    Graph g(test);
+    Instance g(test);
 
     int n;
     if (!(ds >> n)) {

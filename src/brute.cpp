@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "ds.h"
-#include "graph.h"
+#include "instance.h"
 #include "rrules.h"
 int main() {
     std::vector<RRules::Rule> reduction_rules = {
@@ -13,5 +13,5 @@ int main() {
 
     DomSet::Exact ds(reduction_rules);
 
-    ds.solve_bruteforce(Graph(std::cin), std::cout);
+    ds.solve_bruteforce(Instance(std::cin), std::cout);
 }

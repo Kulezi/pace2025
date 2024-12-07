@@ -1,12 +1,12 @@
 #ifndef _RRULES_H
 #define _RRULES_H
-#include "graph.h"
+#include "instance.h"
 #include "setops.h"
 #define dbg(x) #x << " = " << x << " "
 namespace RRules {
-using Rule = std::function<bool(Graph &, std::vector<int> &)>;
+using Rule = std::function<bool(Instance &, std::vector<int> &)>;
 
-void reduce(Graph &g, std::vector<int> &ds, std::vector<Rule> rules) {
+void reduce(Instance &g, std::vector<int> &ds, std::vector<Rule> rules) {
 _start:
     for (size_t i = 0; i < rules.size(); i++) {
         auto f = rules[i];
@@ -17,7 +17,7 @@ _start:
     }
 }
 
-bool has_undominated_node(Graph &g, std::list<int> nodes) {
+bool has_undominated_node(Instance &g, std::list<int> nodes) {
     for (auto v : nodes)
         if (g.set_status(v) == UNDOMINATED) return true;
     return false;
@@ -25,7 +25,7 @@ bool has_undominated_node(Graph &g, std::list<int> nodes) {
 
 // Naive implementation of Main Rule 1 - DOI 10.1007/s10479-006-0045-4, p. 4
 // ~ O(|V|^2) or O(|V|^3) depending on the remove_node operation complexity.
-bool AlberMainRule1(Graph &g, std::vector<int> &ds) {
+bool AlberMainRule1(Instance &g, std::vector<int> &ds) {
     for (auto v : g.nodes) {
         auto N_v_with = g.neighbourhood_including(v);
         auto N_v_without = g.neighbourhood_excluding(v);
@@ -61,7 +61,7 @@ bool AlberMainRule1(Graph &g, std::vector<int> &ds) {
 
 // Naive implementation of Main Rule 2 - DOI 10.1007/s10479-006-0045-4, p. 4
 // ~ O(|V|^2) or O(|V|^3) depending on the remove_node operation complexity.
-bool AlberMainRule2(Graph &g, std::vector<int> &ds) {
+bool AlberMainRule2(Instance &g, std::vector<int> &ds) {
     for (auto v : g.nodes) {
         for (auto w : g.nodes) {
             if (v == w) continue;
@@ -162,7 +162,7 @@ bool AlberMainRule2(Graph &g, std::vector<int> &ds) {
 
 // Naive implementation of Simple Rule 1 - DOI 10.1007/s10479-006-0045-4, p. 6
 // ~ O(|E| + |V| * (# removed edges)) depending on the remove_node operation complexity.
-bool AlberSimpleRule1(Graph &g, std::vector<int> &) {
+bool AlberSimpleRule1(Instance &g, std::vector<int> &) {
     std::vector<std::pair<int, int>> to_remove;
     for (auto v : g.nodes) {
         for (auto w : g.adj[v]) {
@@ -179,7 +179,7 @@ bool AlberSimpleRule1(Graph &g, std::vector<int> &) {
 
 // Naive implementation of Simple Rule 2 - DOI 10.1007/s10479-006-0045-4, p. 6
 // ~ O(|V| * (# removed nodes)) depending on the remove_node operation complexity.
-bool AlberSimpleRule2(Graph &g, std::vector<int> &) {
+bool AlberSimpleRule2(Instance &g, std::vector<int> &) {
     std::vector<int> to_remove;
     for (auto v : g.nodes) {
         if (g.set_status(v) == DOMINATED && g.deg(v) <= 1) {
@@ -193,7 +193,7 @@ bool AlberSimpleRule2(Graph &g, std::vector<int> &) {
 
 // Naive implementation of Simple Rule 3 - DOI 10.1007/s10479-006-0045-4, p. 6
 // ~ O(|V|^2 * (# removed nodes)) depending on the remove_node operation complexity.
-bool AlberSimpleRule3(Graph &g, std::vector<int> &) {
+bool AlberSimpleRule3(Instance &g, std::vector<int> &) {
     std::vector<int> to_remove;
     for (auto v : g.nodes) {
         if (g.set_status(v) != UNDOMINATED && g.deg(v) == 2) {
@@ -222,7 +222,7 @@ bool AlberSimpleRule3(Graph &g, std::vector<int> &) {
 
 // Naive implementation of Simple Rule 4 - DOI 10.1007/s10479-006-0045-4, p. 6
 // ~ O(|V| * (# removed nodes)) depending on the remove_node operation complexity.
-bool AlberSimpleRule4(Graph &g, std::vector<int> &) {
+bool AlberSimpleRule4(Instance &g, std::vector<int> &) {
     std::vector<int> to_remove;
     for (auto v : g.nodes) {
         if (g.set_status(v) != UNDOMINATED && g.deg(v) == 3) {

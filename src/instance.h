@@ -1,17 +1,20 @@
-#ifndef _GRAPH_H
-#define _GRAPH_H
+#ifndef _INSTANCE_H
+#define _INSTANCE_H
 #include <algorithm>
 #include <cassert>
 #include <list>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <iostream>
+using std::vector;
 
 enum Status { UNDOMINATED, DOMINATED, TAKEN };
-using std::vector;
-// Undirected graph representing an instance of dominating set problem, with colors regarding domination status assigned to nodes.
-// Assumes that vertex numbers are assigned incrementally, without id reusage.
-struct Graph {
+
+// Undirected graph representing an instance of dominating set problem.
+// Nodes are marked with a domination status.
+// Node labels are assigned incrementally starting with 1.
+struct Instance {
     int n_nodes;
     int n_edges;
     int next_free_id;
@@ -24,9 +27,9 @@ struct Graph {
     // Order is maintained to make set union/intersection possible in O(|A| + |B|).
     vector<std::list<int>> adj;
     std::vector<Status> status;
-
+    
     // Constructs graph from input stream assuming DIMACS-like .gr format.
-    Graph(std::istream &in) : n_edges(0) {
+    Instance(std::istream &in) : n_edges(0) {
         std::string line;
         int E = 0;
         while (std::getline(in, line)) {

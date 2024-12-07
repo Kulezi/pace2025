@@ -1,6 +1,6 @@
 #ifndef _DS_H
 #define _DS_H
-#include "graph.h"
+#include "instance.h"
 #include "rrules.h"
 #include "setops.h"
 #define dbg(x) #x << " = " << x << " "
@@ -17,7 +17,7 @@ struct Exact {
     std::vector<RRules::Rule> rules;
     Exact(vector<RRules::Rule> _rules) : rules(_rules) {}
 
-    void solve(Graph g, std::ostream &out) {
+    void solve(Instance g, std::ostream &out) {
         vector<int> ds;
         RRules::reduce(g, ds, rules);
         solve_branching(g, ds);
@@ -25,7 +25,7 @@ struct Exact {
     }
 
     std::vector<int> best_ds;
-    void take(Graph &g, vector<int> &ds, int v) {
+    void take(Instance &g, vector<int> &ds, int v) {
         auto n_g = g;
         auto n_ds = ds;
         n_ds.push_back(v);
@@ -37,7 +37,7 @@ struct Exact {
         solve_branching(n_g, n_ds);
     }
 
-    void solve_branching(Graph g, vector<int> cur_ds) {
+    void solve_branching(Instance g, vector<int> cur_ds) {
         int v = g.min_deg_node_of_color(UNDOMINATED);
         if (cur_ds.size() >= best_ds.size() && !best_ds.empty()) return;
         if (v == -1) {
@@ -64,7 +64,7 @@ struct Exact {
         }
     }
 
-    void solve_bruteforce(Graph g, std::ostream &out) {
+    void solve_bruteforce(Instance g, std::ostream &out) {
         int n = g.n_nodes;
 
         assert(g.n_nodes == (int)g.nodes.size());
