@@ -7,8 +7,9 @@
 #include <string>
 #include <vector>
 
+enum Color { UNDOMINATED, DOMINATED, TAKEN };
 using std::vector;
-// Undirected graph, with colors assigned to nodes.
+// Undirected graph representing an instance of dominating set problem, with colors regarding domination status assigned to nodes.
 // Assumes that vertex numbers are assigned incrementally, without id reusage.
 struct Graph {
     int n_nodes;
@@ -22,7 +23,7 @@ struct Graph {
     // adj[v] = list of adjacent nodes sorted by increasing node id.
     // Order is maintained to make set union/intersection possible in O(|A| + |B|).
     vector<std::list<int>> adj;
-    std::vector<int> color;
+    std::vector<Color> color;
 
     // Constructs graph from input stream assuming DIMACS-like .gr format.
     Graph(std::istream &in) : n_edges(0) {
@@ -35,8 +36,9 @@ struct Graph {
             if (s[0] == 'c') continue;
             if (s[0] == 'p') {
                 tokens >> problem >> n_nodes >> E;
+                assert(problem == "ds");
                 adj = vector(n_nodes + 1, std::list<int>());
-                color = vector(n_nodes + 1, 0);
+                color = vector(n_nodes + 1, UNDOMINATED);
                 for (int i = 1; i <= n_nodes; i++) {
                     nodes.push_back(i);
                 }
@@ -54,9 +56,9 @@ struct Graph {
         assert(E == n_edges);
     }
 
-    void set_color(int v, int c) { color[v] = c; }
+    void set_color(int v, Color c) { color[v] = c; }
     
-    int get_color(int v) { return color[v]; }
+    Color get_color(int v) { return color[v]; }
 
     int deg(int v) { return (int)adj[v].size(); }
 
@@ -102,7 +104,7 @@ struct Graph {
     int add_node() {
         adj.push_back({});
         nodes.push_back(next_free_id);
-        color.push_back(0);
+        color.push_back(UNDOMINATED);
         n_nodes++;
         return next_free_id++;
     }
