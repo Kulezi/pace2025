@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-enum Color { UNDOMINATED, DOMINATED, TAKEN };
+enum Status { UNDOMINATED, DOMINATED, TAKEN };
 using std::vector;
 // Undirected graph representing an instance of dominating set problem, with colors regarding domination status assigned to nodes.
 // Assumes that vertex numbers are assigned incrementally, without id reusage.
@@ -23,7 +23,7 @@ struct Graph {
     // adj[v] = list of adjacent nodes sorted by increasing node id.
     // Order is maintained to make set union/intersection possible in O(|A| + |B|).
     vector<std::list<int>> adj;
-    std::vector<Color> color;
+    std::vector<Status> status;
 
     // Constructs graph from input stream assuming DIMACS-like .gr format.
     Graph(std::istream &in) : n_edges(0) {
@@ -38,7 +38,7 @@ struct Graph {
                 tokens >> problem >> n_nodes >> E;
                 assert(problem == "ds");
                 adj = vector(n_nodes + 1, std::list<int>());
-                color = vector(n_nodes + 1, UNDOMINATED);
+                status = vector(n_nodes + 1, UNDOMINATED);
                 for (int i = 1; i <= n_nodes; i++) {
                     nodes.push_back(i);
                 }
@@ -56,9 +56,9 @@ struct Graph {
         assert(E == n_edges);
     }
 
-    void set_color(int v, Color c) { color[v] = c; }
+    void set_status(int v, Status c) { status[v] = c; }
     
-    Color get_color(int v) { return color[v]; }
+    Status set_status(int v) { return status[v]; }
 
     int deg(int v) { return (int)adj[v].size(); }
 
@@ -104,7 +104,7 @@ struct Graph {
     int add_node() {
         adj.push_back({});
         nodes.push_back(next_free_id);
-        color.push_back(UNDOMINATED);
+        status.push_back(UNDOMINATED);
         n_nodes++;
         return next_free_id++;
     }
@@ -125,7 +125,7 @@ struct Graph {
     void print() {
         std::cerr << "n = " << n_nodes << ",\tm = " << n_edges << "\n";
         for (int i = 1; i < next_free_id; i++) {
-            std::cerr << i << " color: " << get_color(i) << "\n";
+            std::cerr << i << " color: " << set_status(i) << "\n";
         }
         for (int i = 1; i < next_free_id; i++) {
             for (auto j : adj[i]) {
@@ -138,7 +138,7 @@ struct Graph {
     int min_deg_node_of_color(const int c) {
         int best_v = -1;
         for (auto v : nodes)
-            if (get_color(v) == c && (best_v == -1 || deg(v) < deg(best_v)))
+            if (set_status(v) == c && (best_v == -1 || deg(v) < deg(best_v)))
                 best_v = v;
 
         return best_v;

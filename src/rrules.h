@@ -3,7 +3,6 @@
 #include "graph.h"
 #include "setops.h"
 #define dbg(x) #x << " = " << x << " "
-enum { UNDOMINATED, DOMINATED, TAKEN };
 namespace RRules {
 using Rule = std::function<bool(Graph &, std::vector<int> &)>;
 
@@ -20,7 +19,7 @@ _start:
 
 bool has_undominated_node(Graph &g, std::list<int> nodes) {
     for (auto v : nodes)
-        if (g.get_color(v) == UNDOMINATED) return true;
+        if (g.set_status(v) == UNDOMINATED) return true;
     return false;
 }
 
@@ -49,7 +48,7 @@ bool AlberMainRule1(Graph &g, std::vector<int> &ds) {
             for (auto u : N_prison) g.remove_node(u);
             for (auto u : N_guard) g.remove_node(u);
 
-            for (auto u : g.adj[v]) g.set_color(u, DOMINATED);
+            for (auto u : g.adj[v]) g.set_status(u, DOMINATED);
             ds.push_back(v);
 
             g.remove_node(v);
@@ -86,7 +85,7 @@ bool AlberMainRule2(Graph &g, std::vector<int> &ds) {
 
             N_prison = remove(remove(N_vw_without, N_exit), N_guard);
             auto N_prison_intersect_B = N_prison;
-            N_prison_intersect_B.remove_if([&](int u) { return g.get_color(u) != UNDOMINATED; });
+            N_prison_intersect_B.remove_if([&](int u) { return g.set_status(u) != UNDOMINATED; });
 
             auto intersection_can_be_dominated_by_single_from = [&](std::list<int> &nodes) {
                 for (auto x : nodes)
@@ -126,7 +125,7 @@ bool AlberMainRule2(Graph &g, std::vector<int> &ds) {
                 } else if (can_be_dominated_by_just_v) {
                     // Case 1.2
                     ds.push_back(v);
-                    for (auto u : N_v_without) g.set_color(u, DOMINATED);
+                    for (auto u : N_v_without) g.set_status(u, DOMINATED);
 
                     // TODO: Order of those operations can be changed to reduce reduntant ops.
                     g.remove_node(v);
@@ -135,7 +134,7 @@ bool AlberMainRule2(Graph &g, std::vector<int> &ds) {
                 } else if (can_be_dominated_by_just_w) {
                     // Case 1.3
                     ds.push_back(w);
-                    for (auto u : N_w_without) g.set_color(u, DOMINATED);
+                    for (auto u : N_w_without) g.set_status(u, DOMINATED);
 
                     // TODO: Order of those operations can be changed to reduce reduntant ops.
                     g.remove_node(w);
@@ -146,9 +145,9 @@ bool AlberMainRule2(Graph &g, std::vector<int> &ds) {
                     ds.push_back(v);
                     ds.push_back(w);
 
-                    for (auto u : N_vw_without) g.set_color(u, DOMINATED);
-                    g.set_color(v, TAKEN);
-                    g.set_color(w, TAKEN);
+                    for (auto u : N_vw_without) g.set_status(u, DOMINATED);
+                    g.set_status(v, TAKEN);
+                    g.set_status(w, TAKEN);
                     g.remove_nodes(N_prison);
                     g.remove_nodes(N_guard);
                 }
@@ -168,7 +167,7 @@ bool AlberSimpleRule1(Graph &g, std::vector<int> &) {
     for (auto v : g.nodes) {
         for (auto w : g.adj[v]) {
             if (v > w) continue;
-            if (g.get_color(v) == DOMINATED && g.get_color(w) == DOMINATED) {
+            if (g.set_status(v) == DOMINATED && g.set_status(w) == DOMINATED) {
                 to_remove.emplace_back(v, w);
             }
         }
@@ -183,7 +182,7 @@ bool AlberSimpleRule1(Graph &g, std::vector<int> &) {
 bool AlberSimpleRule2(Graph &g, std::vector<int> &) {
     std::vector<int> to_remove;
     for (auto v : g.nodes) {
-        if (g.get_color(v) == DOMINATED && g.deg(v) <= 1) {
+        if (g.set_status(v) == DOMINATED && g.deg(v) <= 1) {
             to_remove.push_back(v);
         }
     }
@@ -197,10 +196,10 @@ bool AlberSimpleRule2(Graph &g, std::vector<int> &) {
 bool AlberSimpleRule3(Graph &g, std::vector<int> &) {
     std::vector<int> to_remove;
     for (auto v : g.nodes) {
-        if (g.get_color(v) != UNDOMINATED && g.deg(v) == 2) {
+        if (g.set_status(v) != UNDOMINATED && g.deg(v) == 2) {
             int u_1 = g.adj[v].front();
             int u_2 = *++g.adj[v].begin();
-            if (g.get_color(u_1) == UNDOMINATED && g.get_color(u_2) == UNDOMINATED) {
+            if (g.set_status(u_1) == UNDOMINATED && g.set_status(u_2) == UNDOMINATED) {
                 if (g.has_edge(u_1, u_2)) {
                     // 3.1
                     g.remove_node(v);
@@ -226,14 +225,14 @@ bool AlberSimpleRule3(Graph &g, std::vector<int> &) {
 bool AlberSimpleRule4(Graph &g, std::vector<int> &) {
     std::vector<int> to_remove;
     for (auto v : g.nodes) {
-        if (g.get_color(v) != UNDOMINATED && g.deg(v) == 3) {
+        if (g.set_status(v) != UNDOMINATED && g.deg(v) == 3) {
             auto it = g.adj[v].begin();
             int u_1 = *it;
             int u_2 = *++it;
             int u_3 = *++it;
 
-            if (g.get_color(u_1) == UNDOMINATED && g.get_color(u_2) == UNDOMINATED &&
-                g.get_color(u_3) == UNDOMINATED) {
+            if (g.set_status(u_1) == UNDOMINATED && g.set_status(u_2) == UNDOMINATED &&
+                g.set_status(u_3) == UNDOMINATED) {
                 int n_edges = (g.has_edge(u_1, u_2) + g.has_edge(u_2, u_3) + g.has_edge(u_1, u_3));
                 if (n_edges >= 2) {
                     to_remove.push_back(v);

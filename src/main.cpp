@@ -22,8 +22,8 @@ int main() {
     
     auto ans = ds.best_ds;
     for (auto u : ans) {
-        for (auto v : g.neighbourhood_including(u)) g.set_color(v, DOMINATED);
+        for (auto v : g.neighbourhood_including(u)) g.set_status(v, DOMINATED);
     }
 
-    for (auto u : g.nodes) assert(g.get_color(u) == DOMINATED);
+    for (auto u : g.nodes) assert(g.set_status(u) == DOMINATED);
 }

@@ -30,7 +30,7 @@ struct Exact {
         auto n_ds = ds;
         n_ds.push_back(v);
 
-        for (auto w : n_g.neighbourhood_excluding(v)) n_g.set_color(w, DOMINATED);
+        for (auto w : n_g.neighbourhood_excluding(v)) n_g.set_status(w, DOMINATED);
         n_g.remove_node(v);
 
         RRules::reduce(n_g, n_ds, rules);
