@@ -9,10 +9,11 @@ int main() {
     DomSet::Exact ds(reduction_rules);
 
     Instance g(std::cin);
-    auto ans = ds.solve(g, std::cout);
-
-    std::cout << std::endl;
-
+    auto ans = ds.solve(g, std::cerr);
+    
+    std::cout << "branching_calls:" << ds.branch_calls << "\t" <<
+                 "successful splits: " << ds.n_splits << std::endl;
+    
     for (auto u : ans) {
         for (auto v : g.neighbourhood_including(u)) g.set_status(v, DOMINATED);
     }

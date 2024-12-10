@@ -16,7 +16,7 @@ int32_t main(int argc, char* argv[]) {
         exit(1);
     }
 
-    vector<int> dominated(g.n_nodes + 1, 0);
+    vector<int> dominated(g.n_nodes() + 1, 0);
     for (int i = 1; i <= n; i++) {
         int v;
         ds >> v;
@@ -25,7 +25,7 @@ int32_t main(int argc, char* argv[]) {
         for (auto u : g.adj[v]) dominated[u] = 1;
     }
 
-    for (int i = 1; i <= g.n_nodes; i++) {
+    for (int i = 1; i <= g.n_nodes(); i++) {
         if (!dominated[i]) {
             cerr << "node " << i << " undominated" << endl;
             exit(1);

@@ -4,9 +4,11 @@
 #include <cassert>
 #include <iostream>
 #include <list>
+#include <queue>
 #include <sstream>
 #include <string>
 #include <vector>
+
 using std::vector;
 
 enum Status { UNDOMINATED, DOMINATED, TAKEN };
@@ -15,7 +17,6 @@ enum Status { UNDOMINATED, DOMINATED, TAKEN };
 // Nodes are marked with a domination status.
 // Node labels are assigned incrementally starting with 1.
 struct Instance {
-    int n_nodes;
     int n_edges;
     int next_free_id;
     std::string problem;
@@ -32,7 +33,7 @@ struct Instance {
     // we should take all their neighbours instead.
     std::vector<bool> is_extra;
 
-    // Nodes in the currently considered dominating set candidate.
+    // Nodes already removed from the graph considered as the dominating set candidates.
     std::vector<int> ds;
 
     // Constructs graph from input stream assuming DIMACS-like .gr format.
@@ -45,6 +46,7 @@ struct Instance {
             tokens >> s;
             if (s[0] == 'c') continue;
             if (s[0] == 'p') {
+                int n_nodes;
                 tokens >> problem >> n_nodes >> E;
                 assert(problem == "ds");
                 adj = vector(n_nodes + 1, std::list<int>());
@@ -65,6 +67,19 @@ struct Instance {
         }
 
         assert(E == n_edges);
+    }
+
+    int n_nodes() {
+        return nodes.size();
+    }
+
+    Instance(Instance i, std::list<int> to_take) {
+        *this = i;
+        nodes = to_take;
+        n_edges =0 ;
+        for (auto v : nodes) n_edges += adj[v].size();
+        n_edges /= 2;
+        ds = {};
     }
 
     void set_status(int v, Status c) { status[v] = c; }
@@ -107,7 +122,6 @@ struct Instance {
     void remove_node(int v) {
         if (find(nodes.begin(), nodes.end(), v) == nodes.end()) return;
         n_edges -= (int)adj[v].size();
-        n_nodes--;
         for (auto u : adj[v]) {
             adj[u].remove(v);
         }
@@ -137,7 +151,6 @@ struct Instance {
         nodes.push_back(next_free_id);
         status.push_back(UNDOMINATED);
         is_extra.push_back(true);
-        n_nodes++;
         return next_free_id++;
     }
 
@@ -154,11 +167,11 @@ struct Instance {
     }
 
     void print() {
-        std::cerr << "n = " << n_nodes << ",\tm = " << n_edges << "\n";
-        for (int i = 1; i < next_free_id; i++) {
+        std::cerr << "n = " << n_nodes() << ",\tm = " << n_edges << "\n";
+        for (int i : nodes) {
             std::cerr << i << " color: " << get_status(i) << "\n";
         }
-        for (int i = 1; i < next_free_id; i++) {
+        for (int i : nodes) {
             for (auto j : adj[i]) {
                 if (j > i) continue;
                 std::cerr << i << " " << j << "\n";
@@ -172,6 +185,42 @@ struct Instance {
             if (get_status(v) == s && (best_v == -1 || deg(v) < deg(best_v))) best_v = v;
 
         return best_v;
+    }
+
+
+    // Splits the graph into connected components.
+    vector<Instance> split() {
+        vector<Instance> result;
+
+        vector<int> component(next_free_id + 1, 0);
+        int components = 0;
+
+        // Assign nodes to connected components using breadth-first search.
+        for (auto v : nodes) {
+            if (!component[v]) {
+                std::list<int> to_take;
+                component[v] = ++components;
+
+                std::queue<int> q;
+                q.push(v);
+                while (!q.empty()) {
+                    int w = q.front();
+                    q.pop();
+
+                    to_take.push_back(w);
+                    for (auto u : adj[w]) {
+                        if (!component[u]) {
+                            component[u] = component[w];
+                            q.push(u);
+                        }
+                    }
+                }
+
+                result.emplace_back(*this, to_take);
+            }
+        }
+
+        return result;
     }
 };
 

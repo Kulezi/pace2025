@@ -15,5 +15,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: make
       run: make
-    - name: make check
+    - name: make stresstest
       run: make stresstest
+    - name: make bench
+      run: make bench

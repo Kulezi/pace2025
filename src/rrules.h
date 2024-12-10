@@ -4,8 +4,8 @@
 #include "setops.h"
 #define dbg(x) #x << " = " << x << " "
 namespace RRules {
-using Rule = std::function<bool(Instance &)>;
 
+using Rule = std::function<bool(Instance &)>;
 void reduce(Instance &g, std::vector<Rule> rules) {
 _start:
     for (size_t i = 0; i < rules.size(); i++) {
@@ -133,7 +133,8 @@ bool AlberMainRule2(Instance &g) {
                     g.remove_nodes(intersect(N_w_without, N_guard));
                 } else {
                     // Case 2
-                    // w might get removed when taking v, so we need to set statuses before taking v and w.
+                    // w might get removed when taking v, so we need to set statuses before taking v
+                    // and w.
                     for (auto u : N_vw_without) g.set_status(u, DOMINATED);
                     g.take(v);
                     g.take(w);
@@ -235,6 +236,14 @@ bool AlberSimpleRule4(Instance &g) {
     return !to_remove.empty();
 }
 
+const std::vector<RRules::Rule> defaults = {
+    RRules::AlberMainRule1,
+    RRules::AlberMainRule2,
+    RRules::AlberSimpleRule1,
+    RRules::AlberSimpleRule2,
+    RRules::AlberSimpleRule3,
+    RRules::AlberSimpleRule4,
+};
 }  // namespace RRules
 
 #endif

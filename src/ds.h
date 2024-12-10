@@ -4,6 +4,12 @@
 #include "rrules.h"
 #include "setops.h"
 #define dbg(x) #x << " = " << x << " "
+std::string dbgv(std::vector<int> v) {
+    std::string s = "[ ";
+    for (auto i : v) s += std::to_string(i) + " ";
+    s += "]";
+    return s;
+}
 
 namespace DomSet {
 
@@ -12,57 +18,87 @@ namespace DomSet {
 // Bonus: jak jakąs heura umiesz to zrobić dużo wczesniej to zrob.
 // Może regułki albera w branchingu monza na biezaco.
 
-
 struct Exact {
+    size_t branch_calls = 0;
+    size_t n_splits = 0;
+
     std::vector<RRules::Rule> rules;
     Exact(vector<RRules::Rule> _rules) : rules(_rules) {}
 
-    void solve(Instance g, std::ostream &out) {
+    vector<int> solve(Instance g, std::ostream &out) {
         vector<int> ds;
         RRules::reduce(g, rules);
-        solve_branching(g);
-        print(out);
+
+        solve_branching(g, ds);
+        print(ds, out);
+        return ds;
     }
 
-    std::vector<int> best_ds;
-    void take(Instance g, int v) {
+    void take(Instance g, int v, std::vector<int> &best_ds, int level) {
         g.take(v);
 
-        RRules::reduce(g, rules);
-        solve_branching(g);
+        auto split = g.split();
+        #if BENCH
+        if (split.size() >= 2) {
+            n_splits++;
+        }
+        #endif
+        // TODO: each components needs at least 1 node, hence if |ds| + |#ccs| > |best| return.
+        for (auto &cc : split) {
+            std::vector<int> ds;
+            RRules::reduce(cc, rules);
+            solve_branching(cc, ds, level + 1);
+
+            for (auto i : ds) g.ds.push_back(i);
+
+            if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
+        }
+
+        best_ds = g.ds;
+
+        if (level < 10) {
+            for (int i = 0; i < level; i++) std::cerr << " ";
+            std::cerr << best_ds.size() << "\n";
+        }
     }
 
-    void solve_branching(Instance g) {
+    void solve_branching(Instance g, std::vector<int> &best_ds, int level = 0) {
+        #if BENCH
+            branch_calls++;
+        #endif
         int v = g.min_deg_node_of_status(UNDOMINATED);
-        if (g.ds.size() >= best_ds.size() && !best_ds.empty()) return;
+        if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
         if (v == -1) {
             // Hooray, we have a dominating set.
+            if (level < 10) {
+                for (int i = 0; i < level; i++) std::cerr << " ";
+                std::cerr << best_ds.size() << "\n";
+            }
             best_ds = g.ds;
-            std::cerr << "-> <" << best_ds.size() << "> ";
             return;
         }
 
         // Branch 0: v belongs to DS -> dominate N(v)
-        if (g.deg(v) != 1) take(g, v);
+        if (g.deg(v) != 1) take(g, v, best_ds, level + 1);
 
         // Branches 1, ..., deg(v): v doesn't belong to DS -> take any neighbour to DS.
         for (auto u : g.adj[v]) {
-            take(g, u);
+            take(g, u, best_ds, level + 1);
         }
     }
 
-    void print(std::ostream &out) {
-        out << best_ds.size() << "\n";
-        sort(best_ds.begin(), best_ds.end());
-        for (auto i : best_ds) {
+    void print(std::vector<int> ds, std::ostream &out) {
+        out << ds.size() << "\n";
+        sort(ds.begin(), ds.end());
+        for (auto i : ds) {
             out << i << "\n";
         }
     }
 
     void solve_bruteforce(Instance g, std::ostream &out) {
-        int n = g.n_nodes;
+        int n = g.n_nodes();
+        vector<int> best_ds;
 
-        assert(g.n_nodes == (int)g.nodes.size());
         for (int mask = 0; mask < (1 << n); mask++) {
             vector<int> dominated(g.next_free_id, false);
             auto node = g.nodes.begin();
@@ -92,8 +128,8 @@ struct Exact {
             }
         }
 
-        print(out);
+        print(best_ds, out);
     }
 };
 }  // namespace DomSet
-#endif  // DS_H
+#endif  // _DS_H

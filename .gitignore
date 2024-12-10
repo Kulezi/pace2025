@@ -35,3 +35,4 @@
 .solutions/
 rg.gr
 *.log
+.gdb_history
