@@ -1,5 +1,7 @@
 #ifndef _RRULES_H
 #define _RRULES_H
+#include <functional>
+
 #include "instance.h"
 #include "setops.h"
 #include <functional>
@@ -18,7 +20,7 @@ _start:
     }
 }
 
-bool has_undominated_node(Instance &g, std::list<int> nodes) {
+bool has_undominated_node(Instance &g, std::vector<int> nodes) {
     for (auto v : nodes)
         if (g.get_status(v) == UNDOMINATED) return true;
     return false;
@@ -31,10 +33,9 @@ bool AlberMainRule1(Instance &g) {
         auto N_v_with = g.neighbourhood_including(v);
         auto N_v_without = g.neighbourhood_excluding(v);
 
-        std::list<int> N_exit, N_guard, N_prison;
+        std::vector<int> N_exit, N_guard, N_prison;
         for (auto u : N_v_without) {
             auto N_u = g.neighbourhood_excluding(u);
-
             if (!remove(N_u, N_v_with).empty()) N_exit.push_back(u);
         }
 
@@ -69,7 +70,7 @@ bool AlberMainRule2(Instance &g) {
             auto N_vw_with = unite(g.neighbourhood_including(v), g.neighbourhood_including(w));
             auto N_vw_without = unite(N_v_without, N_w_without);
 
-            std::list<int> N_exit, N_guard, N_prison;
+            std::vector<int> N_exit, N_guard, N_prison;
             for (auto u : N_vw_without) {
                 auto N_u = g.neighbourhood_excluding(u);
 
@@ -83,9 +84,12 @@ bool AlberMainRule2(Instance &g) {
 
             N_prison = remove(remove(N_vw_without, N_exit), N_guard);
             auto N_prison_intersect_B = N_prison;
-            N_prison_intersect_B.remove_if([&](int u) { return g.get_status(u) != UNDOMINATED; });
+            const auto new_end =
+                std::remove_if(N_prison_intersect_B.begin(), N_prison_intersect_B.end(),
+                               [&](int u) { return g.get_status(u) != UNDOMINATED; });
+            N_prison_intersect_B.erase(new_end, N_prison_intersect_B.end());
 
-            auto intersection_can_be_dominated_by_single_from = [&](std::list<int> &nodes) {
+            auto intersection_can_be_dominated_by_single_from = [&](std::vector<int> &nodes) {
                 for (auto x : nodes)
                     if (contains(g.neighbourhood_including(x), N_prison_intersect_B)) return true;
                 return false;
@@ -190,7 +194,7 @@ bool AlberSimpleRule3(Instance &g) {
     for (auto v : g.nodes) {
         if (g.get_status(v) != UNDOMINATED && g.deg(v) == 2) {
             int u_1 = g.adj[v].front();
-            int u_2 = *++g.adj[v].begin();
+            int u_2 = g.adj[v][1];
             if (g.get_status(u_1) == UNDOMINATED && g.get_status(u_2) == UNDOMINATED) {
                 if (g.has_edge(u_1, u_2)) {
                     // 3.1
@@ -239,12 +243,8 @@ bool AlberSimpleRule4(Instance &g) {
 }
 
 const std::vector<RRules::Rule> defaults = {
-    RRules::AlberMainRule1,
-    RRules::AlberMainRule2,
-    RRules::AlberSimpleRule1,
-    RRules::AlberSimpleRule2,
-    RRules::AlberSimpleRule3,
-    RRules::AlberSimpleRule4,
+    RRules::AlberMainRule1,   RRules::AlberMainRule2,   RRules::AlberSimpleRule1,
+    RRules::AlberSimpleRule2, RRules::AlberSimpleRule3, RRules::AlberSimpleRule4,
 };
 }  // namespace RRules
 

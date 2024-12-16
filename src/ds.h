@@ -4,12 +4,6 @@
 #include "rrules.h"
 #include "setops.h"
 #define dbg(x) #x << " = " << x << " "
-std::string dbgv(std::vector<int> v) {
-    std::string s = "[ ";
-    for (auto i : v) s += std::to_string(i) + " ";
-    s += "]";
-    return s;
-}
 
 namespace DomSet {
 
@@ -23,10 +17,10 @@ struct Exact {
     size_t n_splits = 0;
 
     std::vector<RRules::Rule> rules;
-    Exact(vector<RRules::Rule> _rules) : rules(_rules) {}
+    Exact(std::vector<RRules::Rule> _rules) : rules(_rules) {}
 
-    vector<int> solve(Instance g, std::ostream &out) {
-        vector<int> ds;
+    std::vector<int> solve(Instance g, std::ostream &out) {
+        std::vector<int> ds;
         RRules::reduce(g, rules);
 
         solve_branching(g, ds);
@@ -87,13 +81,13 @@ struct Exact {
 
     void solve_bruteforce(Instance g, std::ostream &out) {
         int n = g.n_nodes();
-        vector<int> best_ds;
+        std::vector<int> best_ds;
 
         for (int mask = 0; mask < (1 << n); mask++) {
-            vector<int> dominated(g.next_free_id, false);
+            std::vector<int> dominated(g.next_free_id, false);
             auto node = g.nodes.begin();
 
-            vector<int> ds;
+            std::vector<int> ds;
             for (int i = 0; i < n; i++) {
                 int v = *node;
                 if (mask >> i & 1) {

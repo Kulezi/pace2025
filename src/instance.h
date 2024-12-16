@@ -3,13 +3,12 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
-#include <list>
 #include <queue>
 #include <sstream>
 #include <string>
 #include <vector>
 
-using std::vector;
+#include "setops.h"
 
 enum Status { UNDOMINATED, DOMINATED, TAKEN };
 
@@ -22,11 +21,11 @@ struct Instance {
     std::string problem;
 
     // List of nodes, sorted by increasing node id.
-    std::list<int> nodes;
+    std::vector<int> nodes;
 
     // adj[v] = list of adjacent nodes sorted by increasing node id.
     // Order is maintained to make set union/intersection possible in O(|A| + |B|).
-    vector<std::list<int>> adj;
+    std::vector<std::vector<int>> adj;
     std::vector<Status> status;
 
     // Extra vertices cannot be taken into the dominating set, we assume they mean if we take them
@@ -49,9 +48,9 @@ struct Instance {
                 int n_nodes;
                 tokens >> problem >> n_nodes >> E;
                 assert(problem == "ds");
-                adj = vector(n_nodes + 1, std::list<int>());
-                status = vector(n_nodes + 1, UNDOMINATED);
-                is_extra = vector(n_nodes + 1, false);
+                adj = std::vector(n_nodes + 1, std::vector<int>());
+                status = std::vector(n_nodes + 1, UNDOMINATED);
+                is_extra = std::vector(n_nodes + 1, false);
                 for (int i = 1; i <= n_nodes; i++) {
                     nodes.push_back(i);
                 }
@@ -69,14 +68,13 @@ struct Instance {
         assert(E == n_edges);
     }
 
-    int n_nodes() {
-        return nodes.size();
-    }
+    int n_nodes() { return nodes.size(); }
 
-    Instance(Instance i, std::list<int> to_take) {
+    Instance(Instance i, std::vector<int> to_take) {
         *this = i;
+        sort(to_take.begin(), to_take.end());
         nodes = to_take;
-        n_edges =0 ;
+        n_edges = 0;
         for (auto v : nodes) n_edges += adj[v].size();
         n_edges /= 2;
         ds = {};
@@ -113,8 +111,8 @@ struct Instance {
     // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
     void add_edge(int u, int v) {
         n_edges++;
-        adj[u].merge({v});
-        adj[v].merge({u});
+        insert(adj[u], v);
+        insert(adj[v], u);
     }
 
     // Removes the node with given id.
@@ -123,25 +121,27 @@ struct Instance {
         if (find(nodes.begin(), nodes.end(), v) == nodes.end()) return;
         n_edges -= (int)adj[v].size();
         for (auto u : adj[v]) {
-            adj[u].remove(v);
+            remove(adj[u], v);
+            assert(is_sorted(adj[u].begin(), adj[u].end()));
         }
         adj[v].clear();
 
-        nodes.remove(v);
+        remove(nodes, v);
+        assert(is_sorted(nodes.begin(), nodes.end()));
     }
 
-    void remove_nodes(std::list<int> &l) {
+    void remove_nodes(std::vector<int> &l) {
         for (auto &v : l) remove_node(v);
     }
 
-    void remove_nodes(std::list<int> &&l) {
+    void remove_nodes(std::vector<int> &&l) {
         for (auto &v : l) remove_node(v);
     }
 
     void remove_edge(int v, int w) {
         n_edges--;
-        adj[v].remove(w);
-        adj[w].remove(v);
+        remove(adj[v], w);
+        remove(adj[w], v);
     }
 
     // Creates and returns the id of the created node.
@@ -154,13 +154,13 @@ struct Instance {
         return next_free_id++;
     }
 
-    std::list<int> neighbourhood_including(int v) {
+    std::vector<int> neighbourhood_including(int v) {
         auto res = adj[v];
-        res.merge({v});
+        insert(res, v);
         return res;
     }
 
-    std::list<int> neighbourhood_excluding(int v) { return adj[v]; }
+    std::vector<int> neighbourhood_excluding(int v) { return adj[v]; }
 
     bool has_edge(int u, int v) {
         return std::find(adj[u].begin(), adj[u].end(), v) != adj[u].end();
@@ -187,18 +187,17 @@ struct Instance {
         return best_v;
     }
 
-
     // Splits the graph into connected components.
-    vector<Instance> split() {
-        vector<Instance> result;
+    std::vector<Instance> split() {
+        std::vector<Instance> result;
 
-        vector<int> component(next_free_id + 1, 0);
+        std::vector<int> component(next_free_id + 1, 0);
         int components = 0;
 
         // Assign nodes to connected components using breadth-first search.
         for (auto v : nodes) {
             if (!component[v]) {
-                std::list<int> to_take;
+                std::vector<int> to_take;
                 component[v] = ++components;
 
                 std::queue<int> q;
