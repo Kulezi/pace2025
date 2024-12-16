@@ -1,38 +1,54 @@
 #ifndef _SETOPS_H
 #define _SETOPS_H
-#include <list>
 #include <algorithm>
 #include <string>
+#include <vector>
 
-std::list<int> intersect(std::list<int> a, std::list<int> b) {
-    std::list<int> res;
+std::vector<int> intersect(std::vector<int> a, std::vector<int> b) {
+    std::vector<int> res;
     std::set_intersection(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(res));
     return res;
 }
 
-std::list<int> unite(std::list<int> &a, std::list<int> &b) {
-    std::list<int> res;
+std::vector<int> unite(std::vector<int> &a, std::vector<int> &b) {
+    std::vector<int> res;
     std::set_union(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(res));
     return res;
 }
 
-std::list<int> unite(std::list<int> &&a, std::list<int> &&b) {
-    std::list<int> res;
+std::vector<int> unite(std::vector<int> &&a, std::vector<int> &&b) {
+    std::vector<int> res;
     std::set_union(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(res));
     return res;
 }
 
-std::list<int> remove(std::list<int> a, std::list<int> &b) {
-    for (auto val : b) a.remove(val);
+void insert(std::vector<int> &a, int v) { a.insert(std::upper_bound(a.begin(), a.end(), v), v); 
+    assert(is_sorted(a.begin(),a.end()));
+}
+
+void remove(std::vector<int> &a, int v) {
+    auto it = std::lower_bound(a.begin(), a.end(), v);
+    if (it != a.end() && *it == v) a.erase(it);
+    assert(is_sorted(a.begin(),a.end()));
+}
+
+std::vector<int> remove(std::vector<int> a, std::vector<int> &b) {
+    for (auto val : b) remove(a, val);
+    assert(is_sorted(a.begin(),a.end()));
+
     return a;
 }
 
-// Returns true if a contains b.
-bool contains(std::list<int> a, std::list<int> b) {
-    return remove(b, a).empty();
+std::string dbgv(std::vector<int> v) {
+    std::string s = "[ ";
+    for (auto i : v) s += std::to_string(i) + " ";
+    s += "]";
+    return s;
 }
+// Returns true if a contains b.
+bool contains(std::vector<int> a, std::vector<int> b) { return remove(b, a).empty(); }
 
-std::string pprint(std::list<int> x) {
+std::string pprint(std::vector<int> x) {
     std::string res = "[";
     for (auto i : x) res += std::to_string(i) + " ";
     return res + "]";
