@@ -2,6 +2,7 @@
 #define _RRULES_H
 #include "instance.h"
 #include "setops.h"
+#include <functional>
 #define dbg(x) #x << " = " << x << " "
 namespace RRules {
 
@@ -198,6 +199,7 @@ bool AlberSimpleRule3(Instance &g) {
                 } else {
                     // 3.2
                     for (auto u : g.adj[u_1]) {
+                        if (u == v) continue;
                         if (g.has_edge(u, u_2)) {
                             g.remove_node(v);
                             return true;
