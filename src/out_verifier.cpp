@@ -22,7 +22,7 @@ int32_t main(int argc, char* argv[]) {
         ds >> v;
 
         dominated[v] = 1;
-        for (auto u : g.adj[v]) dominated[u] = 1;
+        for (auto u : g.neighbourhood_excluding(v)) dominated[u] = 1;
     }
 
     for (int i = 1; i <= g.n_nodes(); i++) {

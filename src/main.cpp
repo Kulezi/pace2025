@@ -9,13 +9,18 @@ int main() {
     DomSet::Exact ds(reduction_rules);
 
     Instance g(std::cin);
-    auto ans = ds.solve(g, std::cout);
+    auto ans = ds.solve(g.clone(), std::cout);
 
     std::cout << std::endl;
 
     for (auto u : ans) {
-        for (auto v : g.neighbourhood_including(u)) g.set_status(v, DOMINATED);
+        // std::cerr << "u = " << u << " ";
+        for (auto v : g.neighbourhood_including(u)) {
+            // std::cerr << v << " ";
+            g.set_status(v, DOMINATED);
+        }
+        // std::cerr << std::endl;
     }
 
-    for (auto u : g.nodes) assert(g.get_status(u) == DOMINATED);
+    for (auto u : g.nodes()) assert(g.get_status(u) == DOMINATED);
 }

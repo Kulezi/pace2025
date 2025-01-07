@@ -37,20 +37,25 @@ struct Exact {
     void take(Instance g, int v, std::vector<int> &best_ds, int level) {
         g.take(v);
 
+    
         auto split = g.split();
         #if BENCH
         if (split.size() >= 2) {
             n_splits++;
         }
         #endif
+        std::cerr << "SPLIT " << v << std::endl;
         // TODO: each components needs at least 1 node, hence if |ds| + |#ccs| > |best| return.
         for (auto &cc : split) {
+            cc.print();
+        }
+        for (auto &cc : split) {
+
             std::vector<int> ds;
             RRules::reduce(cc, rules);
             solve_branching(cc, ds, level + 1);
 
             for (auto i : ds) g.ds.push_back(i);
-
             if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
         }
 
@@ -69,11 +74,11 @@ struct Exact {
         }
 
         // Branch 0: v belongs to DS -> dominate N(v)
-        if (g.deg(v) != 1) take(g, v, best_ds, level + 1);
+        if (g.deg(v) != 1) take(g.clone(), v, best_ds, level + 1);
 
         // Branches 1, ..., deg(v): v doesn't belong to DS -> take any neighbour to DS.
-        for (auto u : g.adj[v]) {
-            take(g, u, best_ds, level + 1);
+        for (auto u : g.neighbourhood_excluding(v)) {
+            take(g.clone(), u, best_ds, level + 1);
         }
     }
 
@@ -90,8 +95,8 @@ struct Exact {
         vector<int> best_ds;
 
         for (int mask = 0; mask < (1 << n); mask++) {
-            vector<int> dominated(g.next_free_id, false);
-            auto node = g.nodes.begin();
+            vector<int> dominated(g.n_nodes()+1, false);
+            auto node = g.nodes().begin();
 
             vector<int> ds;
             for (int i = 0; i < n; i++) {
@@ -99,14 +104,14 @@ struct Exact {
                 if (mask >> i & 1) {
                     ds.push_back(v);
                     dominated[v] = true;
-                    for (auto u : g.adj[v]) dominated[u] = true;
+                    for (auto u : g.neighbourhood_excluding(v)) dominated[u] = true;
                 }
 
                 ++node;
             }
 
             bool is_domset = true;
-            for (auto v : g.nodes) {
+            for (auto v : g.nodes()) {
                 if (!dominated[v]) {
                     is_domset = false;
                     break;
