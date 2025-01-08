@@ -75,7 +75,7 @@ struct Instance {
         *this = i;
         graph = graph->clone();
 
-        auto vertices = graph->vertices();
+        auto vertices = std::vector(graph->vertices().begin(), graph->vertices().end());
         for (auto i : vertices) {
             if (find(to_take.begin(), to_take.end(), i) == to_take.end()) remove_node(i);
         }
@@ -95,9 +95,6 @@ struct Instance {
 
     void take(int v) {
         assert(status[v] != TAKEN);
-        std::cerr << "[";
-        for (auto i : ds) std::cerr << i << " ";
-        std::cerr << "]" << "+ " << v << std::endl;
         if (is_extra[v]) {
             for (auto u : neighbourhood_excluding(v)) {
                 assert(get_status(u) != TAKEN);
@@ -151,7 +148,6 @@ struct Instance {
     // Complexity: O(1)
     int add_node() {
         auto v = graph->addVertex();
-        std::cerr << "[" << v << "]" << "\n";
         assert(v == status.size());
         status.push_back(UNDOMINATED);
         is_extra.push_back(true);
@@ -202,8 +198,6 @@ struct Instance {
         std::unordered_map<int, int> component;
         int components = 0;
 
-        print();
-
         // Assign nodes to connected components using breadth-first search.
         for (auto v : graph->vertices()) {
             if (!component[v]) {
@@ -225,8 +219,6 @@ struct Instance {
                     }
                 }
 
-
-                std::cerr << "R"<< dbgv(to_take) << "\n";;
                 result.emplace_back(*this, to_take);
             }
         }

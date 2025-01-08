@@ -37,7 +37,6 @@ struct Exact {
     void take(Instance g, int v, std::vector<int> &best_ds, int level) {
         g.take(v);
 
-    
         auto split = g.split();
         #if BENCH
         if (split.size() >= 2) {

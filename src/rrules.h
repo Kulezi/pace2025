@@ -190,7 +190,6 @@ bool AlberSimpleRule2(Instance &g) {
 // Naive implementation of Simple Rule 3 - DOI 10.1007/s10479-006-0045-4, p. 6
 // ~ O(|V|^2 * (# removed nodes)) depending on the remove_node operation complexity.
 bool AlberSimpleRule3(Instance &g) {
-    std::vector<int> to_remove;
     for (auto v : g.nodes()) {
         if (g.get_status(v) != UNDOMINATED && g.deg(v) == 2) {
             auto u_1 = g.neighbourhood_excluding(v).front();
@@ -248,8 +247,12 @@ bool AlberSimpleRule4(Instance &g) {
 }
 
 const std::vector<RRules::Rule> defaults = {
-    RRules::AlberMainRule1,   RRules::AlberMainRule2,   RRules::AlberSimpleRule1,
-    RRules::AlberSimpleRule2, RRules::AlberSimpleRule3, RRules::AlberSimpleRule4,
+    // RRules::AlberMainRule1,
+    // RRules::AlberMainRule2,
+    // RRules::AlberSimpleRule1,
+    // RRules::AlberSimpleRule2, 
+    // RRules::AlberSimpleRule3, 
+    // RRules::AlberSimpleRule4,
 };
 }  // namespace RRules
 

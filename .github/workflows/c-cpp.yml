@@ -7,21 +7,39 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  install-and-build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ninja-build
+        git clone https://github.com/mabseher/htd/
+        cd htd
+        cmake .
+        sudo make install
+
+  stresstest:
+    needs: install-and-build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: make
-      run: make
-    - name: make stresstest
-      run: time make stresstest
+      run: |
+        cmake .
+        make
+    - name: stresstest
+      run: time ./stresstest.sh
 
   bench:
+    needs: install-and-build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: make
-      run: make
+      run: |
+        cmake .
+        make
     - name: make bench
-      run: make bench
-    
+      run: time ./bench.sh
