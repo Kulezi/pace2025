@@ -1,8 +1,6 @@
-for i in $(seq 1 1000); do
-    printf "\nRunning test $i\n"
-    
+for i in $(seq 1 10000); do
     # Generate random input
-    ./rg.out >rg.gr
+    ./rg.out $i >rg.gr
     if [ $? -ne 0 ]; then
         echo "Runtime error in rg.out"
         exit 1

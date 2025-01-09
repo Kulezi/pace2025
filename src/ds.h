@@ -55,11 +55,6 @@ struct Exact {
         }
 
         best_ds = g.ds;
-
-        if (level < 10) {
-            for (int i = 0; i < level; i++) std::cerr << " ";
-            std::cerr << best_ds.size() << "\n";
-        }
     }
 
     void solve_branching(Instance g, std::vector<int> &best_ds, int level = 0) {
@@ -69,11 +64,6 @@ struct Exact {
         int v = g.min_deg_node_of_status(UNDOMINATED);
         if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
         if (v == -1) {
-            // Hooray, we have a dominating set.
-            if (level < 10) {
-                for (int i = 0; i < level; i++) std::cerr << " ";
-                std::cerr << best_ds.size() << "\n";
-            }
             best_ds = g.ds;
             return;
         }
