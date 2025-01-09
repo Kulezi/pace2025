@@ -8,14 +8,20 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
     - name: make
       run: make
     - name: make stresstest
-      run: make stresstest
+      run: time make stresstest
+
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: make
+      run: make
     - name: make bench
       run: make bench
+    

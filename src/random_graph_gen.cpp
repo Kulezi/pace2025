@@ -1,11 +1,12 @@
 #include <bits/stdc++.h>
 using namespace std;
-int R(int a, int b) {
-    static mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-    return uniform_int_distribution<int>(a, b)(rng);
-}
-int32_t main() {
-    srand(R(1, 123891213));
+static mt19937 rng;
+int R(int a, int b) { return uniform_int_distribution<int>(a, b)(rng); }
+int32_t main(int argc, char *argv[]) {
+    assert(argc > 1);
+    hash<string> h;
+
+    rng.seed(h(argv[1]));
     cout << "p ds ";
     int n = R(1, 16);
     int m = R(0, (n * (n - 1) / 2));
@@ -17,7 +18,7 @@ int32_t main() {
         }
     }
 
-    random_shuffle(v.begin(), v.end());
+    shuffle(v.begin(), v.end(), rng);
     while ((int)v.size() > m) v.pop_back();
     for (auto [a, b] : v) {
         if (R(0, 1)) swap(a, b);
