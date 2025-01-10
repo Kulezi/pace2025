@@ -242,13 +242,13 @@ bool AlberSimpleRule4(Instance &g) {
 }
 
 const std::vector<RRules::Rule> defaults_preprocess = {
-    RRules::AlberMainRule1,   RRules::AlberMainRule2,   RRules::AlberSimpleRule1,
-    RRules::AlberSimpleRule2, RRules::AlberSimpleRule3, RRules::AlberSimpleRule4,
+    RRules::AlberSimpleRule1, RRules::AlberSimpleRule2, RRules::AlberSimpleRule3,
+    RRules::AlberSimpleRule4, RRules::AlberMainRule1,   RRules::AlberMainRule2,
 };
 
 const std::vector<RRules::Rule> defaults_branching = {
-    RRules::AlberMainRule1,   RRules::AlberSimpleRule1, RRules::AlberSimpleRule2,
-    RRules::AlberSimpleRule3, RRules::AlberSimpleRule4,
+    RRules::AlberSimpleRule1, RRules::AlberSimpleRule2, RRules::AlberSimpleRule3,
+    RRules::AlberSimpleRule4, RRules::AlberMainRule1,
 };
 }  // namespace RRules
 
