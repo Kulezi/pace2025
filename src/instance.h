@@ -16,7 +16,6 @@ enum Status { UNDOMINATED, DOMINATED, TAKEN };
 // Nodes are marked with a domination status.
 // Node labels are assigned incrementally starting with 1.
 struct Instance {
-    int n_edges;
     int next_free_id;
 
     // List of nodes, sorted by increasing node id.
@@ -35,7 +34,7 @@ struct Instance {
     std::vector<int> ds;
 
     // Constructs graph from input stream assuming DIMACS-like .gr format.
-    Instance(std::istream &in) : n_edges(0), ds{} {
+    Instance(std::istream &in) : ds{} {
         std::string line;
         int E = 0;
         while (std::getline(in, line)) {
@@ -49,12 +48,12 @@ struct Instance {
                 int a = stoi(s);
                 int b;
                 tokens >> b;
-
+                --E;
                 add_edge(a, b);
             }
         }
 
-        assert(E == n_edges);
+        assert(E == 0);
     }
 
     void parse_header(std::stringstream &tokens, int &E) {
@@ -72,12 +71,10 @@ struct Instance {
     }
 
     Instance(Instance i, std::vector<int> to_take) {
-        *this = i;
         sort(to_take.begin(), to_take.end());
+        *this = i;
         nodes = to_take;
-        n_edges = 0;
-        for (auto v : nodes) n_edges += adj[v].size();
-        n_edges /= 2;
+
         ds = {};
     }
 
@@ -103,7 +100,6 @@ struct Instance {
     // Complexity: O(deg(v) + sum over deg(v) of neighbours)
     void remove_node(int v) {
         if (find(nodes.begin(), nodes.end(), v) == nodes.end()) return;
-        n_edges -= (int)adj[v].size();
         for (auto u : adj[v]) {
             remove(adj[u], v);
             assert(is_sorted(adj[u].begin(), adj[u].end()));
@@ -121,13 +117,11 @@ struct Instance {
     // Adds an edge between nodes with id's u and v.
     // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
     void add_edge(int u, int v) {
-        n_edges++;
         insert(adj[u], v);
         insert(adj[v], u);
     }
 
     void remove_edge(int v, int w) {
-        n_edges--;
         remove(adj[v], w);
         remove(adj[w], v);
     }
@@ -136,6 +130,12 @@ struct Instance {
         auto res = adj[v];
         insert(res, v);
         return res;
+    }
+
+    int n_edges() {
+        int sum_deg = 0;
+        for (auto i : nodes) sum_deg += deg(i);
+        return sum_deg / 2;
     }
 
     const std::vector<int> neighbourhood_excluding(int v) { return adj[v]; }
@@ -180,6 +180,7 @@ struct Instance {
         std::vector<int> component(next_free_id + 1, 0);
         int components = 0;
 
+
         // Assign nodes to connected components using breadth-first search.
         for (auto v : nodes) {
             if (!component[v]) {
@@ -208,8 +209,10 @@ struct Instance {
         return result;
     }
 
+
+
     void print() {
-        std::cerr << "[n = " << n_nodes() << ",\tm = " << n_edges << "]\n";
+        std::cerr << "[n = " << n_nodes() << ",\tm = " << n_edges() << "]\n";
         for (int i : nodes) {
             std::cerr << "color(" << i << ") = " << get_status(i) << "\n";
         }
