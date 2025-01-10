@@ -18,7 +18,6 @@ enum Status { UNDOMINATED, DOMINATED, TAKEN };
 struct Instance {
     int n_edges;
     int next_free_id;
-    std::string problem;
 
     // List of nodes, sorted by increasing node id.
     std::vector<int> nodes;
@@ -45,6 +44,7 @@ struct Instance {
             tokens >> s;
             if (s[0] == 'c') continue;
             if (s[0] == 'p') {
+                string problem;
                 int n_nodes;
                 tokens >> problem >> n_nodes >> E;
                 assert(problem == "ds");
