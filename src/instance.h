@@ -181,16 +181,13 @@ struct Instance {
 
     // Separates the nodes of a graph into connected components.
     std::vector<std::vector<int>> split() const {
-        std::vector<std::vector<int>> result;
-
-        std::vector<int> component(next_free_id + 1, 0);
+        std::vector<int> component(next_free_id + 1, -1);
         int components = 0;
 
         // Assign nodes to connected components using breadth-first search.
         for (auto v : nodes) {
-            if (!component[v]) {
-                std::vector<int> to_take;
-                component[v] = ++components;
+            if (component[v] < 0) {
+                component[v] = components;
 
                 std::queue<int> q;
                 q.push(v);
@@ -198,20 +195,23 @@ struct Instance {
                     int w = q.front();
                     q.pop();
 
-                    to_take.push_back(w);
                     for (auto u : adj[w]) {
-                        if (!component[u]) {
-                            component[u] = component[w];
+                        if (component[u] < 0) {
+                            component[u] = components;
                             q.push(u);
                         }
                     }
                 }
 
-                sort(to_take.begin(), to_take.end());
-                result.push_back(to_take);
+                ++components;
             }
         }
 
+        if (components == 1) return {};
+        std::vector<std::vector<int>> result(components, std::vector<int>());
+        for (auto v : nodes) {
+            result[component[v]].push_back(v);
+        }
         return result;
     }
 
