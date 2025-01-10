@@ -207,7 +207,7 @@ struct Instance {
             }
         }
 
-        if (components == 1) return {};
+        if (components <= 1) return {};
         std::vector<std::vector<int>> result(components, std::vector<int>());
         for (auto v : nodes) {
             result[component[v]].push_back(v);
