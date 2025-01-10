@@ -38,6 +38,11 @@ struct Exact {
             n_splits++;
         }
 #endif
+        if (split.size() <= 1) {
+            RRules::reduce(g, rules_branch);
+            solve_branching(g, best_ds, level);
+            return;
+        }
 
         // TODO: each components needs at least 1 node, hence if |ds| + |#ccs| > |best| return.
         for (auto &cc : split) {
