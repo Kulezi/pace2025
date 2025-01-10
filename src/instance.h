@@ -70,12 +70,18 @@ struct Instance {
         next_free_id = n_nodes + 1;
     }
 
-    Instance(Instance i, std::vector<int> to_take) {
-        sort(to_take.begin(), to_take.end());
-        *this = i;
-        nodes = to_take;
+    Instance(Instance &i, std::vector<int> to_take) : nodes(to_take), ds({}) {
+        assert(is_sorted(nodes.begin(), nodes.end()));
+        next_free_id = to_take.back()+1;
+        adj.resize(next_free_id+1, {});
+        status.resize(next_free_id+1, UNDOMINATED);
+        is_extra.resize(next_free_id+1, false);
 
-        ds = {};
+        for (auto v : nodes) {
+            adj[v] = i.adj[v];
+            status[v] = i.status[v];
+            is_extra[v] = i.is_extra[v];
+        }
     }
 
     int n_nodes() { return nodes.size(); }
@@ -202,6 +208,7 @@ struct Instance {
                     }
                 }
 
+                sort(to_take.begin(), to_take.end());
                 result.emplace_back(*this, to_take);
             }
         }
