@@ -38,21 +38,22 @@ struct Exact {
             n_splits++;
         }
 #endif
+
         // TODO: each components needs at least 1 node, hence if |ds| + |#ccs| > |best| return.
         for (auto &cc : split) {
             std::vector<int> ds;
-            RRules::reduce(cc, rules_branch);
-            solve_branching(cc, ds, level + 1);
+            g.nodes = cc;
+            RRules::reduce(g, rules_branch);
+            solve_branching(g, ds, level + 1);
 
-            for (auto i : ds) g.ds.push_back(i);
-
+            g.ds.insert(g.ds.end(), ds.begin()+g.ds.size(), ds.end());
             if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
         }
 
         best_ds = g.ds;
     }
 
-    void solve_branching(Instance g, std::vector<int> &best_ds, int level = 0) {
+    void solve_branching(const Instance g, std::vector<int> &best_ds, int level = 0) {
 #if BENCH
         branch_calls++;
 #endif

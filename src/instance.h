@@ -84,13 +84,13 @@ struct Instance {
         }
     }
 
-    int n_nodes() { return nodes.size(); }
+    int n_nodes() const { return nodes.size(); }
 
     void set_status(int v, Status c) { status[v] = c; }
 
-    Status get_status(int v) { return status[v]; }
+    Status get_status(int v) const { return status[v]; }
 
-    int deg(int v) { return (int)adj[v].size(); }
+    int deg(int v) const { return (int)adj[v].size(); }
 
     // Creates and returns the id of the created node.
     // Complexity: O(1)
@@ -132,25 +132,25 @@ struct Instance {
         remove(adj[w], v);
     }
 
-    const std::vector<int> neighbourhood_including(int v) {
+    const std::vector<int> neighbourhood_including(int v) const {
         auto res = adj[v];
         insert(res, v);
         return res;
     }
 
-    int n_edges() {
+    int n_edges() const {
         int sum_deg = 0;
         for (auto i : nodes) sum_deg += deg(i);
         return sum_deg / 2;
     }
 
-    const std::vector<int> neighbourhood_excluding(int v) { return adj[v]; }
+    const std::vector<int> neighbourhood_excluding(int v) const { return adj[v]; }
 
-    bool has_edge(int u, int v) {
+    bool has_edge(int u, int v) const {
         return std::find(adj[u].begin(), adj[u].end(), v) != adj[u].end();
     }
 
-    int min_deg_node_of_status(Status s) {
+    int min_deg_node_of_status(Status s) const {
         int best_v = -1;
         for (auto v : nodes)
             if (get_status(v) == s && (best_v == -1 || deg(v) < deg(best_v))) best_v = v;
@@ -179,13 +179,12 @@ struct Instance {
         remove_node(v);
     }
 
-    // Splits the graph into connected components.
-    std::vector<Instance> split() {
-        std::vector<Instance> result;
+    // Separates the nodes of a graph into connected components.
+    std::vector<std::vector<int>> split() const {
+        std::vector<std::vector<int>> result;
 
         std::vector<int> component(next_free_id + 1, 0);
         int components = 0;
-
 
         // Assign nodes to connected components using breadth-first search.
         for (auto v : nodes) {
@@ -209,7 +208,7 @@ struct Instance {
                 }
 
                 sort(to_take.begin(), to_take.end());
-                result.emplace_back(*this, to_take);
+                result.push_back(to_take);
             }
         }
 
@@ -218,7 +217,7 @@ struct Instance {
 
 
 
-    void print() {
+    void print() const {
         std::cerr << "[n = " << n_nodes() << ",\tm = " << n_edges() << "]\n";
         for (int i : nodes) {
             std::cerr << "color(" << i << ") = " << get_status(i) << "\n";
