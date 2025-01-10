@@ -44,18 +44,7 @@ struct Instance {
             tokens >> s;
             if (s[0] == 'c') continue;
             if (s[0] == 'p') {
-                string problem;
-                int n_nodes;
-                tokens >> problem >> n_nodes >> E;
-                assert(problem == "ds");
-                adj = std::vector(n_nodes + 1, std::vector<int>());
-                status = std::vector(n_nodes + 1, UNDOMINATED);
-                is_extra = std::vector(n_nodes + 1, false);
-                for (int i = 1; i <= n_nodes; i++) {
-                    nodes.push_back(i);
-                }
-
-                next_free_id = n_nodes + 1;
+                parse_header(tokens, E);
             } else {
                 int a = stoi(s);
                 int b;
@@ -68,7 +57,19 @@ struct Instance {
         assert(E == n_edges);
     }
 
-    int n_nodes() { return nodes.size(); }
+    void parse_header(std::stringstream &tokens, int &E) {
+        std::string problem;
+        int n_nodes;
+        tokens >> problem >> n_nodes >> E;
+        assert(problem == "ds");
+        adj.resize(n_nodes + 1);
+        status.resize(n_nodes + 1, UNDOMINATED);
+        is_extra.resize(n_nodes + 1, false);
+        for (int i = 1; i <= n_nodes; ++i) {
+            nodes.push_back(i);
+        }
+        next_free_id = n_nodes + 1;
+    }
 
     Instance(Instance i, std::vector<int> to_take) {
         *this = i;
@@ -80,9 +81,76 @@ struct Instance {
         ds = {};
     }
 
+    int n_nodes() { return nodes.size(); }
+
     void set_status(int v, Status c) { status[v] = c; }
 
     Status get_status(int v) { return status[v]; }
+
+    int deg(int v) { return (int)adj[v].size(); }
+
+    // Creates and returns the id of the created node.
+    // Complexity: O(1)
+    int add_node() {
+        adj.push_back({});
+        nodes.push_back(next_free_id);
+        status.push_back(UNDOMINATED);
+        is_extra.push_back(true);
+        return next_free_id++;
+    }
+
+    // Removes the node with given id.
+    // Complexity: O(deg(v) + sum over deg(v) of neighbours)
+    void remove_node(int v) {
+        if (find(nodes.begin(), nodes.end(), v) == nodes.end()) return;
+        n_edges -= (int)adj[v].size();
+        for (auto u : adj[v]) {
+            remove(adj[u], v);
+            assert(is_sorted(adj[u].begin(), adj[u].end()));
+        }
+        adj[v].clear();
+
+        remove(nodes, v);
+        assert(is_sorted(nodes.begin(), nodes.end()));
+    }
+
+    void remove_nodes(const std::vector<int> &l) {
+        for (auto &v : l) remove_node(v);
+    }
+
+    // Adds an edge between nodes with id's u and v.
+    // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
+    void add_edge(int u, int v) {
+        n_edges++;
+        insert(adj[u], v);
+        insert(adj[v], u);
+    }
+
+    void remove_edge(int v, int w) {
+        n_edges--;
+        remove(adj[v], w);
+        remove(adj[w], v);
+    }
+
+    std::vector<int> neighbourhood_including(int v) {
+        auto res = adj[v];
+        insert(res, v);
+        return res;
+    }
+
+    std::vector<int> neighbourhood_excluding(int v) { return adj[v]; }
+
+    bool has_edge(int u, int v) {
+        return std::find(adj[u].begin(), adj[u].end(), v) != adj[u].end();
+    }
+
+    int min_deg_node_of_status(Status s) {
+        int best_v = -1;
+        for (auto v : nodes)
+            if (get_status(v) == s && (best_v == -1 || deg(v) < deg(best_v))) best_v = v;
+
+        return best_v;
+    }
 
     void take(int v) {
         assert(status[v] != TAKEN);
@@ -103,88 +171,6 @@ struct Instance {
         }
 
         remove_node(v);
-    }
-
-    int deg(int v) { return (int)adj[v].size(); }
-
-    // Adds an edge between nodes with id's u and v.
-    // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
-    void add_edge(int u, int v) {
-        n_edges++;
-        insert(adj[u], v);
-        insert(adj[v], u);
-    }
-
-    // Removes the node with given id.
-    // Complexity: O(deg(v) + sum over deg(v) of neighbours)
-    void remove_node(int v) {
-        if (find(nodes.begin(), nodes.end(), v) == nodes.end()) return;
-        n_edges -= (int)adj[v].size();
-        for (auto u : adj[v]) {
-            remove(adj[u], v);
-            assert(is_sorted(adj[u].begin(), adj[u].end()));
-        }
-        adj[v].clear();
-
-        remove(nodes, v);
-        assert(is_sorted(nodes.begin(), nodes.end()));
-    }
-
-    void remove_nodes(std::vector<int> &l) {
-        for (auto &v : l) remove_node(v);
-    }
-
-    void remove_nodes(std::vector<int> &&l) {
-        for (auto &v : l) remove_node(v);
-    }
-
-    void remove_edge(int v, int w) {
-        n_edges--;
-        remove(adj[v], w);
-        remove(adj[w], v);
-    }
-
-    // Creates and returns the id of the created node.
-    // Complexity: O(1)
-    int add_node() {
-        adj.push_back({});
-        nodes.push_back(next_free_id);
-        status.push_back(UNDOMINATED);
-        is_extra.push_back(true);
-        return next_free_id++;
-    }
-
-    std::vector<int> neighbourhood_including(int v) {
-        auto res = adj[v];
-        insert(res, v);
-        return res;
-    }
-
-    std::vector<int> neighbourhood_excluding(int v) { return adj[v]; }
-
-    bool has_edge(int u, int v) {
-        return std::find(adj[u].begin(), adj[u].end(), v) != adj[u].end();
-    }
-
-    void print() {
-        std::cerr << "n = " << n_nodes() << ",\tm = " << n_edges << "\n";
-        for (int i : nodes) {
-            std::cerr << i << " color: " << get_status(i) << "\n";
-        }
-        for (int i : nodes) {
-            for (auto j : adj[i]) {
-                if (j > i) continue;
-                std::cerr << i << " " << j << "\n";
-            }
-        }
-    }
-
-    int min_deg_node_of_status(Status s) {
-        int best_v = -1;
-        for (auto v : nodes)
-            if (get_status(v) == s && (best_v == -1 || deg(v) < deg(best_v))) best_v = v;
-
-        return best_v;
     }
 
     // Splits the graph into connected components.
@@ -220,6 +206,19 @@ struct Instance {
         }
 
         return result;
+    }
+
+    void print() {
+        std::cerr << "[n = " << n_nodes() << ",\tm = " << n_edges << "]\n";
+        for (int i : nodes) {
+            std::cerr << "color(" << i << ") = " << get_status(i) << "\n";
+        }
+        for (int i : nodes) {
+            for (auto j : adj[i]) {
+                if (j > i) continue;
+                std::cerr << i << " " << j << "\n";
+            }
+        }
     }
 };
 
