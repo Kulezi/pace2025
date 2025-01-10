@@ -4,7 +4,6 @@
 
 #include "instance.h"
 #include "setops.h"
-#include <functional>
 #define dbg(x) #x << " = " << x << " "
 namespace RRules {
 
@@ -242,9 +241,14 @@ bool AlberSimpleRule4(Instance &g) {
     return !to_remove.empty();
 }
 
-const std::vector<RRules::Rule> defaults = {
+const std::vector<RRules::Rule> defaults_preprocess = {
     RRules::AlberMainRule1,   RRules::AlberMainRule2,   RRules::AlberSimpleRule1,
     RRules::AlberSimpleRule2, RRules::AlberSimpleRule3, RRules::AlberSimpleRule4,
+};
+
+const std::vector<RRules::Rule> defaults_branching = {
+    RRules::AlberMainRule1,   RRules::AlberSimpleRule1, RRules::AlberSimpleRule2,
+    RRules::AlberSimpleRule3, RRules::AlberSimpleRule4,
 };
 }  // namespace RRules
 

@@ -4,9 +4,7 @@
 #include "instance.h"
 #include "rrules.h"
 int main() {
-    std::vector<RRules::Rule> reduction_rules = RRules::defaults;
-
-    DomSet::Exact ds(reduction_rules);
+    DomSet::Exact ds(RRules::defaults_preprocess, RRules::defaults_preprocess);
 
     Instance g(std::cin);
     auto ans = ds.solve(g, std::cerr);

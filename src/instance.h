@@ -132,13 +132,13 @@ struct Instance {
         remove(adj[w], v);
     }
 
-    std::vector<int> neighbourhood_including(int v) {
+    const std::vector<int> neighbourhood_including(int v) {
         auto res = adj[v];
         insert(res, v);
         return res;
     }
 
-    std::vector<int> neighbourhood_excluding(int v) { return adj[v]; }
+    const std::vector<int> neighbourhood_excluding(int v) { return adj[v]; }
 
     bool has_edge(int u, int v) {
         return std::find(adj[u].begin(), adj[u].end(), v) != adj[u].end();

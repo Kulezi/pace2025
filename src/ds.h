@@ -16,8 +16,9 @@ struct Exact {
     size_t branch_calls = 0;
     size_t n_splits = 0;
 
-    std::vector<RRules::Rule> rules;
-    Exact(std::vector<RRules::Rule> _rules) : rules(_rules) {}
+    std::vector<RRules::Rule> rules, rules_branch;
+    Exact(std::vector<RRules::Rule> _rules, std::vector<RRules::Rule> _rules_branch)
+        : rules(_rules), rules_branch(_rules_branch) {}
 
     std::vector<int> solve(Instance g, std::ostream &out) {
         std::vector<int> ds;
@@ -32,15 +33,15 @@ struct Exact {
         g.take(v);
 
         auto split = g.split();
-        #if BENCH
+#if BENCH
         if (split.size() >= 2) {
             n_splits++;
         }
-        #endif
+#endif
         // TODO: each components needs at least 1 node, hence if |ds| + |#ccs| > |best| return.
         for (auto &cc : split) {
             std::vector<int> ds;
-            RRules::reduce(cc, rules);
+            RRules::reduce(cc, rules_branch);
             solve_branching(cc, ds, level + 1);
 
             for (auto i : ds) g.ds.push_back(i);
@@ -52,9 +53,9 @@ struct Exact {
     }
 
     void solve_branching(Instance g, std::vector<int> &best_ds, int level = 0) {
-        #if BENCH
-            branch_calls++;
-        #endif
+#if BENCH
+        branch_calls++;
+#endif
         int v = g.min_deg_node_of_status(UNDOMINATED);
         if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
         if (v == -1) {
