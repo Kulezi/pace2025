@@ -116,6 +116,17 @@ struct Exact {
 
         print(best_ds, out);
     }
+
+    void solve_tw(Instance g, std::ostream &out) {
+        RRules::reduce(g, rules);
+
+        // make htd::graph from instance, together with a reverse mapping of vertex numbers to retrieve the dominating set later
+        
+        // Then run decomposition on it.
+
+        // Then run dynamic programming on the decomposition.
+
+    }
 };
 }  // namespace DomSet
 #endif  // _DS_H
