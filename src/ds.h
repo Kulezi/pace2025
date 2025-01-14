@@ -3,6 +3,7 @@
 #include "instance.h"
 #include "rrules.h"
 #include "setops.h"
+#include "td.h"
 #define dbg(x) #x << " = " << x << " "
 
 namespace DomSet {
@@ -46,7 +47,7 @@ struct Exact {
             RRules::reduce(g, rules_branch);
             solve_branching(g, ds, level + 1);
 
-            g.ds.insert(g.ds.end(), ds.begin()+g.ds.size(), ds.end());
+            g.ds.insert(g.ds.end(), ds.begin() + g.ds.size(), ds.end());
             if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
         }
 
@@ -117,15 +118,13 @@ struct Exact {
         print(best_ds, out);
     }
 
+    void calc_c(int v, int f) {}
+
     void solve_tw(Instance g, std::ostream &out) {
-        RRules::reduce(g, rules);
-
-        // make htd::graph from instance, together with a reverse mapping of vertex numbers to retrieve the dominating set later
-        
-        // Then run decomposition on it.
-
-        // Then run dynamic programming on the decomposition.
-
+        // RRules::reduce(g, rules);
+        TreeDecomposition td(g);
+        td.print();
+        // recover result...
     }
 };
 }  // namespace DomSet
