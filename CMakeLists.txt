@@ -4,7 +4,7 @@ project(SourceCode)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra")
+# set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra")
 
 # Include the src directory and the external directory (htd)
 include_directories(${CMAKE_SOURCE_DIR}/src)

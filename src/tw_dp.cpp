@@ -5,7 +5,7 @@
 #include "rrules.h"
 #include "td.h"
 int main(int argc, char *argv[]) {
-    std::ifstream f("/home/dvdpawcio/pace2025/in/tiny/testset/test.gr");
+    std::ifstream f(argv[1]);
     Instance g(f);
     auto td = TreeDecomposition(g);
     DomSet::Exact ds(RRules::defaults_preprocess, RRules::defaults_branching);

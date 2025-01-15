@@ -58,7 +58,8 @@ struct TreeDecomposition {
         delete graph;
     };
 
-    DecompositionNode operator[](int v) { return decomp[v]; }
+    DecompositionNode &operator[](int v) { return decomp[v]; }
+    int root;
 
    private:
     htd::IMutableGraph *graph;
@@ -66,7 +67,6 @@ struct TreeDecomposition {
     htd::ITreeDecomposition *htdDecomposition;
     Instance &g;
     std::vector<DecompositionNode> decomp;
-    int root;
 
     void loadGraph(Instance &g) {
         // Dummy value for 1-indexing.
@@ -91,7 +91,7 @@ struct TreeDecomposition {
             new htd::TreeDecompositionOptimizationOperation(manager.get(), f.clone());
 
         operation->setManagementInstance(manager.get());
-        operation->setVertexSelectionStrategy(new htd::RandomVertexSelectionStrategy(10));
+        operation->setVertexSelectionStrategy(new htd::RandomVertexSelectionStrategy(100));
         operation->addManipulationOperation(new htd::NormalizationOperation(manager.get()));
 
         manager->orderingAlgorithmFactory().setConstructionTemplate(
@@ -104,7 +104,7 @@ struct TreeDecomposition {
         htd::IterativeImprovementTreeDecompositionAlgorithm algorithm(manager.get(), baseAlgorithm,
                                                                       f.clone());
 
-        algorithm.setIterationCount(10);
+        algorithm.setIterationCount(0);
         algorithm.setNonImprovementLimit(3);
         htdDecomposition = algorithm.computeDecomposition(*graph);
     }
@@ -213,7 +213,8 @@ struct TreeDecomposition {
             // direct child.
             for (auto to : newBag) {
                 if (g.has_edge(forgotten, to)) {
-                    root = createNode(NodeType::IntroduceEdge, decomp[root].bag, forgotten, to, root);
+                    root =
+                        createNode(NodeType::IntroduceEdge, decomp[root].bag, forgotten, to, root);
                 }
             }
 
@@ -245,7 +246,7 @@ struct TreeDecomposition {
                 break;
         }
 
-        std::cerr << vertex_label << " [";
+        std::cerr << v << "." << vertex_label << " [";
         for (auto i : node.bag) std::cerr << " " << i;
         std::cerr << " ]\n";
 
@@ -254,6 +255,18 @@ struct TreeDecomposition {
     };
 
    public:
-    void print() { printDecomp(root, 0); }
+    int n_nodes() { return decomp.size(); }
+
+    size_t width() {
+        size_t max_width = 0;
+        for (auto &v : decomp)
+            if (max_width < v.bag.size()) max_width = v.bag.size();
+        return max_width;
+    }
+
+    void print() {
+        std::cerr << "n_nodes: " << n_nodes() << ", width: " << width() << "\n";
+        printDecomp(root, 0);
+    }
 };
 #endif  // _TD_H
