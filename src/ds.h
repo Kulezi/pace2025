@@ -12,7 +12,7 @@ namespace DomSet {
 // Branching: Nie wchodź jak już wykraczasz za najlepszy wynik.
 // Bonus: jak jakąs heura umiesz to zrobić dużo wczesniej to zrob.
 // Może regułki albera w branchingu monza na biezaco.
-constexpr int INF = 1000;
+constexpr int UNSET = -1, INF = 1'000'000;
 
 struct Exact {
     size_t branch_calls = 0;
@@ -164,27 +164,46 @@ struct Exact {
         return '1';
     }
 
-    int calc_c(TreeDecomposition &td, int t, TernaryFun f) {
-        int res = calc_cc(td, t, f);
-        // std::cerr << "[" << t << ", ";
-        // for (int i = 0; i < td[t].bag.size(); i++) {
-        //     std::cerr << val(at(f, i));
-        // }
-        // std::cerr << "] = ";
-        // if (res >= INF)
-        //     std::cerr << "INF";
-        // else
-        //     std::cerr << res;
-        // std::cerr << std::endl;
+    TernaryFun toInt(std::string s) {
+        int res = 0;
+        for (int i = 0; i < s.size(); i++) {
+            res += pow3(i) * (s[i] - '0');
+        }
         return res;
     }
 
-    int calc_cc(TreeDecomposition &td, int t, TernaryFun f) {
+    std::string toString(TernaryFun f) {
+        if (f == 0) return "0";
+        std::string res;
+        while (f > 0) {
+            res += (char)((f % 3) + '0');
+            f /= 3;
+        }
+
+        return res;
+    }
+
+    // int calc_c(TreeDecomposition &td, int t, TernaryFun f) {
+    //     int res = calc_cc(td, t, f);
+    //     // std::cerr << "[" << t << ", ";
+    //     // for (int i = 0; i < td[t].bag.size(); i++) {
+    //     //     std::cerr << val(at(f, i));
+    //     // }
+    //     // std::cerr << "] = ";
+    //     // if (res >= INF)
+    //     //     std::cerr << "INF";
+    //     // else
+    //     //     std::cerr << res;
+    //     // std::cerr << std::endl;
+    //     return res;
+    // }
+
+    int calc_c(TreeDecomposition &td, int t, TernaryFun f) {
         auto &node = td[t];
         assert(f < pow3(node.bag.size()));
-        if (!c[t].empty() && c[t][f] != INF) return c[t][f];
-        if (c[t].empty()) c[t].resize(pow3(node.bag.size()), INF);
-
+        if (!c[t].empty() && c[t][f] != UNSET) return c[t][f];
+        if (c[t].empty()) c[t].resize(pow3(node.bag.size()), UNSET);
+        c[t][f] = INF;
         auto bag_pos = [&](const std::vector<int> &bag, int v) -> int {
             int pos = 0;
             while (bag[pos] != v) ++pos;
@@ -193,17 +212,14 @@ struct Exact {
 
         switch (node.type) {
             case NodeType::Leaf:
-                return c[t][f] = 0;
+                return c[t][f] = 0;  // OK
             case NodeType::IntroduceVertex: {
                 int pos = bag_pos(node.bag, node.v);
                 Color f_v = at(f, pos);
                 if (f_v == Color::WHITE)
-                    return c[t][f] = INF;
+                    return c[t][f] = INF;  // OK
                 else if (f_v == Color::GRAY) {
-                    int cc = cut(f, pos);
-                    int res = calc_c(td, node.lChild, cut(f, pos));
-
-                    return c[t][f] = res;
+                    return c[t][f] = calc_c(td, node.lChild, cut(f, pos));
                 } else {
                     assert(f_v == Color::BLACK);
                     return c[t][f] = 1 + calc_c(td, node.lChild, cut(f, pos));
@@ -249,11 +265,11 @@ struct Exact {
                     for (int i = 0; i < N; i++) {
                         if (at(f, i) == Color::WHITE) {
                             if (mask >> zero & 1) {
-                                set(f_1, i, Color::GRAY);
-                                set(f_2, i, Color::WHITE);
+                                f_1 = set(f_1, i, Color::GRAY);
+                                f_2 = set(f_2, i, Color::WHITE);
                             } else {
-                                set(f_1, i, Color::WHITE);
-                                set(f_2, i, Color::GRAY);
+                                f_1 = set(f_1, i, Color::WHITE);
+                                f_2 = set(f_2, i, Color::GRAY);
                             }
                             ++zero;
                         }
@@ -262,7 +278,6 @@ struct Exact {
                     c[t][f] = std::min(c[t][f], calc_c(td, node.lChild, f_1) +
                                                     calc_c(td, node.rChild, f_2) - ones);
                 }
-
                 return c[t][f];
             }
         }
@@ -271,14 +286,107 @@ struct Exact {
         throw("Unknown node type reached in calc_c!");
     }
 
-    void solve_tw(Instance g, std::ostream &out) {
+    void recover_ds(TreeDecomposition &td, int t, TernaryFun f, std::vector<int> &ds) {
+        auto &node = td[t];
+        assert(f < pow3(node.bag.size()));
+        assert(!c[t].empty() && c[t][f] != UNSET);
+        auto bag_pos = [&](const std::vector<int> &bag, int v) -> int {
+            int pos = 0;
+            while (bag[pos] != v) ++pos;
+            return pos;
+        };
+
+        switch (node.type) {
+            case NodeType::IntroduceVertex: {
+                int pos = bag_pos(node.bag, node.v);
+                Color f_v = at(f, pos);
+                assert(f_v != Color::WHITE);
+                recover_ds(td, node.lChild, cut(f, pos), ds);
+                return;
+            }
+            case NodeType::IntroduceEdge: {
+                int pos_u = bag_pos(node.bag, node.to);
+                int pos_v = bag_pos(node.bag, node.v);
+
+                Color f_u = at(f, pos_u);
+                Color f_v = at(f, pos_v);
+
+                if (f_u == Color::BLACK && f_v == Color::WHITE)
+                    recover_ds(td, node.lChild, set(f, pos_v, Color::GRAY), ds);
+                else if (f_u == Color::WHITE && f_v == Color::BLACK)
+                    recover_ds(td, node.lChild, set(f, pos_u, Color::GRAY), ds);
+                else
+                    recover_ds(td, node.lChild, f, ds);
+                return;
+            }
+            case NodeType::Forget: {
+                int pos_w = bag_pos(td[node.lChild].bag, node.v);
+                if (c[t][f] == calc_c(td, node.lChild, insert(f, pos_w, Color::BLACK))) {
+                    ds.push_back(node.v);
+                    recover_ds(td, node.lChild, insert(f, pos_w, Color::BLACK), ds);
+                } else {
+                    recover_ds(td, node.lChild, insert(f, pos_w, Color::WHITE), ds);
+                }
+                return;
+            }
+            case NodeType::Join: {
+                int ones = 0;
+                int zeros = 0;
+                int N = node.bag.size();
+                for (int i = 0; i < N; i++) {
+                    if (at(f, i) == Color::BLACK)
+                        ones++;
+                    else if (at(f, i) == Color::WHITE)
+                        zeros++;
+                }
+
+                // Iterate over all combinations of choosing f_1(v), f_2(v) for positions where f(v)
+                // = 0.
+                for (int mask = 0; mask < (1 << zeros); mask++) {
+                    int zero = 0;
+                    // The value of f_1, f_2 will be the same on all trits that ain't 0 in f, so we
+                    // don't need to touch those.
+                    TernaryFun f_1 = f, f_2 = f;
+                    for (int i = 0; i < N; i++) {
+                        if (at(f, i) == Color::WHITE) {
+                            if (mask >> zero & 1) {
+                                f_1 = set(f_1, i, Color::GRAY);
+                                f_2 = set(f_2, i, Color::WHITE);
+                            } else {
+                                f_1 = set(f_1, i, Color::WHITE);
+                                f_2 = set(f_2, i, Color::GRAY);
+                            }
+                            ++zero;
+                        }
+                    }
+
+                    if (c[t][f] ==
+                        calc_c(td, node.lChild, f_1) + calc_c(td, node.rChild, f_2) - ones) {
+                        recover_ds(td, node.lChild, f_1, ds);
+                        recover_ds(td, node.rChild, f_2, ds);
+                        return;
+                    }
+                }
+
+                assert(false && "didn't find join argument!");
+            }
+            default:
+                return;
+        }
+    }
+
+    std::vector<int> solve_tw(Instance g, std::ostream &out) {
         // RRules::reduce(g, rules);
         TreeDecomposition td(g);
-        td.print();
-        std::cerr << "root:" << td.root << "\n";
+        // td.print();
+        // std::cerr << "root:" << td.root << "\n";
         c.resize(td.n_nodes());
-        std::cerr << calc_c(td, td.root, 0) << "\n";
-        // recover result...
+        calc_c(td, td.root, 0);
+        std::vector<int> res = g.ds;
+        recover_ds(td, td.root, 0, res);
+
+        print(res, out);
+        return res;
     }
 };
 }  // namespace DomSet
