@@ -201,11 +201,8 @@ struct Exact {
                 Color f_v = at(f, pos);
                 if (f_v == Color::WHITE)
                     return c[t][f] = INF;  // OK
-                else if (f_v == Color::GRAY) {
+                else {
                     return c[t][f] = calc_c(td, node.lChild, cut(f, pos));
-                } else {
-                    assert(f_v == Color::BLACK);
-                    return c[t][f] = 1 + calc_c(td, node.lChild, cut(f, pos));
                 }
             }
             case NodeType::IntroduceEdge: {
@@ -224,18 +221,15 @@ struct Exact {
             }
             case NodeType::Forget: {
                 int pos_w = bag_pos(td[node.lChild].bag, node.v);
-                return c[t][f] = std::min(calc_c(td, node.lChild, insert(f, pos_w, Color::BLACK)),
-                                          calc_c(td, node.lChild, insert(f, pos_w, Color::WHITE)));
+                return c[t][f] =
+                           std::min(1 + calc_c(td, node.lChild, insert(f, pos_w, Color::BLACK)),
+                                    calc_c(td, node.lChild, insert(f, pos_w, Color::WHITE)));
             }
             case NodeType::Join: {
-                int ones = 0;
                 int zeros = 0;
                 int N = node.bag.size();
                 for (int i = 0; i < N; i++) {
-                    if (at(f, i) == Color::BLACK)
-                        ones++;
-                    else if (at(f, i) == Color::WHITE)
-                        zeros++;
+                    if (at(f, i) == Color::WHITE) zeros++;
                 }
 
                 // Iterate over all combinations of choosing f_1(v), f_2(v) for positions where f(v)
@@ -258,8 +252,8 @@ struct Exact {
                         }
                     }
 
-                    c[t][f] = std::min(c[t][f], calc_c(td, node.lChild, f_1) +
-                                                    calc_c(td, node.rChild, f_2) - ones);
+                    c[t][f] = std::min(c[t][f],
+                                       calc_c(td, node.lChild, f_1) + calc_c(td, node.rChild, f_2));
                 }
                 return c[t][f];
             }
@@ -304,7 +298,7 @@ struct Exact {
             }
             case NodeType::Forget: {
                 int pos_w = bag_pos(td[node.lChild].bag, node.v);
-                if (c[t][f] == calc_c(td, node.lChild, insert(f, pos_w, Color::BLACK))) {
+                if (c[t][f] == 1 + calc_c(td, node.lChild, insert(f, pos_w, Color::BLACK))) {
                     ds.push_back(node.v);
                     recover_ds(td, node.lChild, insert(f, pos_w, Color::BLACK), ds);
                 } else {
@@ -313,14 +307,10 @@ struct Exact {
                 return;
             }
             case NodeType::Join: {
-                int ones = 0;
                 int zeros = 0;
                 int N = node.bag.size();
                 for (int i = 0; i < N; i++) {
-                    if (at(f, i) == Color::BLACK)
-                        ones++;
-                    else if (at(f, i) == Color::WHITE)
-                        zeros++;
+                    if (at(f, i) == Color::WHITE) zeros++;
                 }
 
                 // Iterate over all combinations of choosing f_1(v), f_2(v) for positions where f(v)
@@ -343,8 +333,7 @@ struct Exact {
                         }
                     }
 
-                    if (c[t][f] ==
-                        calc_c(td, node.lChild, f_1) + calc_c(td, node.rChild, f_2) - ones) {
+                    if (c[t][f] == calc_c(td, node.lChild, f_1) + calc_c(td, node.rChild, f_2)) {
                         recover_ds(td, node.lChild, f_1, ds);
                         recover_ds(td, node.rChild, f_2, ds);
                         return;
