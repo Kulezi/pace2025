@@ -23,7 +23,6 @@ set(SOURCE_FILES
     src/main.cpp
     src/out_verifier.cpp
     src/random_graph_gen.cpp
-    src/tw_dp.cpp
 )
 
 # Define each executable separately

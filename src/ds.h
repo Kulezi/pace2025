@@ -26,7 +26,7 @@ struct Exact {
         std::vector<int> ds;
         RRules::reduce(g, rules);
 
-        solve_branching(g, ds);
+        solve_tw(g, ds);
         print(ds, out);
         return ds;
     }
@@ -182,21 +182,6 @@ struct Exact {
 
         return res;
     }
-
-    // int calc_c(TreeDecomposition &td, int t, TernaryFun f) {
-    //     int res = calc_cc(td, t, f);
-    //     // std::cerr << "[" << t << ", ";
-    //     // for (int i = 0; i < td[t].bag.size(); i++) {
-    //     //     std::cerr << val(at(f, i));
-    //     // }
-    //     // std::cerr << "] = ";
-    //     // if (res >= INF)
-    //     //     std::cerr << "INF";
-    //     // else
-    //     //     std::cerr << res;
-    //     // std::cerr << std::endl;
-    //     return res;
-    // }
 
     int calc_c(TreeDecomposition &td, int t, TernaryFun f) {
         auto &node = td[t];
@@ -375,18 +360,13 @@ struct Exact {
         }
     }
 
-    std::vector<int> solve_tw(Instance g, std::ostream &out) {
+    void solve_tw(Instance g, std::vector<int> &res) {
         // RRules::reduce(g, rules);
         TreeDecomposition td(g);
-        // td.print();
-        // std::cerr << "root:" << td.root << "\n";
         c.resize(td.n_nodes());
         calc_c(td, td.root, 0);
-        std::vector<int> res = g.ds;
+        res = g.ds;
         recover_ds(td, td.root, 0, res);
-
-        print(res, out);
-        return res;
     }
 };
 }  // namespace DomSet
