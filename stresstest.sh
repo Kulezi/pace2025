@@ -1,6 +1,6 @@
 for i in $(seq 1 10000); do
     # Generate random input
-    ./rg.out $i >rg.gr
+    ./random_graph_gen.out $i >rg.gr
     if [ $? -ne 0 ]; then
         echo "Runtime error in rg.out"
         exit 1
