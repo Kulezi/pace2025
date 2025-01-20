@@ -23,7 +23,7 @@ struct Exact {
         : rules(_rules), rules_branch(_rules_branch) {}
 
     std::vector<int> solve(Instance g, std::ostream &out) {
-        // RRules::reduce(g, rules);
+        RRules::reduce(g, rules);
         solve_tw(g, g.ds);
         print(g.ds, out);
         return g.ds;
@@ -181,8 +181,8 @@ struct Exact {
         return res;
     }
 
-    int calc_c(TreeDecomposition &td, int t, TernaryFun f) {
-        auto &node = td[t];
+    int calc_c(const Instance &g, TreeDecomposition &td, int t, TernaryFun f) {
+        const auto &node = td[t];
         assert(f < pow3(node.bag.size()));
         if (!c[t].empty() && c[t][f] != UNSET) return c[t][f];
         if (c[t].empty()) c[t].resize(pow3(node.bag.size()), UNSET);
@@ -199,10 +199,11 @@ struct Exact {
             case NodeType::IntroduceVertex: {
                 int pos = bag_pos(node.bag, node.v);
                 Color f_v = at(f, pos);
-                if (f_v == Color::WHITE)
+                // This vertex could already be dominated by some reduction rule.
+                if (f_v == Color::WHITE && g.get_status(node.v) != DOMINATED)
                     return c[t][f] = INF;  // OK
                 else {
-                    return c[t][f] = calc_c(td, node.lChild, cut(f, pos));
+                    return c[t][f] = calc_c(g, td, node.lChild, cut(f, pos));
                 }
             }
             case NodeType::IntroduceEdge: {
@@ -213,17 +214,17 @@ struct Exact {
                 Color f_v = at(f, pos_v);
 
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    return c[t][f] = calc_c(td, node.lChild, set(f, pos_v, Color::GRAY));
+                    return c[t][f] = calc_c(g, td, node.lChild, set(f, pos_v, Color::GRAY));
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    return c[t][f] = calc_c(td, node.lChild, set(f, pos_u, Color::GRAY));
+                    return c[t][f] = calc_c(g, td, node.lChild, set(f, pos_u, Color::GRAY));
                 else
-                    return c[t][f] = calc_c(td, node.lChild, f);
+                    return c[t][f] = calc_c(g, td, node.lChild, f);
             }
             case NodeType::Forget: {
                 int pos_w = bag_pos(td[node.lChild].bag, node.v);
                 return c[t][f] =
-                           std::min(1 + calc_c(td, node.lChild, insert(f, pos_w, Color::BLACK)),
-                                    calc_c(td, node.lChild, insert(f, pos_w, Color::WHITE)));
+                           std::min(1 + calc_c(g, td, node.lChild, insert(f, pos_w, Color::BLACK)),
+                                    calc_c(g, td, node.lChild, insert(f, pos_w, Color::WHITE)));
             }
             case NodeType::Join: {
                 int zeros = 0;
@@ -253,7 +254,7 @@ struct Exact {
                     }
 
                     c[t][f] = std::min(c[t][f],
-                                       calc_c(td, node.lChild, f_1) + calc_c(td, node.rChild, f_2));
+                                       calc_c(g, td, node.lChild, f_1) + calc_c(g, td, node.rChild, f_2));
                 }
                 return c[t][f];
             }
@@ -263,7 +264,7 @@ struct Exact {
         throw("Unknown node type reached in calc_c!");
     }
 
-    void recover_ds(TreeDecomposition &td, int t, TernaryFun f, std::vector<int> &ds) {
+    void recover_ds(const Instance &g, TreeDecomposition &td, int t, TernaryFun f, std::vector<int> &ds) {
         auto &node = td[t];
         assert(f < pow3(node.bag.size()));
         assert(!c[t].empty() && c[t][f] != UNSET);
@@ -277,8 +278,7 @@ struct Exact {
             case NodeType::IntroduceVertex: {
                 int pos = bag_pos(node.bag, node.v);
                 Color f_v = at(f, pos);
-                assert(f_v != Color::WHITE);
-                recover_ds(td, node.lChild, cut(f, pos), ds);
+                recover_ds(g, td, node.lChild, cut(f, pos), ds);
                 return;
             }
             case NodeType::IntroduceEdge: {
@@ -289,20 +289,20 @@ struct Exact {
                 Color f_v = at(f, pos_v);
 
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    recover_ds(td, node.lChild, set(f, pos_v, Color::GRAY), ds);
+                    recover_ds(g, td, node.lChild, set(f, pos_v, Color::GRAY), ds);
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    recover_ds(td, node.lChild, set(f, pos_u, Color::GRAY), ds);
+                    recover_ds(g, td, node.lChild, set(f, pos_u, Color::GRAY), ds);
                 else
-                    recover_ds(td, node.lChild, f, ds);
+                    recover_ds(g, td, node.lChild, f, ds);
                 return;
             }
             case NodeType::Forget: {
                 int pos_w = bag_pos(td[node.lChild].bag, node.v);
-                if (c[t][f] == 1 + calc_c(td, node.lChild, insert(f, pos_w, Color::BLACK))) {
+                if (c[t][f] == 1 + calc_c(g, td, node.lChild, insert(f, pos_w, Color::BLACK))) {
                     ds.push_back(node.v);
-                    recover_ds(td, node.lChild, insert(f, pos_w, Color::BLACK), ds);
+                    recover_ds(g, td, node.lChild, insert(f, pos_w, Color::BLACK), ds);
                 } else {
-                    recover_ds(td, node.lChild, insert(f, pos_w, Color::WHITE), ds);
+                    recover_ds(g, td, node.lChild, insert(f, pos_w, Color::WHITE), ds);
                 }
                 return;
             }
@@ -333,9 +333,9 @@ struct Exact {
                         }
                     }
 
-                    if (c[t][f] == calc_c(td, node.lChild, f_1) + calc_c(td, node.rChild, f_2)) {
-                        recover_ds(td, node.lChild, f_1, ds);
-                        recover_ds(td, node.rChild, f_2, ds);
+                    if (c[t][f] == calc_c(g, td, node.lChild, f_1) + calc_c(g, td, node.rChild, f_2)) {
+                        recover_ds(g, td, node.lChild, f_1, ds);
+                        recover_ds(g, td, node.rChild, f_2, ds);
                         return;
                     }
                 }
@@ -351,9 +351,9 @@ struct Exact {
         // RRules::reduce(g, rules);
         TreeDecomposition td(g);
         c.resize(td.n_nodes());
-        calc_c(td, td.root, 0);
+        calc_c(g, td, td.root, 0);
         res = g.ds;
-        recover_ds(td, td.root, 0, res);
+        recover_ds(g, td, td.root, 0, res);
     }
 };
 }  // namespace DomSet
