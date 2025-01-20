@@ -23,12 +23,10 @@ struct Exact {
         : rules(_rules), rules_branch(_rules_branch) {}
 
     std::vector<int> solve(Instance g, std::ostream &out) {
-        std::vector<int> ds;
-        RRules::reduce(g, rules);
-
-        solve_tw(g, ds);
-        print(ds, out);
-        return ds;
+        // RRules::reduce(g, rules);
+        solve_tw(g, g.ds);
+        print(g.ds, out);
+        return g.ds;
     }
 
     void take(Instance g, int v, std::vector<int> &best_ds, int level) {
