@@ -6,10 +6,6 @@
 #include "td.h"
 namespace DomSet {
 
-// TODO: Branching po min/max stopniu.
-// Branching: Nie wchodź jak już wykraczasz za najlepszy wynik.
-// Bonus: jak jakąs heura umiesz to zrobić dużo wczesniej to zrob.
-// Może regułki albera w branchingu monza na biezaco.
 constexpr int UNSET = -1, INF = 1'000'000;
 
 struct Exact {
@@ -67,6 +63,8 @@ struct Exact {
         best_ds = g.ds;
     }
 
+    // TODO: Use heuristics to quit branching as soon as we know that the current branch is not
+    // optimal.
     void solveBranching(const Instance g, std::vector<int> &best_ds, int level = 0) {
 #if BENCH
         branch_calls++;
@@ -197,7 +195,8 @@ struct Exact {
         return res;
     }
 
-    int calcC(const Instance &g, TreeDecomposition &td, int t, TernaryFun f) {
+    // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3]
+    int getC(const Instance &g, TreeDecomposition &td, int t, TernaryFun f) {
         const auto &node = td[t];
         assert(f < pow3(node.bag.size()));
         if (!c[t].empty() && c[t][f] != UNSET) return c[t][f];
@@ -211,15 +210,15 @@ struct Exact {
 
         switch (node.type) {
             case NodeType::Leaf:
-                return c[t][f] = 0;  // OK
+                return c[t][f] = 0;
             case NodeType::IntroduceVertex: {
                 int pos = bag_pos(node.bag, node.v);
                 Color f_v = at(f, pos);
                 // This vertex could already be dominated by some reduction rule.
                 if (f_v == Color::WHITE && g.getStatus(node.v) != DOMINATED)
-                    return c[t][f] = INF;  // OK
+                    return c[t][f] = INF;
                 else {
-                    return c[t][f] = calcC(g, td, node.l_child, cut(f, pos));
+                    return c[t][f] = getC(g, td, node.l_child, cut(f, pos));
                 }
             }
             case NodeType::IntroduceEdge: {
@@ -230,17 +229,17 @@ struct Exact {
                 Color f_v = at(f, pos_v);
 
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    return c[t][f] = calcC(g, td, node.l_child, set(f, pos_v, Color::GRAY));
+                    return c[t][f] = getC(g, td, node.l_child, set(f, pos_v, Color::GRAY));
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    return c[t][f] = calcC(g, td, node.l_child, set(f, pos_u, Color::GRAY));
+                    return c[t][f] = getC(g, td, node.l_child, set(f, pos_u, Color::GRAY));
                 else
-                    return c[t][f] = calcC(g, td, node.l_child, f);
+                    return c[t][f] = getC(g, td, node.l_child, f);
             }
             case NodeType::Forget: {
                 int pos_w = bag_pos(td[node.l_child].bag, node.v);
                 return c[t][f] =
-                           std::min(1 + calcC(g, td, node.l_child, insert(f, pos_w, Color::BLACK)),
-                                    calcC(g, td, node.l_child, insert(f, pos_w, Color::WHITE)));
+                           std::min(1 + getC(g, td, node.l_child, insert(f, pos_w, Color::BLACK)),
+                                    getC(g, td, node.l_child, insert(f, pos_w, Color::WHITE)));
             }
             case NodeType::Join: {
                 int zeros = 0;
@@ -270,7 +269,7 @@ struct Exact {
                     }
 
                     c[t][f] = std::min(
-                        c[t][f], calcC(g, td, node.l_child, f_1) + calcC(g, td, node.r_child, f_2));
+                        c[t][f], getC(g, td, node.l_child, f_1) + getC(g, td, node.r_child, f_2));
                 }
                 return c[t][f];
             }
@@ -313,7 +312,7 @@ struct Exact {
             }
             case NodeType::Forget: {
                 int pos_w = bag_pos(td[node.l_child].bag, node.v);
-                if (c[t][f] == 1 + calcC(g, td, node.l_child, insert(f, pos_w, Color::BLACK))) {
+                if (c[t][f] == 1 + getC(g, td, node.l_child, insert(f, pos_w, Color::BLACK))) {
                     g.ds.push_back(node.v);
                     recoverDS(g, td, node.l_child, insert(f, pos_w, Color::BLACK));
                 } else {
@@ -349,7 +348,7 @@ struct Exact {
                     }
 
                     if (c[t][f] ==
-                        calcC(g, td, node.l_child, f_1) + calcC(g, td, node.r_child, f_2)) {
+                        getC(g, td, node.l_child, f_1) + getC(g, td, node.r_child, f_2)) {
                         recoverDS(g, td, node.l_child, f_1);
                         recoverDS(g, td, node.r_child, f_2);
                         return;
@@ -367,7 +366,7 @@ struct Exact {
         TreeDecomposition td(g);
         c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
 
-        calcC(g, td, td.root, 0);
+        getC(g, td, td.root, 0);
         recoverDS(g, td, td.root, 0);
     }
 };
