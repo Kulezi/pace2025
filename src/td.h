@@ -156,7 +156,7 @@ struct TreeDecomposition {
                 // For each disappearing edge insert an IntroduceEdge node between Forget and its
                 // direct child.
                 for (auto to : htd_bag) {
-                    if (g.has_edge(v, to)) {
+                    if (g.hasEdge(v, to)) {
                         lChild =
                             createNode(NodeType::IntroduceEdge, decomp[lChild].bag, v, to, lChild);
                     }
@@ -212,7 +212,7 @@ struct TreeDecomposition {
             // For each disappearing edge insert an IntroduceEdge node between Forget and its
             // direct child.
             for (auto to : new_bag) {
-                if (g.has_edge(forgotten, to)) {
+                if (g.hasEdge(forgotten, to)) {
                     root =
                         createNode(NodeType::IntroduceEdge, decomp[root].bag, forgotten, to, root);
                 }

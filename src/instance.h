@@ -49,7 +49,7 @@ struct Instance {
                 int b = 0;
                 tokens >> b;
                 --E;
-                add_edge(a, b);
+                addEdge(a, b);
             }
         }
 
@@ -84,17 +84,17 @@ struct Instance {
         }
     }
 
-    size_t n_nodes() const { return nodes.size(); }
+    size_t nodeCount() const { return nodes.size(); }
 
-    void set_status(int v, Status c) { status[v] = c; }
+    void setStatus(int v, Status c) { status[v] = c; }
 
-    Status get_status(int v) const { return status[v]; }
+    Status getStatus(int v) const { return status[v]; }
 
     int deg(int v) const { return (int)adj[v].size(); }
 
     // Creates and returns the id of the created node.
     // Complexity: O(1)
-    int add_node() {
+    int addNode() {
         adj.push_back({});
         nodes.push_back(next_free_id);
         status.push_back(UNDOMINATED);
@@ -104,7 +104,7 @@ struct Instance {
 
     // Removes the node with given id.
     // Complexity: O(deg(v) + sum over deg(v) of neighbours)
-    void remove_node(int v) {
+    void removeNode(int v) {
         if (find(nodes.begin(), nodes.end(), v) == nodes.end()) return;
         for (auto u : adj[v]) {
             remove(adj[u], v);
@@ -116,44 +116,44 @@ struct Instance {
         assert(is_sorted(nodes.begin(), nodes.end()));
     }
 
-    void remove_nodes(const std::vector<int> &l) {
-        for (auto &v : l) remove_node(v);
+    void removeNodes(const std::vector<int> &l) {
+        for (auto &v : l) removeNode(v);
     }
 
     // Adds an edge between nodes with id's u and v.
     // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
-    void add_edge(int u, int v) {
+    void addEdge(int u, int v) {
         insert(adj[u], v);
         insert(adj[v], u);
     }
 
-    void remove_edge(int v, int w) {
+    void removeEdge(int v, int w) {
         remove(adj[v], w);
         remove(adj[w], v);
     }
 
-    const std::vector<int> neighbourhood_including(int v) const {
+    const std::vector<int> neighbourhoodIncluding(int v) const {
         auto res = adj[v];
         insert(res, v);
         return res;
     }
 
-    int n_edges() const {
+    int edgeCount() const {
         int sum_deg = 0;
         for (auto i : nodes) sum_deg += deg(i);
         return sum_deg / 2;
     }
 
-    const std::vector<int> neighbourhood_excluding(int v) const { return adj[v]; }
+    const std::vector<int> neighbourhoodExcluding(int v) const { return adj[v]; }
 
-    bool has_edge(int u, int v) const {
+    bool hasEdge(int u, int v) const {
         return std::find(adj[u].begin(), adj[u].end(), v) != adj[u].end();
     }
 
-    int min_deg_node_of_status(Status s) const {
+    int minDegNodeOfStatus(Status s) const {
         int best_v = -1;
         for (auto v : nodes)
-            if (get_status(v) == s && (best_v == -1 || deg(v) < deg(best_v))) best_v = v;
+            if (getStatus(v) == s && (best_v == -1 || deg(v) < deg(best_v))) best_v = v;
 
         return best_v;
     }
@@ -161,8 +161,8 @@ struct Instance {
     void take(int v) {
         assert(status[v] != TAKEN);
         if (is_extra[v]) {
-            for (auto u : neighbourhood_excluding(v)) {
-                assert(get_status(u) != TAKEN);
+            for (auto u : neighbourhoodExcluding(v)) {
+                assert(getStatus(u) != TAKEN);
                 take(u);
             }
 
@@ -171,12 +171,12 @@ struct Instance {
         status[v] = TAKEN;
 
         ds.push_back(v);
-        for (auto u : neighbourhood_excluding(v)) {
-            assert(get_status(u) != TAKEN);
-            set_status(u, DOMINATED);
+        for (auto u : neighbourhoodExcluding(v)) {
+            assert(getStatus(u) != TAKEN);
+            setStatus(u, DOMINATED);
         }
 
-        remove_node(v);
+        removeNode(v);
     }
 
     // Separates the nodes of a graph into connected components.
@@ -218,9 +218,9 @@ struct Instance {
 
 
     void print() const {
-        std::cerr << "[n = " << n_nodes() << ",\tm = " << n_edges() << "]\n";
+        std::cerr << "[n = " << nodeCount() << ",\tm = " << edgeCount() << "]\n";
         for (int i : nodes) {
-            std::cerr << "color(" << i << ") = " << get_status(i) << "\n";
+            std::cerr << "color(" << i << ") = " << getStatus(i) << "\n";
         }
         for (int i : nodes) {
             for (auto j : adj[i]) {

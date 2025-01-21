@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
   
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 
-set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=clang-diagnostic-*,clang-analyzer-*,cppcoreguidelines-*,-clang-diagnostic-c++17-extensions;-warnings-as-errors=*")
+set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=clang-diagnostic-*,clang-analyzer-*,cppcoreguidelines-*,-clang-diagnostic-c++17-extensions,-cppcoreguidelines-pro-bounds-pointer-arithmetic;-warnings-as-errors=*")
 # Include the src directory and the external directory (htd)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(/usr/local/include/htd)  # Path to header files for htd shared library

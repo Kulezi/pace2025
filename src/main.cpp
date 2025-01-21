@@ -12,8 +12,8 @@ int main() {
     std::cout << std::endl;
 
     for (auto u : ans) {
-        for (auto v : g.neighbourhood_including(u)) g.set_status(v, DOMINATED);
+        for (auto v : g.neighbourhoodIncluding(u)) g.setStatus(v, DOMINATED);
     }
 
-    for (auto u : g.nodes) assert(g.get_status(u) == DOMINATED);
+    for (auto u : g.nodes) assert(g.getStatus(u) == DOMINATED);
 }
