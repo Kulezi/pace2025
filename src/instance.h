@@ -1,5 +1,5 @@
-#ifndef _INSTANCE_H
-#define _INSTANCE_H
+#ifndef INSTANCE_H
+#define INSTANCE_H
 #include <algorithm>
 #include <cassert>
 #include <iostream>
@@ -46,7 +46,7 @@ struct Instance {
                 parse_header(tokens, E);
             } else {
                 int a = stoi(s);
-                int b;
+                int b = 0;
                 tokens >> b;
                 --E;
                 add_edge(a, b);
@@ -58,7 +58,7 @@ struct Instance {
 
     void parse_header(std::stringstream &tokens, int &E) {
         std::string problem;
-        int n_nodes;
+        int n_nodes = 0;
         tokens >> problem >> n_nodes >> E;
         assert(problem == "ds");
         adj.resize(n_nodes + 1);
@@ -84,7 +84,7 @@ struct Instance {
         }
     }
 
-    int n_nodes() const { return nodes.size(); }
+    size_t n_nodes() const { return nodes.size(); }
 
     void set_status(int v, Status c) { status[v] = c; }
 
@@ -231,4 +231,4 @@ struct Instance {
     }
 };
 
-#endif  // GRAPH_H
+#endif  // INSTANCE_H

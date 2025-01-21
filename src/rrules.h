@@ -1,10 +1,9 @@
-#ifndef _RRULES_H
-#define _RRULES_H
+#ifndef RRULES_H
+#define RRULES_H
 #include <functional>
 
 #include "instance.h"
 #include "setops.h"
-#define dbg(x) #x << " = " << x << " "
 namespace RRules {
 
 using Rule = std::function<bool(Instance &)>;
@@ -252,4 +251,4 @@ const std::vector<RRules::Rule> defaults_branching = {
 };
 }  // namespace RRules
 
-#endif
+#endif // RRULES_H

@@ -1,5 +1,5 @@
-#ifndef _TD_H
-#define _TD_H
+#ifndef TD_H
+#define TD_H
 
 #include <chrono>
 #include <csignal>
@@ -42,8 +42,8 @@ struct DecompositionNode {
     int v;
     // Label of the other endpoint of an introduced edge or -1 if it's not an IntroduceEdge node.
     int to;
-    int lChild;
-    int rChild;
+    int l_child;
+    int r_child;
 };
 
 // Represents a tree decomposition rooted at node labeled 0.
@@ -54,7 +54,7 @@ struct TreeDecomposition {
         htdDecompose();
         // Rewrite the decomposition so it fits the definition from Platypus Book.
         makeDecomposition();
-        delete htdDecomposition;
+        delete htd_decomposition;
         delete graph;
     };
 
@@ -64,7 +64,7 @@ struct TreeDecomposition {
    private:
     htd::IMutableGraph *graph;
     std::vector<int> reverse_mapping;
-    htd::ITreeDecomposition *htdDecomposition;
+    htd::ITreeDecomposition *htd_decomposition;
     Instance &g;
     std::vector<DecompositionNode> decomp;
 
@@ -106,74 +106,74 @@ struct TreeDecomposition {
 
         algorithm.setIterationCount(0);
         algorithm.setNonImprovementLimit(3);
-        htdDecomposition = algorithm.computeDecomposition(*graph);
+        htd_decomposition = algorithm.computeDecomposition(*graph);
     }
 
     HtdNodeType getNodeType(htd::vertex_t v) {
-        if (htdDecomposition->isForgetNode(v)) return HtdNodeType::Forget;
-        if (htdDecomposition->isLeaf(v)) return HtdNodeType::Leaf;
-        if (htdDecomposition->isIntroduceNode(v)) return HtdNodeType::Introduce;
-        if (htdDecomposition->isJoinNode(v)) return HtdNodeType::Join;
+        if (htd_decomposition->isForgetNode(v)) return HtdNodeType::Forget;
+        if (htd_decomposition->isLeaf(v)) return HtdNodeType::Leaf;
+        if (htd_decomposition->isIntroduceNode(v)) return HtdNodeType::Introduce;
+        if (htd_decomposition->isJoinNode(v)) return HtdNodeType::Join;
         throw std::logic_error("found decomposition node of unknown type");
     }
 
     int createNode(NodeType type, std::vector<int> bag, int v = -1, int to = -1, int lChild = -1,
                    int rChild = -1) {
         decomp.push_back(DecompositionNode{
-            id : (int)decomp.size(),
-            type : type,
-            bag : bag,
-            v : v,
-            to : to,
-            lChild : lChild,
-            rChild : rChild,
+            .id = (int)decomp.size(),
+            .type = type,
+            .bag = bag,
+            .v = v,
+            .to = to,
+            .l_child = lChild,
+            .r_child = rChild,
         });
 
         return decomp.back().id;
     }
 
-    int makeDecompositionNode(htd::vertex_t htdId) {
-        HtdNodeType type = getNodeType(htdId);
-        std::vector<int> htdBag = std::vector<int>(htdDecomposition->bagContent(htdId).begin(),
-                                                   htdDecomposition->bagContent(htdId).end());
-        for (auto &v : htdBag) v = reverse_mapping[v];
+    int makeDecompositionNode(htd::vertex_t htd_id) {
+        HtdNodeType type = getNodeType(htd_id);
+        std::vector<int> htd_bag = std::vector<int>(htd_decomposition->bagContent(htd_id).begin(),
+                                                    htd_decomposition->bagContent(htd_id).end());
+        for (auto &v : htd_bag) v = reverse_mapping[v];
 
         switch (type) {
             case HtdNodeType::Introduce: {
-                assert(htdDecomposition->introducedVertexCount(htdId) == 1);
+                assert(htd_decomposition->introducedVertexCount(htd_id) == 1);
 
-                int lChild = makeDecompositionNode(htdDecomposition->childAtPosition(htdId, 0));
-                int v = reverse_mapping[htdDecomposition->introducedVertexAtPosition(htdId, 0)];
+                int lChild = makeDecompositionNode(htd_decomposition->childAtPosition(htd_id, 0));
+                int v = reverse_mapping[htd_decomposition->introducedVertexAtPosition(htd_id, 0)];
 
-                return createNode(NodeType::IntroduceVertex, htdBag, v, -1, lChild);
+                return createNode(NodeType::IntroduceVertex, htd_bag, v, -1, lChild);
             }
             case HtdNodeType::Forget: {
-                assert(htdDecomposition->forgottenVertexCount(htdId) == 1);
+                assert(htd_decomposition->forgottenVertexCount(htd_id) == 1);
 
-                int lChild = makeDecompositionNode(htdDecomposition->childAtPosition(htdId, 0));
-                int v = reverse_mapping[htdDecomposition->forgottenVertexAtPosition(htdId, 0)];
+                int lChild = makeDecompositionNode(htd_decomposition->childAtPosition(htd_id, 0));
+                int v = reverse_mapping[htd_decomposition->forgottenVertexAtPosition(htd_id, 0)];
 
                 // For each disappearing edge insert an IntroduceEdge node between Forget and its
                 // direct child.
-                for (auto to : htdBag) {
+                for (auto to : htd_bag) {
                     if (g.has_edge(v, to)) {
                         lChild =
                             createNode(NodeType::IntroduceEdge, decomp[lChild].bag, v, to, lChild);
                     }
                 }
 
-                return createNode(NodeType::Forget, htdBag, v, -1, lChild);
+                return createNode(NodeType::Forget, htd_bag, v, -1, lChild);
             }
 
             case HtdNodeType::Leaf: {
-                assert(htdDecomposition->childCount(htdId) == 0);
+                assert(htd_decomposition->childCount(htd_id) == 0);
 
                 // htd provides a decomposition where leaves can have nonempty bags,
                 // so replace a bag of size n with n introduces ending with a leaf.
                 std::vector<int> bag;
                 int last = createNode(NodeType::Leaf, {});
 
-                for (auto i : htdBag) {
+                for (auto i : htd_bag) {
                     bag.push_back(i);
                     last = createNode(NodeType::IntroduceVertex, bag, i, -1, last);
                 }
@@ -181,15 +181,15 @@ struct TreeDecomposition {
                 return last;
             }
             case HtdNodeType::Join: {
-                assert(htdDecomposition->childCount(htdId) == 2);
+                assert(htd_decomposition->childCount(htd_id) == 2);
 
-                int htd_l_child = htdDecomposition->childAtPosition(htdId, 0);
-                int htd_r_child = htdDecomposition->childAtPosition(htdId, 1);
+                int htd_l_child = htd_decomposition->childAtPosition(htd_id, 0);
+                int htd_r_child = htd_decomposition->childAtPosition(htd_id, 1);
 
-                int lChild = makeDecompositionNode(htd_l_child);
-                int rChild = makeDecompositionNode(htd_r_child);
+                int l_child = makeDecompositionNode(htd_l_child);
+                int r_child = makeDecompositionNode(htd_r_child);
 
-                return createNode(NodeType::Join, htdBag, -1, -1, lChild, rChild);
+                return createNode(NodeType::Join, htd_bag, -1, -1, l_child, r_child);
             }
 
             default:
@@ -199,26 +199,26 @@ struct TreeDecomposition {
 
     // Returns the id of the root of decomposition.
     void makeDecomposition() {
-        int htd_root = htdDecomposition->root();
+        int htd_root = htd_decomposition->root();
         root = makeDecompositionNode(htd_root);
 
         // The root bag might not be empty yet, so we forget vertices one by one, possibly
         // introducing new edges.
         while (!decomp[root].bag.empty()) {
-            auto newBag = decomp[root].bag;
-            int forgotten = newBag.back();
-            newBag.pop_back();
+            auto new_bag = decomp[root].bag;
+            int forgotten = new_bag.back();
+            new_bag.pop_back();
 
             // For each disappearing edge insert an IntroduceEdge node between Forget and its
             // direct child.
-            for (auto to : newBag) {
+            for (auto to : new_bag) {
                 if (g.has_edge(forgotten, to)) {
                     root =
                         createNode(NodeType::IntroduceEdge, decomp[root].bag, forgotten, to, root);
                 }
             }
 
-            root = createNode(NodeType::Forget, newBag, forgotten, -1, root);
+            root = createNode(NodeType::Forget, new_bag, forgotten, -1, root);
         }
     }
 
@@ -250,8 +250,8 @@ struct TreeDecomposition {
         for (auto i : node.bag) std::cerr << " " << i;
         std::cerr << " ]\n";
 
-        if (node.type != NodeType::Leaf) printDecomp(node.lChild, level + 1);
-        if (node.type == NodeType::Join) printDecomp(node.rChild, level + 1);
+        if (node.type != NodeType::Leaf) printDecomp(node.l_child, level + 1);
+        if (node.type == NodeType::Join) printDecomp(node.r_child, level + 1);
     };
 
    public:
@@ -269,4 +269,4 @@ struct TreeDecomposition {
         printDecomp(root, 0);
     }
 };
-#endif  // _TD_H
+#endif  // TD_H
