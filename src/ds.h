@@ -1,17 +1,11 @@
-#ifndef _DS_H
-#define _DS_H
+#ifndef DS_H
+#define DS_H
 #include "instance.h"
 #include "rrules.h"
 #include "setops.h"
 #include "td.h"
-#define dbg(x) #x << " = " << x << " "
-
 namespace DomSet {
 
-// TODO: Branching po min/max stopniu.
-// Branching: Nie wchodź jak już wykraczasz za najlepszy wynik.
-// Bonus: jak jakąs heura umiesz to zrobić dużo wczesniej to zrob.
-// Może regułki albera w branchingu monza na biezaco.
 constexpr int UNSET = -1, INF = 1'000'000;
 
 struct Exact {
@@ -25,12 +19,12 @@ struct Exact {
     std::vector<int> solve(Instance g, std::ostream &out) {
         auto split = g.split();
         if (split.size() <= 1)
-            solve_tw(g);
+            solveTreewidth(g);
         else {
             for (auto &cc : split) {
                 g.nodes = cc;
                 RRules::reduce(g, rules);
-                solve_tw(g);
+                solveTreewidth(g);
             }
         }
 
@@ -49,7 +43,7 @@ struct Exact {
 #endif
         if (split.size() <= 1) {
             RRules::reduce(g, rules_branch);
-            solve_branching(g, best_ds, level);
+            solveBranching(g, best_ds, level);
             return;
         }
 
@@ -58,20 +52,24 @@ struct Exact {
             std::vector<int> ds;
             g.nodes = cc;
             RRules::reduce(g, rules_branch);
-            solve_branching(g, ds, level + 1);
+            solveBranching(g, ds, level + 1);
 
-            g.ds.insert(g.ds.end(), ds.begin() + g.ds.size(), ds.end());
+            g.ds.insert(g.ds.end(),
+                        ds.begin() + static_cast<std::vector<int>::difference_type>(g.ds.size()),
+                        ds.end());
             if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
         }
 
         best_ds = g.ds;
     }
 
-    void solve_branching(const Instance g, std::vector<int> &best_ds, int level = 0) {
+    // TODO: Use heuristics to quit branching as soon as we know that the current branch is not
+    // optimal.
+    void solveBranching(const Instance g, std::vector<int> &best_ds, int level = 0) {
 #if BENCH
         branch_calls++;
 #endif
-        int v = g.min_deg_node_of_status(UNDOMINATED);
+        int v = g.minDegNodeOfStatus(UNDOMINATED);
         if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
         if (v == -1) {
             best_ds = g.ds;
@@ -95,8 +93,8 @@ struct Exact {
         }
     }
 
-    void solve_bruteforce(Instance g, std::ostream &out) {
-        int n = g.n_nodes();
+    void solveBruteforce(Instance g, std::ostream &out) {
+        int n = g.nodeCount();
         std::vector<int> best_ds;
 
         for (int mask = 0; mask < (1 << n); mask++) {
@@ -131,44 +129,46 @@ struct Exact {
         print(best_ds, out);
     }
 
-    int pow3(int y) {
-        int res = 1;
+    size_t pow3(size_t y) {
+        size_t res = 1;
         while (y > 0) res *= 3, y--;
         return res;
     }
 
     std::vector<std::vector<int>> c;
 
-    using TernaryFun = int;
+    using TernaryFun = size_t;
 
     // e.g. WHITE = 0, GRAY = 0_dash, BLACK = 1 in platypus book.
     enum class Color { WHITE, GRAY, BLACK };
 
     // Remove x'th argument of f from the domain.
-    TernaryFun cut(TernaryFun f, int x) {
+    TernaryFun cut(TernaryFun f, size_t x) {
         // Value of the first x-1 trits.
-        int pref = f % pow3(x);
+        TernaryFun pref = f % pow3(x);
 
         // Value of trits x+1, x+2, ...
-        int suf = (f / pow3(x + 1)) * pow3(x);
+        TernaryFun suf = (f / pow3(x + 1)) * pow3(x);
 
         return pref + suf;
     }
 
     // Insert at position x.
-    TernaryFun insert(TernaryFun f, int x, Color c) {
+    TernaryFun insert(TernaryFun f, size_t x, Color c) {
         // Value of the first x-1 trits.
-        int pref = f % pow3(x);
+        TernaryFun pref = f % pow3(x);
         // Every trit outside of prefix gets shifted right.
-        int suf = (f - pref) * 3;
+        TernaryFun suf = (f - pref) * 3;
 
         // Lastly we add the value of inserted trit.
-        return pref + suf + (int)c * pow3(x);
+        return pref + suf + (size_t)c * pow3(x);
     }
 
-    TernaryFun set(TernaryFun f, int x, Color c) { return f + ((int)c - (int)at(f, x)) * pow3(x); }
+    TernaryFun set(TernaryFun f, size_t x, Color c) {
+        return f + ((int)c - (int)at(f, x)) * pow3(x);
+    }
 
-    Color at(TernaryFun f, int x) { return (Color)(f / pow3(x) % 3); }
+    Color at(TernaryFun f, size_t x) { return (Color)(f / pow3(x) % 3); }
 
     char val(Color c) {
         if ((int)c == 0) return '0';
@@ -177,9 +177,9 @@ struct Exact {
     }
 
     TernaryFun toInt(std::string s) {
-        int res = 0;
-        for (int i = 0; i < s.size(); i++) {
-            res += pow3(i) * (s[i] - '0');
+        TernaryFun res = 0;
+        for (size_t i = 0; i < s.size(); i++) {
+            res += pow3(i) * static_cast<size_t>(s[i] - '0');
         }
         return res;
     }
@@ -195,7 +195,8 @@ struct Exact {
         return res;
     }
 
-    int calc_c(const Instance &g, TreeDecomposition &td, int t, TernaryFun f) {
+    // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3]
+    int getC(const Instance &g, TreeDecomposition &td, int t, TernaryFun f) {
         const auto &node = td[t];
         assert(f < pow3(node.bag.size()));
         if (!c[t].empty() && c[t][f] != UNSET) return c[t][f];
@@ -209,15 +210,15 @@ struct Exact {
 
         switch (node.type) {
             case NodeType::Leaf:
-                return c[t][f] = 0;  // OK
+                return c[t][f] = 0;
             case NodeType::IntroduceVertex: {
                 int pos = bag_pos(node.bag, node.v);
                 Color f_v = at(f, pos);
                 // This vertex could already be dominated by some reduction rule.
-                if (f_v == Color::WHITE && g.get_status(node.v) != DOMINATED)
-                    return c[t][f] = INF;  // OK
+                if (f_v == Color::WHITE && g.getStatus(node.v) != DOMINATED)
+                    return c[t][f] = INF;
                 else {
-                    return c[t][f] = calc_c(g, td, node.lChild, cut(f, pos));
+                    return c[t][f] = getC(g, td, node.l_child, cut(f, pos));
                 }
             }
             case NodeType::IntroduceEdge: {
@@ -228,22 +229,22 @@ struct Exact {
                 Color f_v = at(f, pos_v);
 
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    return c[t][f] = calc_c(g, td, node.lChild, set(f, pos_v, Color::GRAY));
+                    return c[t][f] = getC(g, td, node.l_child, set(f, pos_v, Color::GRAY));
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    return c[t][f] = calc_c(g, td, node.lChild, set(f, pos_u, Color::GRAY));
+                    return c[t][f] = getC(g, td, node.l_child, set(f, pos_u, Color::GRAY));
                 else
-                    return c[t][f] = calc_c(g, td, node.lChild, f);
+                    return c[t][f] = getC(g, td, node.l_child, f);
             }
             case NodeType::Forget: {
-                int pos_w = bag_pos(td[node.lChild].bag, node.v);
+                int pos_w = bag_pos(td[node.l_child].bag, node.v);
                 return c[t][f] =
-                           std::min(1 + calc_c(g, td, node.lChild, insert(f, pos_w, Color::BLACK)),
-                                    calc_c(g, td, node.lChild, insert(f, pos_w, Color::WHITE)));
+                           std::min(1 + getC(g, td, node.l_child, insert(f, pos_w, Color::BLACK)),
+                                    getC(g, td, node.l_child, insert(f, pos_w, Color::WHITE)));
             }
             case NodeType::Join: {
                 int zeros = 0;
-                int N = node.bag.size();
-                for (int i = 0; i < N; i++) {
+                size_t N = node.bag.size();
+                for (size_t i = 0; i < N; ++i) {
                     if (at(f, i) == Color::WHITE) zeros++;
                 }
 
@@ -254,7 +255,7 @@ struct Exact {
                     // The value of f_1, f_2 will be the same on all trits that ain't 0 in f, so
                     // we don't need to touch those.
                     TernaryFun f_1 = f, f_2 = f;
-                    for (int i = 0; i < N; i++) {
+                    for (size_t i = 0; i < N; ++i) {
                         if (at(f, i) == Color::WHITE) {
                             if (mask >> zero & 1) {
                                 f_1 = set(f_1, i, Color::GRAY);
@@ -268,7 +269,7 @@ struct Exact {
                     }
 
                     c[t][f] = std::min(
-                        c[t][f], calc_c(g, td, node.lChild, f_1) + calc_c(g, td, node.rChild, f_2));
+                        c[t][f], getC(g, td, node.l_child, f_1) + getC(g, td, node.r_child, f_2));
                 }
                 return c[t][f];
             }
@@ -278,7 +279,7 @@ struct Exact {
         throw("Unknown node type reached in calc_c!");
     }
 
-    void recover_ds(Instance &g, TreeDecomposition &td, int t, TernaryFun f) {
+    void recoverDS(Instance &g, TreeDecomposition &td, int t, TernaryFun f) {
         auto &node = td[t];
         assert(f < pow3(node.bag.size()));
         assert(!c[t].empty() && c[t][f] != UNSET);
@@ -291,8 +292,7 @@ struct Exact {
         switch (node.type) {
             case NodeType::IntroduceVertex: {
                 int pos = bag_pos(node.bag, node.v);
-                Color f_v = at(f, pos);
-                recover_ds(g, td, node.lChild, cut(f, pos));
+                recoverDS(g, td, node.l_child, cut(f, pos));
                 return;
             }
             case NodeType::IntroduceEdge: {
@@ -303,27 +303,27 @@ struct Exact {
                 Color f_v = at(f, pos_v);
 
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    recover_ds(g, td, node.lChild, set(f, pos_v, Color::GRAY));
+                    recoverDS(g, td, node.l_child, set(f, pos_v, Color::GRAY));
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    recover_ds(g, td, node.lChild, set(f, pos_u, Color::GRAY));
+                    recoverDS(g, td, node.l_child, set(f, pos_u, Color::GRAY));
                 else
-                    recover_ds(g, td, node.lChild, f);
+                    recoverDS(g, td, node.l_child, f);
                 return;
             }
             case NodeType::Forget: {
-                int pos_w = bag_pos(td[node.lChild].bag, node.v);
-                if (c[t][f] == 1 + calc_c(g, td, node.lChild, insert(f, pos_w, Color::BLACK))) {
+                int pos_w = bag_pos(td[node.l_child].bag, node.v);
+                if (c[t][f] == 1 + getC(g, td, node.l_child, insert(f, pos_w, Color::BLACK))) {
                     g.ds.push_back(node.v);
-                    recover_ds(g, td, node.lChild, insert(f, pos_w, Color::BLACK));
+                    recoverDS(g, td, node.l_child, insert(f, pos_w, Color::BLACK));
                 } else {
-                    recover_ds(g, td, node.lChild, insert(f, pos_w, Color::WHITE));
+                    recoverDS(g, td, node.l_child, insert(f, pos_w, Color::WHITE));
                 }
                 return;
             }
             case NodeType::Join: {
                 int zeros = 0;
-                int N = node.bag.size();
-                for (int i = 0; i < N; i++) {
+                size_t N = node.bag.size();
+                for (size_t i = 0; i < N; ++i) {
                     if (at(f, i) == Color::WHITE) zeros++;
                 }
 
@@ -334,7 +334,7 @@ struct Exact {
                     // The value of f_1, f_2 will be the same on all trits that ain't 0 in f, so
                     // we don't need to touch those.
                     TernaryFun f_1 = f, f_2 = f;
-                    for (int i = 0; i < N; i++) {
+                    for (size_t i = 0; i < N; ++i) {
                         if (at(f, i) == Color::WHITE) {
                             if (mask >> zero & 1) {
                                 f_1 = set(f_1, i, Color::GRAY);
@@ -348,9 +348,9 @@ struct Exact {
                     }
 
                     if (c[t][f] ==
-                        calc_c(g, td, node.lChild, f_1) + calc_c(g, td, node.rChild, f_2)) {
-                        recover_ds(g, td, node.lChild, f_1);
-                        recover_ds(g, td, node.rChild, f_2);
+                        getC(g, td, node.l_child, f_1) + getC(g, td, node.r_child, f_2)) {
+                        recoverDS(g, td, node.l_child, f_1);
+                        recoverDS(g, td, node.r_child, f_2);
                         return;
                     }
                 }
@@ -362,13 +362,13 @@ struct Exact {
         }
     }
 
-    void solve_tw(Instance &g) {
+    void solveTreewidth(Instance &g) {
         TreeDecomposition td(g);
-        c = std::vector(td.n_nodes(), std::vector<int>());
+        c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
 
-        calc_c(g, td, td.root, 0);
-        recover_ds(g, td, td.root, 0);
+        getC(g, td, td.root, 0);
+        recoverDS(g, td, td.root, 0);
     }
 };
 }  // namespace DomSet
-#endif  // _DS_H
+#endif  // DS_H

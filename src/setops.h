@@ -1,5 +1,5 @@
-#ifndef _SETOPS_H
-#define _SETOPS_H
+#ifndef SETOPS_H
+#define SETOPS_H
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -54,4 +54,4 @@ std::string pprint(std::vector<int> x) {
     for (auto i : x) res += std::to_string(i) + " ";
     return res + "]";
 }
-#endif
+#endif // SETOPS_H
