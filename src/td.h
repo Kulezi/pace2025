@@ -91,7 +91,7 @@ struct TreeDecomposition {
             new htd::TreeDecompositionOptimizationOperation(manager.get(), f.clone());
 
         operation->setManagementInstance(manager.get());
-        operation->setVertexSelectionStrategy(new htd::RandomVertexSelectionStrategy(100));
+        operation->setVertexSelectionStrategy(new htd::RandomVertexSelectionStrategy(10));
         operation->addManipulationOperation(new htd::NormalizationOperation(manager.get()));
 
         manager->orderingAlgorithmFactory().setConstructionTemplate(
