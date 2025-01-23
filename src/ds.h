@@ -8,22 +8,47 @@ namespace DomSet {
 
 constexpr int UNSET = -1, INF = 1'000'000;
 
-struct Exact {
+#ifdef DS_BENCHMARK
+struct BenchmarkInfo {
     size_t branch_calls = 0;
     size_t n_splits = 0;
+    size_t max_encountered_treewidth = 0;
+    using millis = std::chrono::duration<double, std::milli>;
+    std::vector<millis> rule_time;
+    std::vector<millis> rule_branch_time;
+    millis treewidth_decomposition_time;
+    millis treewidth_calculation_time;
 
+    BenchmarkInfo() = default;
+    BenchmarkInfo(std::vector<RRules::Rule> rules, std::vector<RRules::Rule> rules_branch)
+        : rule_time(rules.size(), millis(0)),
+          rule_branch_time(rules_branch.size(), millis(0)),
+          treewidth_decomposition_time(0),
+          treewidth_calculation_time(0) {}
+};
+#endif
+
+struct Exact {
     std::vector<RRules::Rule> rules, rules_branch;
+#ifdef DS_BENCHMARK
+    BenchmarkInfo benchmark_info;
+#endif  // DS_BENCHMARK
     Exact(std::vector<RRules::Rule> _rules, std::vector<RRules::Rule> _rules_branch)
-        : rules(_rules), rules_branch(_rules_branch) {}
+        : rules(_rules), rules_branch(_rules_branch) {
+#ifdef DS_BENCHMARK
+        benchmark_info = BenchmarkInfo(rules, rules_branch);
+#endif
+    }
 
     std::vector<int> solve(Instance g, std::ostream &out) {
         auto split = g.split();
-        if (split.size() <= 1)
+        if (split.size() <= 1) {
+            reduce(g);
             solveTreewidth(g);
-        else {
+        } else {
             for (auto &cc : split) {
                 g.nodes = cc;
-                RRules::reduce(g, rules);
+                reduce(g);
                 solveTreewidth(g);
             }
         }
@@ -32,17 +57,47 @@ struct Exact {
         return g.ds;
     }
 
+    void reduce(Instance &g) {
+    _start:
+        for (size_t i = 0; i < rules.size(); i++) {
+            auto &f = rules[i];
+#ifdef DS_BENCHMARK
+            auto start = std::chrono::high_resolution_clock::now();
+            bool reduced = f(g);
+            benchmark_info.rule_time[i] += std::chrono::high_resolution_clock::now() - start;
+#else
+            bool reduced = f(g);
+#endif
+            if (reduced) goto _start;
+        }
+    }
+
+    void reduce_branch(Instance &g) {
+    _start:
+        for (size_t i = 0; i < rules_branch.size(); i++) {
+            auto &f = rules_branch[i];
+#ifdef DS_BENCHMARK
+            auto start = std::chrono::high_resolution_clock::now();
+            bool reduced = f(g);
+            benchmark_info.rule_branch_time[i] += std::chrono::high_resolution_clock::now() - start;
+#else
+            bool reduced = f(g);
+#endif
+            if (reduced) goto _start;
+        }
+    }
+
     void take(Instance g, int v, std::vector<int> &best_ds, int level) {
         g.take(v);
 
         auto split = g.split();
-#if BENCH
+#ifdef DS_BENCHMARK
         if (split.size() >= 2) {
-            n_splits++;
+            benchmark_info.n_splits++;
         }
 #endif
         if (split.size() <= 1) {
-            RRules::reduce(g, rules_branch);
+            reduce_branch(g);
             solveBranching(g, best_ds, level);
             return;
         }
@@ -51,7 +106,7 @@ struct Exact {
         for (auto &cc : split) {
             std::vector<int> ds;
             g.nodes = cc;
-            RRules::reduce(g, rules_branch);
+            reduce_branch(g);
             solveBranching(g, ds, level + 1);
 
             g.ds.insert(g.ds.end(),
@@ -66,8 +121,8 @@ struct Exact {
     // TODO: Use heuristics to quit branching as soon as we know that the current branch is not
     // optimal.
     void solveBranching(const Instance g, std::vector<int> &best_ds, int level = 0) {
-#if BENCH
-        branch_calls++;
+#if DS_BENCHMARK
+        benchmark_info.branch_calls++;
 #endif
         int v = g.minDegNodeOfStatus(UNDOMINATED);
         if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
@@ -363,11 +418,27 @@ struct Exact {
     }
 
     void solveTreewidth(Instance &g) {
+#ifdef DS_BENCHMARK
+        auto start = std::chrono::high_resolution_clock::now();
+        TreeDecomposition td(g);
+        benchmark_info.treewidth_decomposition_time +=
+            std::chrono::high_resolution_clock::now() - start;
+        start = std::chrono::high_resolution_clock::now();
+        c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
+
+        getC(g, td, td.root, 0);
+        recoverDS(g, td, td.root, 0);
+        benchmark_info.treewidth_calculation_time +=
+            std::chrono::high_resolution_clock::now() - start;
+        benchmark_info.max_encountered_treewidth =
+            std::max(benchmark_info.max_encountered_treewidth, td.width());
+#else
         TreeDecomposition td(g);
         c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
 
         getC(g, td, td.root, 0);
         recoverDS(g, td, td.root, 0);
+#endif
     }
 };
 }  // namespace DomSet

@@ -43,4 +43,10 @@ foreach(SRC ${SOURCE_FILES})
 
     # Link the external htd shared library
     target_link_libraries(${EXEC_NAME} PRIVATE htd htd_io)  # Link with the shared library 'htd'
+
+    # For the 'bench' target, define DS_BENCHMARK
+    if(EXEC_NAME STREQUAL "bench")
+        target_compile_definitions(${EXEC_NAME} PRIVATE DS_BENCHMARK)
+    endif()
+        
 endforeach()
