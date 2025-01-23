@@ -8,15 +8,6 @@ namespace RRules {
 
 using Rule = std::function<bool(Instance &)>;
 
-void reduce(Instance &g, std::vector<Rule> rules) {
-_start:
-    for (size_t i = 0; i < rules.size(); i++) {
-        auto f = rules[i];
-        bool reduced = f(g);
-        if (reduced) goto _start;
-    }
-}
-
 bool hasUndominatedNode(Instance &g, std::vector<int> nodes) {
     for (auto v : nodes)
         if (g.getStatus(v) == UNDOMINATED) return true;
