@@ -1,4 +1,6 @@
 #!/bin/bash
+cmake .
+make bench
 
 BENCHES="in/bench"
 
