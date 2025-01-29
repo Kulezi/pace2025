@@ -18,13 +18,15 @@ struct BenchmarkInfo {
     std::vector<millis> rule_branch_time;
     millis treewidth_decomposition_time;
     millis treewidth_calculation_time;
+    millis treewidth_joins_time;
 
     BenchmarkInfo() = default;
     BenchmarkInfo(std::vector<RRules::Rule> rules, std::vector<RRules::Rule> rules_branch)
         : rule_time(rules.size(), millis(0)),
           rule_branch_time(rules_branch.size(), millis(0)),
           treewidth_decomposition_time(0),
-          treewidth_calculation_time(0) {}
+          treewidth_calculation_time(0),
+          treewidth_joins_time(0) {}
 };
 #endif
 
@@ -297,15 +299,24 @@ struct Exact {
                                     getC(g, td, node.l_child, insert(f, pos_w, Color::WHITE)));
             }
             case NodeType::Join: {
+#if DS_BENCHMARK
+                auto start = std::chrono::high_resolution_clock::now();
+#endif
                 int zeros = 0;
                 size_t N = node.bag.size();
                 for (size_t i = 0; i < N; ++i) {
                     if (at(f, i) == Color::WHITE) zeros++;
                 }
-
+#if DS_BENCHMARK
+                benchmark_info.treewidth_joins_time +=
+                    std::chrono::high_resolution_clock::now() - start;
+#endif
                 // Iterate over all combinations of choosing f_1(v), f_2(v) for positions where
                 // f(v) = 0.
                 for (int mask = 0; mask < (1 << zeros); mask++) {
+#if DS_BENCHMARK
+                    start = std::chrono::high_resolution_clock::now();
+#endif
                     int zero = 0;
                     // The value of f_1, f_2 will be the same on all trits that ain't 0 in f, so
                     // we don't need to touch those.
@@ -323,6 +334,10 @@ struct Exact {
                         }
                     }
 
+#if DS_BENCHMARK
+                    benchmark_info.treewidth_joins_time +=
+                        std::chrono::high_resolution_clock::now() - start;
+#endif
                     c[t][f] = std::min(
                         c[t][f], getC(g, td, node.l_child, f_1) + getC(g, td, node.r_child, f_2));
                 }
