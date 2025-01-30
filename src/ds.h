@@ -252,6 +252,8 @@ struct Exact {
         return res;
     }
 
+    inline int cost(const Instance &g, int v) { return g.is_extra[v] ? INF : 1; }
+
     // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3]
     int getC(const Instance &g, TreeDecomposition &td, int t, TernaryFun f) {
         const auto &node = td[t];
@@ -295,7 +297,8 @@ struct Exact {
             case NodeType::Forget: {
                 int pos_w = bag_pos(td[node.l_child].bag, node.v);
                 return c[t][f] =
-                           std::min(1 + getC(g, td, node.l_child, insert(f, pos_w, Color::BLACK)),
+                           std::min(cost(g, node.v) +
+                                        getC(g, td, node.l_child, insert(f, pos_w, Color::BLACK)),
                                     getC(g, td, node.l_child, insert(f, pos_w, Color::WHITE)));
             }
             case NodeType::Join: {
@@ -382,7 +385,8 @@ struct Exact {
             }
             case NodeType::Forget: {
                 int pos_w = bag_pos(td[node.l_child].bag, node.v);
-                if (c[t][f] == 1 + getC(g, td, node.l_child, insert(f, pos_w, Color::BLACK))) {
+                if (c[t][f] ==
+                    cost(g, node.v) + getC(g, td, node.l_child, insert(f, pos_w, Color::BLACK))) {
                     g.ds.push_back(node.v);
                     recoverDS(g, td, node.l_child, insert(f, pos_w, Color::BLACK));
                 } else {
