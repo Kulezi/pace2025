@@ -30,6 +30,12 @@ struct BenchmarkInfo {
 };
 #endif
 
+constexpr size_t MAX_HANDLED_TREEWIDTH = 20;
+constexpr size_t pow3[MAX_HANDLED_TREEWIDTH] = {
+    1,     3,      9,      27,      81,      243,      729,      2187,      6561,      19683,
+    59049, 177147, 531441, 1594323, 4782969, 14348907, 43046721, 129140163, 387420489, 1162261467,
+};
+
 struct Exact {
     std::vector<RRules::Rule> rules, rules_branch;
 #ifdef DS_BENCHMARK
@@ -198,12 +204,6 @@ struct Exact {
         return best_ds;
     }
 
-    size_t pow3(size_t y) {
-        size_t res = 1;
-        while (y > 0) res *= 3, y--;
-        return res;
-    }
-
     std::vector<std::vector<int>> c;
 
     using TernaryFun = size_t;
@@ -214,10 +214,10 @@ struct Exact {
     // Remove x'th argument of f from the domain.
     TernaryFun cut(TernaryFun f, size_t x) {
         // Value of the first x-1 trits.
-        TernaryFun pref = f % pow3(x);
+        TernaryFun pref = f % pow3[x];
 
         // Value of trits x+1, x+2, ...
-        TernaryFun suf = (f / pow3(x + 1)) * pow3(x);
+        TernaryFun suf = (f / pow3[x + 1]) * pow3[x];
 
         return pref + suf;
     }
@@ -225,19 +225,19 @@ struct Exact {
     // Insert at position x.
     TernaryFun insert(TernaryFun f, size_t x, Color c) {
         // Value of the first x-1 trits.
-        TernaryFun pref = f % pow3(x);
+        TernaryFun pref = f % pow3[x];
         // Every trit outside of prefix gets shifted right.
         TernaryFun suf = (f - pref) * 3;
 
         // Lastly we add the value of inserted trit.
-        return pref + suf + (size_t)c * pow3(x);
+        return pref + suf + (size_t)c * pow3[x];
     }
 
     TernaryFun set(TernaryFun f, size_t x, Color c) {
-        return f + ((int)c - (int)at(f, x)) * pow3(x);
+        return f + ((int)c - (int)at(f, x)) * pow3[x];
     }
 
-    Color at(TernaryFun f, size_t x) { return (Color)(f / pow3(x) % 3); }
+    Color at(TernaryFun f, size_t x) { return (Color)(f / pow3[x] % 3); }
 
     char val(Color c) {
         if ((int)c == 0) return '0';
@@ -248,7 +248,7 @@ struct Exact {
     TernaryFun toInt(std::string s) {
         TernaryFun res = 0;
         for (size_t i = 0; i < s.size(); i++) {
-            res += pow3(i) * static_cast<size_t>(s[i] - '0');
+            res += pow3[i] * static_cast<size_t>(s[i] - '0');
         }
         return res;
     }
@@ -269,9 +269,9 @@ struct Exact {
     // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3]
     int getC(const Instance &g, TreeDecomposition &td, int t, TernaryFun f) {
         const auto &node = td[t];
-        assert(f < pow3(node.bag.size()));
+        assert(f < pow3[node.bag.size()]);
         if (!c[t].empty() && c[t][f] != UNSET) return c[t][f];
-        if (c[t].empty()) c[t].resize(pow3(node.bag.size()), UNSET);
+        if (c[t].empty()) c[t].resize(pow3[node.bag.size()], UNSET);
         c[t][f] = INF;
         auto bag_pos = [&](const std::vector<int> &bag, int v) -> int {
             int pos = 0;
@@ -366,7 +366,7 @@ struct Exact {
 
     void recoverDS(Instance &g, TreeDecomposition &td, int t, TernaryFun f) {
         auto &node = td[t];
-        assert(f < pow3(node.bag.size()));
+        assert(f < pow3[node.bag.size()]);
         assert(!c[t].empty() && c[t][f] != UNSET);
         auto bag_pos = [&](const std::vector<int> &bag, int v) -> int {
             int pos = 0;
@@ -471,6 +471,6 @@ struct Exact {
         recoverDS(g, td, td.root, 0);
 #endif
     }
-};
+};  // namespace DomSet
 }  // namespace DomSet
 #endif  // DS_H
