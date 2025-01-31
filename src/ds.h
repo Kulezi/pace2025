@@ -42,6 +42,17 @@ struct Exact {
 #endif
     }
 
+    // Checks whether the given solution is a dominating set of the given instance.
+    static bool is_ds(Instance g, const std::vector<int> &solution) {
+        for (auto u : solution)
+            for (auto v : g.neighbourhoodIncluding(u)) g.setStatus(v, DOMINATED);
+
+        for (auto u : g.nodes)
+            if (g.getStatus(u) == UNDOMINATED) return false;
+
+        return true;
+    }
+
     std::vector<int> solve(Instance g, std::ostream &out) {
         auto split = g.split();
         if (split.size() <= 1) {
@@ -150,7 +161,7 @@ struct Exact {
         }
     }
 
-    void solveBruteforce(Instance g, std::ostream &out) {
+    std::vector<int> solveBruteforce(Instance g, std::ostream &out) {
         int n = g.nodeCount();
         std::vector<int> best_ds;
 
@@ -184,6 +195,7 @@ struct Exact {
         }
 
         print(best_ds, out);
+        return best_ds;
     }
 
     size_t pow3(size_t y) {

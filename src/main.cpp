@@ -8,12 +8,6 @@ int main() {
 
     Instance g(std::cin);
     auto ans = ds.solve(g, std::cout);
+    assert(DomSet::Exact::is_ds(g, ans));
 
-    std::cout << std::endl;
-
-    for (auto u : ans) {
-        for (auto v : g.neighbourhoodIncluding(u)) g.setStatus(v, DOMINATED);
-    }
-
-    for (auto u : g.nodes) assert(g.getStatus(u) == DOMINATED);
 }

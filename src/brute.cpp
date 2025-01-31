@@ -6,5 +6,7 @@
 int main() {
     DomSet::Exact ds(RRules::defaults_preprocess, RRules::defaults_preprocess);
 
-    ds.solveBruteforce(Instance(std::cin), std::cout);
+    Instance g(std::cin);
+    auto sol = ds.solveBruteforce(g, std::cout);
+    assert(DomSet::Exact::is_ds(g, sol));
 }
