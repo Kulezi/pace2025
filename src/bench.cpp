@@ -3,16 +3,21 @@
 #include "ds.h"
 #include "instance.h"
 #include "rrules.h"
+#include "bounds.h"
 int main() {
     DomSet::Exact ds(RRules::defaults_preprocess, RRules::defaults_preprocess);
 
     Instance g(std::cin);
+    std::cout << "nodes: " << g.nodeCount() << "\n";
+    std::cout << "edges: " << g.edgeCount() << "\n";
+    std::cout << "initial upper_bound: " << bounds::upper_bound(g) << "\n";
+    std::cout << "initial lower_bound: " << bounds::lower_bound(g) << "\n";
 
     auto start = std::chrono::high_resolution_clock::now();
     auto ans = ds.solve(g, std::cerr);
     auto time = std::chrono::high_resolution_clock::now() - start;
     std::cout << "time: " << std::chrono::duration<double, std::milli>(time).count() << "ms\n";
-
+    std::cout << "dominating set size: " << ans.size() << "\n";
     for (auto u : ans) {
         for (auto v : g.neighbourhoodIncluding(u)) g.setStatus(v, DOMINATED);
     }
