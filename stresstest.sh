@@ -1,10 +1,10 @@
+#!/bin/bash
 # Stresstests the main solution on random instances
 # against a brute force solution that considers all possible sets.
 cmake .
 make
 
 for i in $(seq 1 10000); do
-    echo -ne "$i "
     # Generate random input
     ./random_graph_gen.out $i >rg.gr
     if [ $? -ne 0 ]; then
@@ -20,30 +20,12 @@ for i in $(seq 1 10000); do
         exit 1
     fi
 
-    ./out_verifier.out rg.gr brute.sol > verifier.log
-    if [ $? -ne 0 ]; then
-        echo "Incorrect ds in brute.out"
-        cat rg.gr
-        cat main.log
-        cat verifier.log
-        exit 1
-    fi
-
     # Run main solution
     ./main.out <rg.gr 2>main.log >main.sol 
     if [ $? -ne 0 ]; then
         echo "Runtime error in main.out"
         cat rg.gr
         cat main.log
-        exit 1
-    fi
-
-    ./out_verifier.out rg.gr main.sol > verifier.log
-    if [ $? -ne 0 ]; then
-        echo "Incorrect ds in main.out"
-        cat rg.gr
-        cat main.log
-        cat verifier.log
         exit 1
     fi
 

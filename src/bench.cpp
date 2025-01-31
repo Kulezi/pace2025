@@ -18,11 +18,7 @@ int main() {
     auto time = std::chrono::high_resolution_clock::now() - start;
     std::cout << "time: " << std::chrono::duration<double, std::milli>(time).count() << "ms\n";
     std::cout << "dominating set size: " << ans.size() << "\n";
-    for (auto u : ans) {
-        for (auto v : g.neighbourhoodIncluding(u)) g.setStatus(v, DOMINATED);
-    }
-
-    for (auto u : g.nodes) assert(g.getStatus(u) == DOMINATED);
+    assert(DomSet::Exact::is_ds(g, ans));
 
     auto &info = ds.benchmark_info;
     std::cout << "branching_calls:" << info.branch_calls << "\n"

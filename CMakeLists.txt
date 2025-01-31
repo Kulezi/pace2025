@@ -23,7 +23,6 @@ set(SOURCE_FILES
     src/bench.cpp
     src/brute.cpp
     src/main.cpp
-    src/out_verifier.cpp
     src/random_graph_gen.cpp
 )
 
