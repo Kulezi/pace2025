@@ -106,7 +106,7 @@ struct Exact {
         }
     }
 
-    void take(Instance g, int v, std::vector<int> &best_ds, int level) {
+    void take(Instance g, int v, std::vector<int> &best_ds) {
         g.take(v);
 
         auto split = g.split();
@@ -117,7 +117,7 @@ struct Exact {
 #endif
         if (split.size() <= 1) {
             reduce_branch(g);
-            solveBranching(g, best_ds, level);
+            solveBranching(g, best_ds);
             return;
         }
 
@@ -126,7 +126,7 @@ struct Exact {
             std::vector<int> ds;
             g.nodes = cc;
             reduce_branch(g);
-            solveBranching(g, ds, level + 1);
+            solveBranching(g, ds);
 
             g.ds.insert(g.ds.end(),
                         ds.begin() + static_cast<std::vector<int>::difference_type>(g.ds.size()),
@@ -139,23 +139,23 @@ struct Exact {
 
     // TODO: Use heuristics to quit branching as soon as we know that the current branch is not
     // optimal.
-    void solveBranching(const Instance g, std::vector<int> &best_ds, int level = 0) {
+    void solveBranching(const Instance g, std::vector<int> &best_ds) {
 #if DS_BENCHMARK
         benchmark_info.branch_calls++;
 #endif
         int v = g.minDegNodeOfStatus(UNDOMINATED);
         if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
-        if (v == -1) {
+        if (v == -1) { 
             best_ds = g.ds;
             return;
         }
 
         // Branch 0: v belongs to DS -> dominate N(v)
-        if (g.deg(v) != 1) take(g, v, best_ds, level + 1);
+        if (g.deg(v) != 1) take(g, v, best_ds);
 
         // Branches 1, ..., deg(v): v doesn't belong to DS -> take any neighbour to DS.
         for (auto u : g.adj[v]) {
-            take(g, u, best_ds, level + 1);
+            take(g, u, best_ds);
         }
     }
 
