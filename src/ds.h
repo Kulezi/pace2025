@@ -60,18 +60,7 @@ struct Exact {
     }
 
     std::vector<int> solve(Instance g, std::ostream &out) {
-        auto split = g.split();
-        if (split.size() <= 1) {
-            reduce(g);
-            solveTreewidth(g);
-        } else {
-            for (auto &cc : split) {
-                g.nodes = cc;
-                reduce(g);
-                solveTreewidth(g);
-            }
-        }
-
+        solveBranching(g, g.ds);
         print(g.ds, out);
         return g.ds;
     }
