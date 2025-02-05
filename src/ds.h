@@ -4,6 +4,8 @@
 #include "rrules.h"
 #include "setops.h"
 #include "td.h"
+#include "bounds.h"
+
 namespace DomSet {
 
 constexpr int UNSET = -1, INF = 1'000'000;
@@ -133,7 +135,7 @@ struct Exact {
         benchmark_info.branch_calls++;
 #endif
         int v = g.minDegNodeOfStatus(UNDOMINATED);
-        if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
+        if (!best_ds.empty() && g.ds.size() + bounds::upper_bound(g) >= best_ds.size()) return;
         if (v == -1) { 
             best_ds = g.ds;
             return;
