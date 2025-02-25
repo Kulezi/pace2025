@@ -15,13 +15,14 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y ninja-build
+        pip3 install tqdm
         git clone https://github.com/mabseher/htd/
         cd htd
         cmake .
         sudo make
         sudo make install
     - name: stresstest
-      run: /usr/bin/time ./stresstest.sh
+      run: /usr/bin/time ./stresstest.py
 
   bench:
     runs-on: ubuntu-latest

@@ -34,4 +34,4 @@ The resulting dominating set will be printed to stdout.
 `./bench.sh`
 
 ### Running stresstests
-`./stresstest.sh`
+`./stresstest.py`
