@@ -1,12 +1,13 @@
 #ifndef RRULES_H
 #define RRULES_H
 #include <functional>
+#include <limits.h>
 
 #include "instance.h"
 #include "setops.h"
 
 namespace {
-
+constexpr int BFS_INF = INT_MAX;
 bool hasUndominatedNode(Instance &g, std::vector<int> nodes) {
     for (auto v : nodes)
         if (g.getStatus(v) == UNDOMINATED) return true;
@@ -19,7 +20,8 @@ std::vector<int> exit_neighbourhood(Instance &g, int u) {
     std::vector<int> N_exit;
     for (auto v : g.adj[u]) {
         for (auto w : g.adj[v]) {
-            // This will execute at most O(deg(u)^2) times, since g.hasEdge(u, w) can be true only for deg(u) vertices.
+            // This will execute at most O(deg(u)^2) times, since g.hasEdge(u, w) can be true only
+            // for deg(u) vertices.
             if (w != u && !g.hasEdge(u, w)) {
                 N_exit.push_back(v);
                 break;
@@ -30,7 +32,95 @@ std::vector<int> exit_neighbourhood(Instance &g, int u) {
     return N_exit;
 }
 
-} // namespace
+bool ApplyAlberMainRule2(Instance &g, int v, int w) {
+    auto N_v_without = g.neighbourhoodExcluding(v);
+    auto N_w_without = g.neighbourhoodExcluding(w);
+
+    auto N_vw_with = unite(g.neighbourhoodIncluding(v), g.neighbourhoodIncluding(w));
+    auto N_vw_without = unite(N_v_without, N_w_without);
+
+    std::vector<int> N_exit, N_guard, N_prison;
+    for (auto u : N_vw_without) {
+        auto N_u = g.neighbourhoodExcluding(u);
+
+        if (!remove(N_u, N_vw_with).empty()) N_exit.push_back(u);
+    }
+
+    for (auto u : remove(N_vw_without, N_exit)) {
+        auto N_u = g.neighbourhoodExcluding(u);
+        if (!intersect(N_u, N_exit).empty()) N_guard.push_back(u);
+    }
+
+    N_prison = remove(remove(N_vw_without, N_exit), N_guard);
+    auto N_prison_intersect_B = N_prison;
+    const auto new_end = std::remove_if(N_prison_intersect_B.begin(), N_prison_intersect_B.end(),
+                                        [&](int u) { return g.getStatus(u) != UNDOMINATED; });
+    N_prison_intersect_B.erase(new_end, N_prison_intersect_B.end());
+
+    auto intersection_can_be_dominated_by_single_from = [&](std::vector<int> &nodes) {
+        for (auto x : nodes)
+            if (contains(g.neighbourhoodIncluding(x), N_prison_intersect_B)) return true;
+        return false;
+    };
+
+    if (!N_prison_intersect_B.empty() && !intersection_can_be_dominated_by_single_from(N_guard) &&
+        !intersection_can_be_dominated_by_single_from(N_prison)) {
+        bool can_be_dominated_by_just_v = contains(N_v_without, N_prison_intersect_B);
+        bool can_be_dominated_by_just_w = contains(N_w_without, N_prison_intersect_B);
+
+        // TODO: Maybe it's better to annotate that the one of {v, w} needs to be in the
+        // domset.
+        if (can_be_dominated_by_just_v && can_be_dominated_by_just_w) {
+            // Don't apply the reduction if it doesn't reduce the size of the graph
+            if (N_prison.size() + intersect(intersect(N_guard, N_v_without), N_w_without).size() <=
+                3)
+                return false;
+            // Case 1.1
+            int z1 = g.addNode();
+            int z2 = g.addNode();
+            int z3 = g.addNode();
+
+            g.addEdge(v, z1);
+            g.addEdge(v, z2);
+            g.addEdge(v, z3);
+
+            g.addEdge(w, z1);
+            g.addEdge(w, z2);
+            g.addEdge(w, z3);
+
+            g.removeNodes(N_prison);
+            g.removeNodes(intersect(intersect(N_guard, N_v_without), N_w_without));
+        } else if (can_be_dominated_by_just_v) {
+            // Case 1.2
+            g.take(v);
+            g.removeNodes(N_prison);
+            g.removeNodes(intersect(N_v_without, N_guard));
+        } else if (can_be_dominated_by_just_w) {
+            // Case 1.3
+            g.take(w);
+            // TODO: Order of those operations can be changed to reduce reduntant ops.
+            g.removeNode(w);
+            g.removeNodes(N_prison);
+            g.removeNodes(intersect(N_w_without, N_guard));
+        } else {
+            // Case 2
+            // w might get removed when taking v, so we need to set statuses before taking v
+            // and w.
+            for (auto u : N_vw_without) g.setStatus(u, DOMINATED);
+            g.take(v);
+            g.take(w);
+
+            g.removeNodes(N_prison);
+            g.removeNodes(N_guard);
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+}  // namespace
 
 namespace RRules {
 
@@ -66,96 +156,31 @@ bool AlberMainRule1(Instance &g) {
 // Naive implementation of Main Rule 2 - DOI 10.1007/s10479-006-0045-4, p. 4
 // ~ O(|V|^2) or O(|V|^3) depending on the remove_node operation complexity.
 bool AlberMainRule2(Instance &g) {
+    // Allocate the array once for use in breadth-first search.
+    std::vector<int> dis(g.next_free_id, BFS_INF);
+
+    // Avoid rewriting the distances by considering zero to be INF - 4 * (# checked nodes),
+    // since we only look at distances upto 3.
+    int zero_dist = BFS_INF - 4;
     for (auto v : g.nodes) {
-        for (auto w : g.nodes) {
-            if (v == w) continue;
-            auto N_v_without = g.neighbourhoodExcluding(v);
-            auto N_w_without = g.neighbourhoodExcluding(w);
-
-            auto N_vw_with = unite(g.neighbourhoodIncluding(v), g.neighbourhoodIncluding(w));
-            auto N_vw_without = unite(N_v_without, N_w_without);
-
-            std::vector<int> N_exit, N_guard, N_prison;
-            for (auto u : N_vw_without) {
-                auto N_u = g.neighbourhoodExcluding(u);
-
-                if (!remove(N_u, N_vw_with).empty()) N_exit.push_back(u);
-            }
-
-            for (auto u : remove(N_vw_without, N_exit)) {
-                auto N_u = g.neighbourhoodExcluding(u);
-                if (!intersect(N_u, N_exit).empty()) N_guard.push_back(u);
-            }
-
-            N_prison = remove(remove(N_vw_without, N_exit), N_guard);
-            auto N_prison_intersect_B = N_prison;
-            const auto new_end =
-                std::remove_if(N_prison_intersect_B.begin(), N_prison_intersect_B.end(),
-                               [&](int u) { return g.getStatus(u) != UNDOMINATED; });
-            N_prison_intersect_B.erase(new_end, N_prison_intersect_B.end());
-
-            auto intersection_can_be_dominated_by_single_from = [&](std::vector<int> &nodes) {
-                for (auto x : nodes)
-                    if (contains(g.neighbourhoodIncluding(x), N_prison_intersect_B)) return true;
-                return false;
-            };
-
-            if (!N_prison_intersect_B.empty() &&
-                !intersection_can_be_dominated_by_single_from(N_guard) &&
-                !intersection_can_be_dominated_by_single_from(N_prison)) {
-                bool can_be_dominated_by_just_v = contains(N_v_without, N_prison_intersect_B);
-                bool can_be_dominated_by_just_w = contains(N_w_without, N_prison_intersect_B);
-
-                // TODO: Maybe it's better to annotate that the one of {v, w} needs to be in the
-                // domset.
-                if (can_be_dominated_by_just_v && can_be_dominated_by_just_w) {
-                    // Don't apply the reduction if it doesn't reduce the size of the graph
-                    if (N_prison.size() +
-                            intersect(intersect(N_guard, N_v_without), N_w_without).size() <=
-                        3)
-                        continue;
-                    // Case 1.1
-                    int z1 = g.addNode();
-                    int z2 = g.addNode();
-                    int z3 = g.addNode();
-
-                    g.addEdge(v, z1);
-                    g.addEdge(v, z2);
-                    g.addEdge(v, z3);
-
-                    g.addEdge(w, z1);
-                    g.addEdge(w, z2);
-                    g.addEdge(w, z3);
-
-                    g.removeNodes(N_prison);
-                    g.removeNodes(intersect(intersect(N_guard, N_v_without), N_w_without));
-                } else if (can_be_dominated_by_just_v) {
-                    // Case 1.2
-                    g.take(v);
-                    g.removeNodes(N_prison);
-                    g.removeNodes(intersect(N_v_without, N_guard));
-                } else if (can_be_dominated_by_just_w) {
-                    // Case 1.3
-                    g.take(w);
-                    // TODO: Order of those operations can be changed to reduce reduntant ops.
-                    g.removeNode(w);
-                    g.removeNodes(N_prison);
-                    g.removeNodes(intersect(N_w_without, N_guard));
-                } else {
-                    // Case 2
-                    // w might get removed when taking v, so we need to set statuses before taking v
-                    // and w.
-                    for (auto u : N_vw_without) g.setStatus(u, DOMINATED);
-                    g.take(v);
-                    g.take(w);
-
-                    g.removeNodes(N_prison);
-                    g.removeNodes(N_guard);
+        std::queue<int> q;
+        dis[v] = zero_dist;
+        q.push(v);
+        while (!q.empty()) {
+            int w = q.front();
+            q.pop();
+            if (dis[w] > zero_dist && ApplyAlberMainRule2(g, v, w)) return true;
+            if (dis[w] < zero_dist + 4) {
+                for (auto x : g.adj[w]) {
+                    if (dis[x] > dis[w] + 1) {
+                        dis[x] = dis[w] + 1;
+                        q.push(x);
+                    }
                 }
-
-                return true;
             }
         }
+
+        zero_dist -= 4;
     }
 
     return false;
