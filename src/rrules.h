@@ -4,9 +4,8 @@
 
 #include "instance.h"
 #include "setops.h"
-namespace RRules {
 
-using Rule = std::function<bool(Instance &)>;
+namespace {
 
 bool hasUndominatedNode(Instance &g, std::vector<int> nodes) {
     for (auto v : nodes)
@@ -14,31 +13,49 @@ bool hasUndominatedNode(Instance &g, std::vector<int> nodes) {
     return false;
 }
 
+// Returns a sorted list of neighbours of u that have a neighour outside of the neighbourhood of u.
+// Complexity: O(deg(u)^2)
+std::vector<int> exit_neighbourhood(Instance &g, int u) {
+    std::vector<int> N_exit;
+    for (auto v : g.adj[u]) {
+        for (auto w : g.adj[v]) {
+            // This will execute at most O(deg(u)^2) times, since g.hasEdge(u, w) can be true only for deg(u) vertices.
+            if (w != u && !g.hasEdge(u, w)) {
+                N_exit.push_back(v);
+                break;
+            }
+        }
+    }
+
+    return N_exit;
+}
+
+} // namespace
+
+namespace RRules {
+
+using Rule = std::function<bool(Instance &)>;
+
 // Naive implementation of Main Rule 1 - DOI 10.1007/s10479-006-0045-4, p. 4
 // ~ O(|V|^2) or O(|V|^3) depending on the remove_node operation complexity.
 bool AlberMainRule1(Instance &g) {
-    for (auto v : g.nodes) {
-        auto N_v_with = g.neighbourhoodIncluding(v);
-        auto N_v_without = g.neighbourhoodExcluding(v);
+    for (auto u : g.nodes) {
+        auto N_v_without = g.neighbourhoodExcluding(u);
 
-        std::vector<int> N_exit, N_guard, N_prison;
-        for (auto u : N_v_without) {
-            auto N_u = g.neighbourhoodExcluding(u);
-            if (!remove(N_u, N_v_with).empty()) N_exit.push_back(u);
-        }
+        std::vector<int> N_exit = exit_neighbourhood(g, u), N_guard, N_prison;
 
-        for (auto u : remove(N_v_without, N_exit)) {
-            auto N_u = g.neighbourhoodExcluding(u);
-            if (!intersect(N_u, N_exit).empty()) N_guard.push_back(u);
+        for (auto v : remove(N_v_without, N_exit)) {
+            auto N_u = g.neighbourhoodExcluding(v);
+            if (!intersect(N_u, N_exit).empty()) N_guard.push_back(v);
         }
 
         N_prison = remove(remove(N_v_without, N_exit), N_guard);
 
         if (!N_prison.empty() && hasUndominatedNode(g, N_prison)) {
-            for (auto u : N_prison) g.removeNode(u);
-            for (auto u : N_guard) g.removeNode(u);
+            for (auto v : N_prison) g.removeNode(v);
+            for (auto v : N_guard) g.removeNode(v);
 
-            g.take(v);
+            g.take(u);
             return true;
         }
     }
