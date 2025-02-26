@@ -104,8 +104,8 @@ struct TreeDecomposition {
         htd::IterativeImprovementTreeDecompositionAlgorithm algorithm(manager.get(), baseAlgorithm,
                                                                       f.clone());
 
-        algorithm.setIterationCount(0);
-        algorithm.setNonImprovementLimit(3);
+        algorithm.setIterationCount(1);
+        algorithm.setNonImprovementLimit(0);
         htd_decomposition = algorithm.computeDecomposition(*graph);
     }
 
