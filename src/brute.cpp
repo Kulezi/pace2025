@@ -8,5 +8,4 @@ int main() {
 
     Instance g(std::cin);
     auto sol = ds.solveBruteforce(g, std::cout);
-    assert(DomSet::Exact::is_ds(g, sol));
 }

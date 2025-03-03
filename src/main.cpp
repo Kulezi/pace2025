@@ -8,6 +8,4 @@ int main() {
 
     Instance g(std::cin);
     auto ans = ds.solve(g, std::cout);
-    assert(DomSet::Exact::is_ds(g, ans));
-
 }

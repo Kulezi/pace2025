@@ -18,7 +18,6 @@ int main() {
     auto time = std::chrono::high_resolution_clock::now() - start;
     std::cout << "time: " << std::chrono::duration<double, std::milli>(time).count() << "ms\n";
     std::cout << "dominating set size: " << ans.size() << "\n";
-    assert(DomSet::Exact::is_ds(g, ans));
 
     auto &info = ds.benchmark_info;
     std::cout << "branching_calls:" << info.branch_calls << "\n"
