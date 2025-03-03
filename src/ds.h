@@ -48,15 +48,20 @@ struct Exact {
 #endif
     }
 
-    // Checks whether the given solution is a dominating set of the given instance.
-    static bool is_ds(Instance g, const std::vector<int> &solution) {
-        for (auto u : solution)
-            for (auto v : g.neighbourhoodIncluding(u)) g.setStatus(v, DOMINATED);
+    // Checks whether the given solution is a valid dominating set of the given instance.
+    // Throws a std::logic_error if it isn't.
+    static void verify_solution(Instance g, const std::vector<int> solution) {
+        for (auto u : g.nodes) g.setStatus(u, UNDOMINATED);
+        for (auto u : solution) {
+            if (g.getStatus(u) == TAKEN)
+                throw std::logic_error("solution contains duplicates, one of which is vertex " + std::to_string(u));
+
+            g.setStatus(u, TAKEN);
+            for (auto v : g.neighbourhoodExcluding(u)) g.setStatus(v, DOMINATED);
+        }
 
         for (auto u : g.nodes)
-            if (g.getStatus(u) == UNDOMINATED) return false;
-
-        return true;
+            if (g.getStatus(u) == UNDOMINATED) throw std::logic_error("solution doesn't dominate vertex " + std::to_string(u));
     }
 
     std::vector<int> solve(Instance g, std::ostream &out) {
@@ -71,6 +76,8 @@ struct Exact {
                 solveTreewidth(g);
             }
         }
+        
+        verify_solution(g, g.ds);
 
         print(g.ds, out);
         return g.ds;
@@ -199,6 +206,8 @@ struct Exact {
                 best_ds = ds;
             }
         }
+
+        verify_solution(g, best_ds);
 
         print(best_ds, out);
         return best_ds;
