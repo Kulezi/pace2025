@@ -5,7 +5,7 @@
 #include <functional>
 
 #include "instance.h"
-#include "setops.h"
+#include "utils.h"
 
 namespace {
 constexpr int BFS_INF = INT_MAX;

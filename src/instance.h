@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "setops.h"
+#include "utils.h"
 
 enum Status { UNDOMINATED, DOMINATED, TAKEN };
 
@@ -36,31 +36,36 @@ struct Instance {
     // Constructs graph from input stream assuming DIMACS-like .gr format.
     Instance(std::istream &in) : ds{} {
         std::string line;
-        int E = 0;
+        int header_edges, read_edges = 0;
         while (std::getline(in, line)) {
             std::stringstream tokens(line);
             std::string s;
             tokens >> s;
             if (s[0] == 'c') continue;
             if (s[0] == 'p') {
-                parse_header(tokens, E);
+                parse_header(tokens, header_edges);
             } else {
                 int a = stoi(s);
                 int b = 0;
                 tokens >> b;
-                --E;
+                --header_edges;
                 addEdge(a, b);
             }
         }
 
-        assert(E == 0);
+        if (header_edges != read_edges)
+            throw std::logic_error("expected " + std::to_string(header_edges) + " edges, found " +
+                                   std::to_string(read_edges));
     }
 
-    void parse_header(std::stringstream &tokens, int &E) {
+    void parse_header(std::stringstream &tokens, int &header_edges) {
         std::string problem;
         int n_nodes = 0;
-        tokens >> problem >> n_nodes >> E;
-        assert(problem == "ds");
+        tokens >> problem >> n_nodes >> header_edges;
+
+        if (problem != "ds")
+            throw std::logic_error("expected problem type to be 'ds', found '" + problem + "'");
+
         adj.resize(n_nodes + 1);
         status.resize(n_nodes + 1, UNDOMINATED);
         is_extra.resize(n_nodes + 1, false);
@@ -70,12 +75,15 @@ struct Instance {
         next_free_id = n_nodes + 1;
     }
 
+    // Returns an instance representing a subgraph induced by a sorted list of nodes to take.
     Instance(Instance &i, std::vector<int> to_take) : nodes(to_take), ds({}) {
-        assert(is_sorted(nodes.begin(), nodes.end()));
-        next_free_id = to_take.back()+1;
-        adj.resize(next_free_id+1, {});
-        status.resize(next_free_id+1, UNDOMINATED);
-        is_extra.resize(next_free_id+1, false);
+        DS_ASSERT(is_sorted(to_take.begin(), to_take.end()));
+        DS_ASSERT(set<int>(to_take.begin(), nodes.end()).size() == to_take.size());
+
+        next_free_id = to_take.back() + 1;
+        adj.resize(next_free_id + 1, {});
+        status.resize(next_free_id + 1, UNDOMINATED);
+        is_extra.resize(next_free_id + 1, false);
 
         for (auto v : nodes) {
             adj[v] = i.adj[v];
@@ -108,12 +116,12 @@ struct Instance {
         if (find(nodes.begin(), nodes.end(), v) == nodes.end()) return;
         for (auto u : adj[v]) {
             remove(adj[u], v);
-            assert(is_sorted(adj[u].begin(), adj[u].end()));
+            DS_ASSERT(is_sorted(adj[u].begin(), adj[u].end()));
         }
         adj[v].clear();
 
         remove(nodes, v);
-        assert(is_sorted(nodes.begin(), nodes.end()));
+        DS_ASSERT(is_sorted(adj[u].begin(), adj[u].end()));
     }
 
     void removeNodes(const std::vector<int> &l) {
@@ -159,10 +167,10 @@ struct Instance {
     }
 
     void take(int v) {
-        assert(status[v] != TAKEN);
+        DS_ASSERT(status[v] != TAKEN);
         if (is_extra[v]) {
             for (auto u : neighbourhoodExcluding(v)) {
-                assert(getStatus(u) != TAKEN);
+                DS_ASSERT(getStatus(u) != TAKEN);
                 take(u);
             }
 
@@ -172,7 +180,7 @@ struct Instance {
 
         ds.push_back(v);
         for (auto u : neighbourhoodExcluding(v)) {
-            assert(getStatus(u) != TAKEN);
+            DS_ASSERT(getStatus(u) != TAKEN);
             setStatus(u, DOMINATED);
         }
 
@@ -214,8 +222,6 @@ struct Instance {
         }
         return result;
     }
-
-
 
     void print() const {
         std::cerr << "[n = " << nodeCount() << ",\tm = " << edgeCount() << "]\n";
