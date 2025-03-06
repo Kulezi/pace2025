@@ -2,7 +2,7 @@
 #define DS_H
 #include "instance.h"
 #include "rrules.h"
-#include "setops.h"
+#include "utils.h"
 #include "td.h"
 namespace DomSet {
 
@@ -54,14 +54,16 @@ struct Exact {
         for (auto u : g.nodes) g.setStatus(u, UNDOMINATED);
         for (auto u : solution) {
             if (g.getStatus(u) == TAKEN)
-                throw std::logic_error("solution contains duplicates, one of which is vertex " + std::to_string(u));
+                throw std::logic_error("solution contains duplicates, one of which is vertex " +
+                                       std::to_string(u));
 
             g.setStatus(u, TAKEN);
             for (auto v : g.neighbourhoodExcluding(u)) g.setStatus(v, DOMINATED);
         }
 
         for (auto u : g.nodes)
-            if (g.getStatus(u) == UNDOMINATED) throw std::logic_error("solution doesn't dominate vertex " + std::to_string(u));
+            if (g.getStatus(u) == UNDOMINATED)
+                throw std::logic_error("solution doesn't dominate vertex " + std::to_string(u));
     }
 
     std::vector<int> solve(Instance g, std::ostream &out) {
@@ -76,7 +78,7 @@ struct Exact {
                 solveTreewidth(g);
             }
         }
-        
+
         verify_solution(g, g.ds);
 
         print(g.ds, out);
@@ -278,7 +280,8 @@ struct Exact {
     // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3]
     int getC(const Instance &g, TreeDecomposition &td, int t, TernaryFun f) {
         const auto &node = td[t];
-        assert(f < pow3[node.bag.size()]);
+        DS_ASSERT(f < pow3[node.bag.size()]);
+
         if (!c[t].empty() && c[t][f] != UNSET) return c[t][f];
         if (c[t].empty()) c[t].resize(pow3[node.bag.size()], UNSET);
         c[t][f] = INF;
@@ -369,14 +372,14 @@ struct Exact {
             }
         }
 
-        assert(false);
-        throw("Unknown node type reached in calc_c!");
+        throw std::logic_error("Unknown node type reached in calc_c!");
     }
 
     void recoverDS(Instance &g, TreeDecomposition &td, int t, TernaryFun f) {
         auto &node = td[t];
-        assert(f < pow3[node.bag.size()]);
-        assert(!c[t].empty() && c[t][f] != UNSET);
+        DS_ASSERT(f < pow3[node.bag.size()]);
+        DS_ASSERT(!c[t].empty() && c[t][f] != UNSET);
+
         auto bag_pos = [&](const std::vector<int> &bag, int v) -> int {
             int pos = 0;
             while (bag[pos] != v) ++pos;
@@ -450,7 +453,7 @@ struct Exact {
                     }
                 }
 
-                assert(false && "didn't find join argument!");
+                throw std::logic_error("encountered invalid join state");
             }
             default:
                 return;
