@@ -8,10 +8,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 
 set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=clang-diagnostic-*,clang-analyzer-*,cppcoreguidelines-*,-clang-diagnostic-c++17-extensions,-cppcoreguidelines-pro-bounds-pointer-arithmetic;-warnings-as-errors=*")
-# Include the src directory and the external directory (htd)
+# Include the src directory
 include_directories(${CMAKE_SOURCE_DIR}/src)
-include_directories(/usr/local/include/htd)  # Path to header files for htd shared library
-include_directories(/usr/local/include/htd_io)  # Path to header files for htd shared library
 # Link directories for htd shared library
 link_directories(/usr/local/lib)  # Update this with the actual path to the shared library
 
@@ -37,11 +35,7 @@ foreach(SRC ${SOURCE_FILES})
     # Link against the necessary headers
     target_include_directories(${EXEC_NAME} PRIVATE
         ${CMAKE_SOURCE_DIR}/src
-        /usr/local/include/htd # Include the htd directory for external dependency
     )
-
-    # Link the external htd shared library
-    target_link_libraries(${EXEC_NAME} PRIVATE htd htd_io)  # Link with the shared library 'htd'
 
     # For the 'bench' target, define DS_BENCHMARK
     if(EXEC_NAME STREQUAL "bench")
