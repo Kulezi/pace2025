@@ -1,0 +1,3 @@
+[submodule "src/ext/flow-cutter-pace17"]
+	path = src/ext/flow-cutter-pace17
+	url = https://github.com/Kulezi/flow-cutter-pace17

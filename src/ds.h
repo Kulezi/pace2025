@@ -3,7 +3,7 @@
 #include "instance.h"
 #include "rrules.h"
 #include "utils.h"
-#include "td.h"
+#include "nice_tree_decomposition.h"
 namespace DomSet {
 
 constexpr int UNSET = -1, INF = 1'000'000;
@@ -278,7 +278,7 @@ struct Exact {
     inline int cost(const Instance &g, int v) { return g.is_extra[v] ? INF : 1; }
 
     // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3]
-    int getC(const Instance &g, TreeDecomposition &td, int t, TernaryFun f) {
+    int getC(const Instance &g, NiceTreeDecomposition &td, int t, TernaryFun f) {
         const auto &node = td[t];
         DS_ASSERT(f < pow3[node.bag.size()]);
 
@@ -292,9 +292,9 @@ struct Exact {
         };
 
         switch (node.type) {
-            case NodeType::Leaf:
+            case NiceTreeDecomposition::NodeType::Leaf:
                 return c[t][f] = 0;
-            case NodeType::IntroduceVertex: {
+            case NiceTreeDecomposition::NodeType::IntroduceVertex: {
                 int pos = bag_pos(node.bag, node.v);
                 Color f_v = at(f, pos);
                 // This vertex could already be dominated by some reduction rule.
@@ -304,7 +304,7 @@ struct Exact {
                     return c[t][f] = getC(g, td, node.l_child, cut(f, pos));
                 }
             }
-            case NodeType::IntroduceEdge: {
+            case NiceTreeDecomposition::NodeType::IntroduceEdge: {
                 int pos_u = bag_pos(node.bag, node.to);
                 int pos_v = bag_pos(node.bag, node.v);
 
@@ -318,14 +318,14 @@ struct Exact {
                 else
                     return c[t][f] = getC(g, td, node.l_child, f);
             }
-            case NodeType::Forget: {
+            case NiceTreeDecomposition::NodeType::Forget: {
                 int pos_w = bag_pos(td[node.l_child].bag, node.v);
                 return c[t][f] =
                            std::min(cost(g, node.v) +
                                         getC(g, td, node.l_child, insert(f, pos_w, Color::BLACK)),
                                     getC(g, td, node.l_child, insert(f, pos_w, Color::WHITE)));
             }
-            case NodeType::Join: {
+            case NiceTreeDecomposition::NodeType::Join: {
 #if DS_BENCHMARK
                 auto start = std::chrono::high_resolution_clock::now();
 #endif
@@ -375,7 +375,7 @@ struct Exact {
         throw std::logic_error("Unknown node type reached in calc_c!");
     }
 
-    void recoverDS(Instance &g, TreeDecomposition &td, int t, TernaryFun f) {
+    void recoverDS(Instance &g, NiceTreeDecomposition &td, int t, TernaryFun f) {
         auto &node = td[t];
         DS_ASSERT(f < pow3[node.bag.size()]);
         DS_ASSERT(!c[t].empty() && c[t][f] != UNSET);
@@ -387,12 +387,12 @@ struct Exact {
         };
 
         switch (node.type) {
-            case NodeType::IntroduceVertex: {
+            case NiceTreeDecomposition::NodeType::IntroduceVertex: {
                 int pos = bag_pos(node.bag, node.v);
                 recoverDS(g, td, node.l_child, cut(f, pos));
                 return;
             }
-            case NodeType::IntroduceEdge: {
+            case NiceTreeDecomposition::NodeType::IntroduceEdge: {
                 int pos_u = bag_pos(node.bag, node.to);
                 int pos_v = bag_pos(node.bag, node.v);
 
@@ -407,7 +407,7 @@ struct Exact {
                     recoverDS(g, td, node.l_child, f);
                 return;
             }
-            case NodeType::Forget: {
+            case NiceTreeDecomposition::NodeType::Forget: {
                 int pos_w = bag_pos(td[node.l_child].bag, node.v);
                 if (c[t][f] ==
                     cost(g, node.v) + getC(g, td, node.l_child, insert(f, pos_w, Color::BLACK))) {
@@ -418,7 +418,7 @@ struct Exact {
                 }
                 return;
             }
-            case NodeType::Join: {
+            case NiceTreeDecomposition::NodeType::Join: {
                 int zeros = 0;
                 size_t N = node.bag.size();
                 for (size_t i = 0; i < N; ++i) {
@@ -476,7 +476,7 @@ struct Exact {
         benchmark_info.max_encountered_treewidth =
             std::max(benchmark_info.max_encountered_treewidth, td.width());
 #else
-        TreeDecomposition td(g);
+        NiceTreeDecomposition td(g);
         c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
 
         getC(g, td, td.root, 0);

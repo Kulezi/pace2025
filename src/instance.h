@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <set>
 
 #include "utils.h"
 
@@ -78,7 +79,7 @@ struct Instance {
     // Returns an instance representing a subgraph induced by a sorted list of nodes to take.
     Instance(Instance &i, std::vector<int> to_take) : nodes(to_take), ds({}) {
         DS_ASSERT(is_sorted(to_take.begin(), to_take.end()));
-        DS_ASSERT(set<int>(to_take.begin(), nodes.end()).size() == to_take.size());
+        DS_ASSERT(std::set<int>(to_take.begin(), to_take.end()).size() == to_take.size());
 
         next_free_id = to_take.back() + 1;
         adj.resize(next_free_id + 1, {});
@@ -121,7 +122,7 @@ struct Instance {
         adj[v].clear();
 
         remove(nodes, v);
-        DS_ASSERT(is_sorted(adj[u].begin(), adj[u].end()));
+        DS_ASSERT(std::is_sorted(adj[v].begin(), adj[v].end()));
     }
 
     void removeNodes(const std::vector<int> &l) {
