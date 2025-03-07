@@ -21,6 +21,11 @@ struct TreeDecomposition {
     int size() const {
         return bag.size();
     }
+
+    void print() const {
+        std::cerr << "width: " << width << std::endl;
+        std::cerr << "size: " << size() << std::endl;
+    }
 };
 
 #endif DS_TREE_DECOMPOSITION_H

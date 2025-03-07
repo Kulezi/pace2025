@@ -67,6 +67,8 @@ struct Exact {
     }
 
     std::vector<int> solve(Instance g, std::ostream &out) {
+        auto initial_instance = g;
+
         auto split = g.split();
         if (split.size() <= 1) {
             reduce(g);
@@ -79,9 +81,9 @@ struct Exact {
             }
         }
 
-        verify_solution(g, g.ds);
-
+        
         print(g.ds, out);
+        verify_solution(initial_instance, g.ds);
         return g.ds;
     }
 
@@ -463,7 +465,7 @@ struct Exact {
     void solveTreewidth(Instance &g) {
 #ifdef DS_BENCHMARK
         auto start = std::chrono::high_resolution_clock::now();
-        TreeDecomposition td(g);
+        NiceTreeDecomposition td(g);
         benchmark_info.treewidth_decomposition_time +=
             std::chrono::high_resolution_clock::now() - start;
         start = std::chrono::high_resolution_clock::now();

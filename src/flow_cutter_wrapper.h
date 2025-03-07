@@ -1,3 +1,6 @@
+#ifndef DS_FLOW_CUTTER_WRAPPER_H
+#define DS_FLOW_CUTTER_WRAPPER_H
+
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,8 +16,8 @@
 #include <string>
 #include <vector>
 
-#include "ext/flow-cutter-pace17/src/chain.h"
 #include "ext/flow-cutter-pace17/src/cell.h"
+#include "ext/flow-cutter-pace17/src/chain.h"
 #include "ext/flow-cutter-pace17/src/contraction_graph.h"
 #include "ext/flow-cutter-pace17/src/filter.h"
 #include "ext/flow-cutter-pace17/src/greedy_order.h"
@@ -90,7 +93,7 @@ S& access_internal_vector(std::priority_queue<T, S, C>& q) {
 
 void print_comment(std::string msg) {
     msg = "c " + std::move(msg) + "\n";
-    ignore_return_value(write(STDOUT_FILENO, msg.data(), msg.length()));
+    ignore_return_value(write(STDERR_FILENO, msg.data(), msg.length()));
 }
 
 template <class Tail, class Head>
@@ -321,7 +324,7 @@ ArrayIDIDFunc preorder, inv_preorder;
 
 TreeDecomposition make_tree_decompostion_of_multilevel_partition(
     const ArrayIDIDFunc& tail, const ArrayIDIDFunc& head, const ArrayIDIDFunc& to_input_node_id,
-    const std::vector<Cell>& cell_list, const vector<int> &reverse_mapping) {
+    const std::vector<Cell>& cell_list, const vector<int>& reverse_mapping) {
     TreeDecomposition td;
     int tw = get_treewidth_of_multilevel_partition(cell_list);
     int nodeCount = get_node_count_of_multilevel_partition(cell_list);
@@ -346,9 +349,10 @@ TreeDecomposition make_tree_decompostion_of_multilevel_partition(
     return td;
 }
 
-TreeDecomposition multilevel_partition_as_tree_decomposition(
-    const std::vector<Cell>& cell_list, const vector<int> &reverse_mapping) {
-    return make_tree_decompostion_of_multilevel_partition(tail, head, preorder, cell_list, reverse_mapping);
+TreeDecomposition multilevel_partition_as_tree_decomposition(const std::vector<Cell>& cell_list,
+                                                             const vector<int>& reverse_mapping) {
+    return make_tree_decompostion_of_multilevel_partition(tail, head, preorder, cell_list,
+                                                          reverse_mapping);
 }
 
 char no_decomposition_message[] =
@@ -382,7 +386,8 @@ int compute_max_bag_size_of_order(const ArrayIDIDFunc& order) {
 }
 
 TreeDecomposition tree_decompostion_of_order(ArrayIDIDFunc tail, ArrayIDIDFunc head,
-                                                         const ArrayIDIDFunc& order, const vector<int> &reverse_mapping) {
+                                             const ArrayIDIDFunc& order,
+                                             const vector<int>& reverse_mapping) {
     const int node_count = tail.image_count();
 
     auto inv_order = inverse_permutation(order);
@@ -534,11 +539,13 @@ TreeDecomposition tree_decompostion_of_order(ArrayIDIDFunc tail, ArrayIDIDFunc h
     return td;
 }
 
-TreeDecomposition compute_decomposition_given_order(const ArrayIDIDFunc& order, const vector<int> &reverse_mapping) {
+TreeDecomposition compute_decomposition_given_order(const ArrayIDIDFunc& order,
+                                                    const vector<int>& reverse_mapping) {
     return tree_decompostion_of_order(tail, head, order, reverse_mapping);
 }
 
-void test_new_order(const ArrayIDIDFunc& order, TreeDecomposition& bestDecomposition, const vector<int> &reverse_mapping) {
+void test_new_order(const ArrayIDIDFunc& order, TreeDecomposition& bestDecomposition,
+                    const vector<int>& reverse_mapping) {
     int x = compute_max_bag_size_of_order(order);
     {
         if (x < bestDecomposition.width) {
@@ -546,7 +553,7 @@ void test_new_order(const ArrayIDIDFunc& order, TreeDecomposition& bestDecomposi
             {
                 string msg = "c status " + to_string(bestDecomposition.width) + " " +
                              to_string(get_milli_time()) + "\n";
-                ignore_return_value(write(STDOUT_FILENO, msg.data(), msg.length()));
+                ignore_return_value(write(STDERR_FILENO, msg.data(), msg.length()));
             }
         }
     }
@@ -556,10 +563,11 @@ void test_new_order(const ArrayIDIDFunc& order, TreeDecomposition& bestDecomposi
 
 namespace FlowCutter {
 
-// Finds a tree decomposition with approximately low treewidth. 
+// Finds a tree decomposition with approximately low treewidth.
 // Note that time_limit only tells the FlowCutter to stop looking for new solutions, so it might
 // terminate a lot later.
-TreeDecomposition decompose(Instance input_graph, int random_seed, chrono::milliseconds time_limit) {
+TreeDecomposition decompose(Instance input_graph, int random_seed,
+                            chrono::milliseconds time_limit, int max_iterations) {
     TransferGraph g(input_graph);
     TreeDecomposition best_decomposition;
     best_decomposition.width = numeric_limits<int>::max();
@@ -596,8 +604,8 @@ TreeDecomposition decompose(Instance input_graph, int random_seed, chrono::milli
 
             int tw = get_treewidth_of_multilevel_partition(multilevel_partition);
             {
-                best_decomposition =
-                    multilevel_partition_as_tree_decomposition(multilevel_partition, g.reverse_mapping);
+                best_decomposition = multilevel_partition_as_tree_decomposition(
+                    multilevel_partition, g.reverse_mapping);
             }
             print_comment("status " + to_string(best_decomposition.width) + " " +
                           to_string(get_milli_time()));
@@ -648,7 +656,7 @@ TreeDecomposition decompose(Instance input_graph, int random_seed, chrono::milli
                         flow_cutter::Config::SeparatorSelection::node_min_expansion;
 
                     for (int i = 2; chrono::duration_cast<chrono::milliseconds>(
-                                        chrono::high_resolution_clock::now() - start) <= time_limit;
+                                        chrono::high_resolution_clock::now() - start) <= time_limit && i < max_iterations;
                          ++i) {
                         config.random_seed = rand_gen();
                         if (i % 16 == 0) ++config.cutter_count;
@@ -668,6 +676,7 @@ TreeDecomposition decompose(Instance input_graph, int random_seed, chrono::milli
                         compute_multilevel_partition(
                             tail, head, flow_cutter::ComputeSeparator(config),
                             best_decomposition.width, on_new_multilevel_partition);
+                            
                     }
                 }
             } catch (...) {
@@ -679,3 +688,5 @@ TreeDecomposition decompose(Instance input_graph, int random_seed, chrono::milli
     return best_decomposition;
 }
 }  // namespace FlowCutter
+
+#endif  // DS_FLOW_CUTTER_WRAPPER_H
