@@ -10,6 +10,8 @@
 #define DS_ASSERT(cond)
 #endif
 
+#define dbg(x) #x << " = " << x << " "
+
 std::vector<int> intersect(const std::vector<int> a, const std::vector<int> b) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
     DS_ASSERT(is_sorted(b.begin(), b.end()));
