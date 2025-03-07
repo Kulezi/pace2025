@@ -343,7 +343,7 @@ TreeDecomposition make_tree_decompostion_of_multilevel_partition(
     }
 
     for (int i = 0; i < bagCount; ++i) {
-        if (cell_list[i].parent_cell != -1) td.adj[i].push_back(cell_list[i].parent_cell);
+        if (cell_list[i].parent_cell != -1) td.addEdge(i,cell_list[i].parent_cell);
     }
 
     return td;
@@ -480,7 +480,7 @@ TreeDecomposition tree_decompostion_of_order(ArrayIDIDFunc tail, ArrayIDIDFunc h
     }
 
     {
-        auto output_backbone_edge = [&](int b, int p) { td.adj[b].push_back(p); };
+        auto output_backbone_edge = [&](int b, int p) { td.addEdge(b, p); };
 
         std::vector<int> tail, head, weight;
 

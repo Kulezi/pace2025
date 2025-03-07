@@ -25,6 +25,16 @@ struct TreeDecomposition {
     void print() const {
         std::cerr << "width: " << width << std::endl;
         std::cerr << "size: " << size() << std::endl;
+        for (int i = 0; i < size(); i++) {
+            std::cerr << i <<":" << dbgv(bag[i]) << dbgv(adj[i]) << std::endl;
+        }
+    }
+
+    void addEdge(int a, int b) {
+        DS_ASSERT(find(adj[a].begin(), adj[a].end(), b) == adj[a].end());
+        DS_ASSERT(find(adj[b].begin(), adj[b].end(), a) == adj[b].end());
+        adj[a].push_back(b);
+        adj[b].push_back(a);
     }
 };
 
