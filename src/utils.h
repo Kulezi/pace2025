@@ -12,6 +12,8 @@
 
 #define dbg(x) #x << " = " << x << " "
 
+// Computes A ∩ B.
+// Complexity: O(|A| + |B|)
 std::vector<int> intersect(const std::vector<int> a, const std::vector<int> b) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
     DS_ASSERT(is_sorted(b.begin(), b.end()));
@@ -21,6 +23,8 @@ std::vector<int> intersect(const std::vector<int> a, const std::vector<int> b) {
     return res;
 }
 
+// Computes A ∪ B.
+// Complexity: O(|A| + |B|)
 std::vector<int> unite(const std::vector<int> &a, const std::vector<int> &b) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
     DS_ASSERT(is_sorted(b.begin(), b.end()));
@@ -30,6 +34,8 @@ std::vector<int> unite(const std::vector<int> &a, const std::vector<int> &b) {
     return res;
 }
 
+// Computes A ∪ B.
+// Complexity: O(|A| + |B|)
 std::vector<int> unite(const std::vector<int> &&a, const std::vector<int> &&b) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
     DS_ASSERT(is_sorted(b.begin(), b.end()));
@@ -39,6 +45,8 @@ std::vector<int> unite(const std::vector<int> &&a, const std::vector<int> &&b) {
     return res;
 }
 
+// Inserts v into a preserving ascending order.
+// Complexity: O(|A|)
 void insert(std::vector<int> &a, int v) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
 
@@ -46,6 +54,8 @@ void insert(std::vector<int> &a, int v) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
 }
 
+// Computes A \ {v}.
+// Complexity: O(|A|)
 void remove(std::vector<int> &a, int v) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
 
@@ -55,6 +65,8 @@ void remove(std::vector<int> &a, int v) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
 }
 
+// Computes A \ B.
+// Complexity: O(|A| * |B|)
 std::vector<int> remove(std::vector<int> a, const std::vector<int> &b) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
     DS_ASSERT(is_sorted(b.begin(), b.end()));
@@ -66,13 +78,16 @@ std::vector<int> remove(std::vector<int> a, const std::vector<int> &b) {
     return a;
 }
 
+// Returns a human-readable string representing given vector.
 std::string dbgv(const std::vector<int> v) {
     std::string s = "[ ";
     for (auto i : v) s += std::to_string(i) + " ";
     s += "]";
     return s;
 }
+
 // Returns true if a contains b.
+// Complexity: O(|A| * |B|).
 bool contains(const std::vector<int> a, const std::vector<int> b) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
     DS_ASSERT(is_sorted(b.begin(), b.end()));
@@ -80,9 +95,4 @@ bool contains(const std::vector<int> a, const std::vector<int> b) {
     return remove(b, a).empty();
 }
 
-std::string pprint(std::vector<int> x) {
-    std::string res = "[";
-    for (auto i : x) res += std::to_string(i) + " ";
-    return res + "]";
-}
 #endif  // UTILS_H

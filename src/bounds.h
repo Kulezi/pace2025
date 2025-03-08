@@ -8,7 +8,8 @@ namespace bounds {
 
 // Returns an approximation that is a upper bound on the number of additional vertices needed to
 // make this instance fully dominated, calculated by a greedy algorithm always taking the maximum
-// degree undominated node first. Time complexity: O ((n + m) * log(n+m))
+// degree undominated node first. 
+// Complexity: O ((n + m) * log(n + m))
 int greedy_upper_bound(const Instance &g) {
     int upper_bound = 0;
     auto nodes = g.nodes;

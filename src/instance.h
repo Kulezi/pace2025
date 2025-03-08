@@ -4,10 +4,10 @@
 #include <cassert>
 #include <iostream>
 #include <queue>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <set>
 
 #include "utils.h"
 
@@ -93,12 +93,14 @@ struct Instance {
         }
     }
 
+    // Returns the number of nodes in the graph.
     size_t nodeCount() const { return nodes.size(); }
 
     void setStatus(int v, Status c) { status[v] = c; }
 
     Status getStatus(int v) const { return status[v]; }
 
+    // Returns the degree of given node.
     int deg(int v) const { return (int)adj[v].size(); }
 
     // Creates and returns the id of the created node.
@@ -125,6 +127,8 @@ struct Instance {
         DS_ASSERT(std::is_sorted(adj[v].begin(), adj[v].end()));
     }
 
+    // Removes nodes in the given list from the graph.
+    // Complexity: O(sum of deg(v) over l ∪ N(l))
     void removeNodes(const std::vector<int> &l) {
         for (auto &v : l) removeNode(v);
     }
@@ -136,29 +140,42 @@ struct Instance {
         insert(adj[v], u);
     }
 
+    // Removes edge (v, w) from the graph.
+    // Complexity: O(deg(v) + deg(w))
     void removeEdge(int v, int w) {
         remove(adj[v], w);
         remove(adj[w], v);
     }
 
+    // Same meaning as N[v] notation.
+    // Complexity: O(deg(v)).
     const std::vector<int> neighbourhoodIncluding(int v) const {
         auto res = adj[v];
         insert(res, v);
         return res;
     }
 
+    // Returns the number of edges in the graph.
+    // Complexity: O(n)
     int edgeCount() const {
         int sum_deg = 0;
         for (auto i : nodes) sum_deg += deg(i);
         return sum_deg / 2;
     }
 
+    // Same meaning as N(v) notation.
+    // Complexity: O(1)
     const std::vector<int> neighbourhoodExcluding(int v) const { return adj[v]; }
 
+    // Returns true if and only if undirected edge (u, v) is present in the graph.
+    // Complexity: O(deg(u)) !
     bool hasEdge(int u, int v) const {
         return std::find(adj[u].begin(), adj[u].end(), v) != adj[u].end();
     }
 
+    // Returns the minimum degree node of given status present in the graph.
+    // Returns -1 if there is no such node.
+    // Complexity: O(n)
     int minDegNodeOfStatus(Status s) const {
         int best_v = -1;
         for (auto v : nodes)
@@ -167,6 +184,9 @@ struct Instance {
         return best_v;
     }
 
+    // Inserts given node to the dominating set, changing the status of
+    // it's neighours to DOMINATED if they are not, the node is removed from the graph afterwards.
+    // Complexity: O(deg(v)) or O(sum of degrees of neighbours) in case of extra vertices.
     void take(int v) {
         DS_ASSERT(status[v] != TAKEN);
         if (is_extra[v]) {
@@ -188,7 +208,9 @@ struct Instance {
         removeNode(v);
     }
 
-    // Separates the nodes of a graph into connected components.
+    // Splits the list of graph nodes into individual connected components.
+    // Note in case of a connected graph it returns an empty list.
+    // Complexity: O(n + m)
     std::vector<std::vector<int>> split() const {
         std::vector<int> component(next_free_id + 1, -1);
         int components = 0;
@@ -224,6 +246,7 @@ struct Instance {
         return result;
     }
 
+    // Prints the graph to stdout in a human-readable format.
     void print() const {
         std::cerr << "[n = " << nodeCount() << ",\tm = " << edgeCount() << "]\n";
         for (int i : nodes) {
