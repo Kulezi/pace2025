@@ -11,6 +11,7 @@ mkdir $SOLUTIONS
 
 basename -a in/PACE2025-instances/ds/exact/*.gr | parallel -j2 "./eval.sh {}"
 
-ls $SOLUTIONS/*.header | head -n 1 | xargs cat
+echo -ne "file" 
+echo "p ds 0 0" | ./eval.out >/dev/null
 ls $SOLUTIONS/*.content | xargs cat
 
