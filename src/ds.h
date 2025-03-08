@@ -1,9 +1,9 @@
 #ifndef DS_H
 #define DS_H
 #include "instance.h"
+#include "nice_tree_decomposition.h"
 #include "rrules.h"
 #include "utils.h"
-#include "nice_tree_decomposition.h"
 namespace DomSet {
 
 constexpr int UNSET = -1, INF = 1'000'000;
@@ -30,10 +30,11 @@ struct BenchmarkInfo {
 };
 #endif
 
-constexpr size_t MAX_HANDLED_TREEWIDTH = 20;
-constexpr size_t pow3[MAX_HANDLED_TREEWIDTH] = {
+constexpr size_t MAX_HANDLED_TREEWIDTH = 18;
+constexpr size_t GOOD_ENOUGH_TREEWIDTH = 15;
+constexpr size_t pow3[MAX_HANDLED_TREEWIDTH + 1] = {
     1,     3,      9,      27,      81,      243,      729,      2187,      6561,      19683,
-    59049, 177147, 531441, 1594323, 4782969, 14348907, 43046721, 129140163, 387420489, 1162261467,
+    59049, 177147, 531441, 1594323, 4782969, 14348907, 43046721, 129140163, 387420489,
 };
 
 struct Exact {
@@ -81,7 +82,6 @@ struct Exact {
             }
         }
 
-        
         print(g.ds, out);
         verify_solution(initial_instance, g.ds);
         return g.ds;
@@ -465,7 +465,7 @@ struct Exact {
     void solveTreewidth(Instance &g) {
 #ifdef DS_BENCHMARK
         auto start = std::chrono::high_resolution_clock::now();
-        NiceTreeDecomposition td(g);
+        NiceTreeDecomposition td(g, GOOD_ENOUGH_TREEWIDTH);
         benchmark_info.treewidth_decomposition_time +=
             std::chrono::high_resolution_clock::now() - start;
         start = std::chrono::high_resolution_clock::now();
@@ -478,13 +478,13 @@ struct Exact {
         benchmark_info.max_encountered_treewidth =
             std::max(benchmark_info.max_encountered_treewidth, td.width());
 #else
-        NiceTreeDecomposition td(g);
+        NiceTreeDecomposition td(g, GOOD_ENOUGH_TREEWIDTH);
         c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
 
         getC(g, td, td.root, 0);
         recoverDS(g, td, td.root, 0);
 #endif
     }
-}; 
+};
 }  // namespace DomSet
 #endif  // DS_H
