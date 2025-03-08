@@ -13,14 +13,8 @@ jobs:
     - uses: actions/checkout@v4
     - name: install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y ninja-build
         pip3 install tqdm
-        git clone https://github.com/mabseher/htd/
-        cd htd
-        cmake .
-        sudo make
-        sudo make install
+        git submodule update --init --recursive
     - name: stresstest
       run: /usr/bin/time ./stresstest.py
 
@@ -30,12 +24,6 @@ jobs:
     - uses: actions/checkout@v4
     - name: install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y ninja-build
-        git clone https://github.com/mabseher/htd/
-        cd htd
-        cmake .
-        sudo make
-        sudo make install
+        git submodule update --init --recursive
     - name: benchmark
       run: /usr/bin/time ./bench.sh
