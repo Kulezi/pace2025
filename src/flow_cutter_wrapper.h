@@ -552,10 +552,11 @@ void test_new_order(const ArrayIDIDFunc& order, TreeDecomposition& bestDecomposi
 namespace FlowCutter {
 
 // Finds a tree decomposition with approximately low treewidth.
+// Returns the first decomposition that will have treewidth under treewidth_threshold.
 // Note that time_limit only tells the FlowCutter to stop looking for new solutions, so it might
 // terminate a lot later.
 TreeDecomposition decompose(Instance input_graph, int random_seed,
-                            chrono::milliseconds time_limit, int max_iterations) {
+                            chrono::milliseconds time_limit, int treewidth_threshold) {
     TransferGraph g(input_graph);
     TreeDecomposition best_decomposition;
     best_decomposition.width = numeric_limits<int>::max();
@@ -644,7 +645,7 @@ TreeDecomposition decompose(Instance input_graph, int random_seed,
                         flow_cutter::Config::SeparatorSelection::node_min_expansion;
 
                     for (int i = 2; chrono::duration_cast<chrono::milliseconds>(
-                                        chrono::high_resolution_clock::now() - start) <= time_limit && i < max_iterations;
+                                        chrono::high_resolution_clock::now() - start) <= time_limit && best_decomposition.width > treewidth_threshold;
                          ++i) {
                         config.random_seed = rand_gen();
                         if (i % 16 == 0) ++config.cutter_count;
