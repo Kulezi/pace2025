@@ -31,7 +31,7 @@ struct NiceTreeDecomposition {
     };
 
     NiceTreeDecomposition(Instance &g, int treewidth_threshold) : g(g), decomp() {
-        auto initial_decomposition = FlowCutter::decompose(g, 0, 60s, treewidth_threshold);
+        auto initial_decomposition = FlowCutter::decompose(g, 0, 1s, treewidth_threshold);
 
         auto rooted_decomposition = RootedTreeDecomposition(initial_decomposition);
         rooted_decomposition.SortBags();

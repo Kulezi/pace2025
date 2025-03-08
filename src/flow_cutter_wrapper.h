@@ -77,7 +77,6 @@ struct TransferGraph {
 };
 
 ArrayIDIDFunc tail, head;
-void ignore_return_value(long long) {}
 
 unsigned long long get_milli_time() {
     struct timeval tv;
@@ -92,11 +91,6 @@ S& access_internal_vector(std::priority_queue<T, S, C>& q) {
         static S& access(priority_queue<T, S, C>& q) { return q.*&Hacked::c; }
     };
     return Hacked::access(q);
-}
-
-void print_comment(std::string msg) {
-    msg = "c " + std::move(msg) + "\n";
-    ignore_return_value(write(STDERR_FILENO, msg.data(), msg.length()));
 }
 
 template <class Tail, class Head>
@@ -538,11 +532,6 @@ void test_new_order(const ArrayIDIDFunc& order, TreeDecomposition& bestDecomposi
     {
         if (x < bestDecomposition.width) {
             bestDecomposition = compute_decomposition_given_order(order, reverse_mapping);
-            {
-                string msg = "c status " + to_string(bestDecomposition.width) + " " +
-                             to_string(get_milli_time()) + "\n";
-                ignore_return_value(write(STDERR_FILENO, msg.data(), msg.length()));
-            }
         }
     }
 }
@@ -596,8 +585,6 @@ TreeDecomposition decompose(Instance input_graph, int random_seed,
                 best_decomposition = multilevel_partition_as_tree_decomposition(
                     multilevel_partition, g.reverse_mapping);
             }
-            print_comment("status " + to_string(best_decomposition.width) + " " +
-                          to_string(get_milli_time()));
         };
 
         {
@@ -606,7 +593,6 @@ TreeDecomposition decompose(Instance input_graph, int random_seed,
                 rand_gen.seed(random_seed);
 
                 if (node_count > 500000) {
-                    print_comment("start F1 with 0.1 min balance and edge_first");
                     flow_cutter::Config config;
                     config.cutter_count = 1;
                     config.random_seed = rand_gen();
@@ -620,23 +606,17 @@ TreeDecomposition decompose(Instance input_graph, int random_seed,
                 }
 
                 if (node_count < 50000) {
-                    print_comment("min degree heuristic");
                     test_new_order(chain(compute_greedy_min_degree_order(tail, head), inv_preorder),
                                    best_decomposition, g.reverse_mapping);
                 }
 
                 if (node_count < 10000) {
-                    print_comment("min shortcut heuristic");
                     test_new_order(
                         chain(compute_greedy_min_shortcut_order(tail, head), inv_preorder),
                         best_decomposition, g.reverse_mapping);
                 }
 
                 {
-                    print_comment(
-                        "run with 0.0/0.1/0.2 min balance and node_min_expansion in endless "
-                        "loop "
-                        "with varying seed");
                     flow_cutter::Config config;
                     config.cutter_count = 1;
                     config.random_seed = rand_gen();
