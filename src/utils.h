@@ -66,16 +66,32 @@ void remove(std::vector<int> &a, int v) {
 }
 
 // Computes A \ B.
-// Complexity: O(|A| * |B|)
+// Complexity: O(|A| + |B|)
 std::vector<int> remove(std::vector<int> a, const std::vector<int> &b) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
     DS_ASSERT(is_sorted(b.begin(), b.end()));
 
-    for (auto val : b) remove(a, val);
+    std::vector<int> res;
+    
+    // Pointers to smallest unhandled elements.
+    size_t i = 0, j = 0;
+    while (i < a.size() && j < b.size()) {
+        if (a[i] < b[j]) {
+            res.push_back(a[i]);
+            ++i;
+        } else if (a[i] == b[j]) {
+            ++i;
+            ++j;
+        } else if (a[i] > b[j]) {
+            ++j;
+        }
+    }
 
-    DS_ASSERT(is_sorted(a.begin(), a.end()));
+    while (i < a.size()) res.push_back(a[i++]);
 
-    return a;
+    DS_ASSERT(is_sorted(res.begin(), res.end()));
+
+    return res;
 }
 
 // Returns a human-readable string representing given vector.
@@ -87,7 +103,7 @@ std::string dbgv(const std::vector<int> v) {
 }
 
 // Returns true if a contains b.
-// Complexity: O(|A| * |B|).
+// Complexity: O(|A| + |B|).
 bool contains(const std::vector<int> a, const std::vector<int> b) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
     DS_ASSERT(is_sorted(b.begin(), b.end()));
