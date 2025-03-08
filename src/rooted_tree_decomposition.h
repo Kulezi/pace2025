@@ -85,7 +85,7 @@ struct RootedTreeDecomposition {
 
     void print() {
         std::cerr << "decomposition of width " << width << " and size " << size() << std::endl;
-        for (int i = 0; i < decomp.size(); i++) {
+        for (size_t i = 0; i < decomp.size(); i++) {
             std::cerr << i << ", bag = " << dbgv(decomp[i].bag)
                       << " children = " << dbgv(decomp[i].children)
                       << " parent = " << decomp[i].parent_id << std::endl;
@@ -156,4 +156,4 @@ struct RootedTreeDecomposition {
     }
 };
 
-#endif DS_ROOTED_TREE_DECOMPOSITION_H
+#endif // DS_ROOTED_TREE_DECOMPOSITION_H

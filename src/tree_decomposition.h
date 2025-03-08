@@ -38,4 +38,4 @@ struct TreeDecomposition {
     }
 };
 
-#endif DS_TREE_DECOMPOSITION_H
+#endif // DS_TREE_DECOMPOSITION_H

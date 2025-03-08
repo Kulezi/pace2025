@@ -1,3 +1,6 @@
+// Original source: https://github.com/kit-algo/flow-cutter-pace17/blob/7f94541b0119284ea9322d528cef420e041539b6/src/pace.cpp
+// Adapted for the purposes of PACE2025 Dominating Set Exact Solver.
+
 #ifndef DS_FLOW_CUTTER_WRAPPER_H
 #define DS_FLOW_CUTTER_WRAPPER_H
 
@@ -327,7 +330,6 @@ TreeDecomposition make_tree_decompostion_of_multilevel_partition(
     const std::vector<Cell>& cell_list, const vector<int>& reverse_mapping) {
     TreeDecomposition td;
     int tw = get_treewidth_of_multilevel_partition(cell_list);
-    int nodeCount = get_node_count_of_multilevel_partition(cell_list);
     int bagCount = cell_list.size();
 
     td.width = tw;
@@ -354,20 +356,6 @@ TreeDecomposition multilevel_partition_as_tree_decomposition(const std::vector<C
     return make_tree_decompostion_of_multilevel_partition(tail, head, preorder, cell_list,
                                                           reverse_mapping);
 }
-
-char no_decomposition_message[] =
-    "c info programm was aborted before any decomposition was computed\n";
-
-// void signal_handler(int) {
-//     const char* x = best_decomposition;
-//     if (x != 0)
-//         ignore_return_value(write(STDOUT_FILENO, x, strlen(x)));
-//     else
-//         ignore_return_value(
-//             write(STDOUT_FILENO, no_decomposition_message, sizeof(no_decomposition_message)));
-
-//     _Exit(EXIT_SUCCESS);
-// }
 
 int compute_max_bag_size_of_order(const ArrayIDIDFunc& order) {
     auto inv_order = inverse_permutation(order);
@@ -602,7 +590,7 @@ TreeDecomposition decompose(Instance input_graph, int random_seed,
             if (!must_print && now - last_print < 30000) return;
             last_print = now;
 
-            int tw = get_treewidth_of_multilevel_partition(multilevel_partition);
+            
             {
                 best_decomposition = multilevel_partition_as_tree_decomposition(
                     multilevel_partition, g.reverse_mapping);

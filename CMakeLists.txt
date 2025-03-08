@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 3.10)
 project(SourceCode)
 
 # Set C++ standard
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
   
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -g -w")
+set(CMAKE_CXX_FLAGS "-Wall -g")
 
 # Include the src directory
 include_directories(${CMAKE_SOURCE_DIR}/src)
@@ -14,12 +14,18 @@ include_directories(${CMAKE_SOURCE_DIR}/src/ext/flow-cutter-pace17)
 # Set the executable suffix to .out
 set(CMAKE_EXECUTABLE_SUFFIX ".out")
 
-add_library(flow_cutter    
+# Define the external library separately (suppress warnings here explicitly)
+add_library(flow_cutter STATIC
     src/ext/flow-cutter-pace17/src/cell.cpp
     src/ext/flow-cutter-pace17/src/greedy_order.cpp
     src/ext/flow-cutter-pace17/src/list_graph.cpp
     src/ext/flow-cutter-pace17/src/pace.cpp
     src/ext/flow-cutter-pace17/src/tree_decomposition.cpp
+)
+
+# Include external headers with SYSTEM keyword to suppress warnings
+target_include_directories(flow_cutter SYSTEM PUBLIC
+    ${CMAKE_SOURCE_DIR}/src/ext/flow-cutter-pace17/src
 )
 
 # List of source files for each executable
@@ -28,12 +34,6 @@ set(SOURCE_FILES
     src/brute.cpp
     src/main.cpp
     src/random_graph_gen.cpp
-    src/decomposition_test.cpp
-)
-
-set_source_files_properties(
-    ${EXTERNAL_LIBRARY_SOURCES}
-    PROPERTIES COMPILE_FLAGS -w
 )
 
 # Define each executable separately

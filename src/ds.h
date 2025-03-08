@@ -485,6 +485,6 @@ struct Exact {
         recoverDS(g, td, td.root, 0);
 #endif
     }
-};  // namespace DomSet
+}; 
 }  // namespace DomSet
 #endif  // DS_H
