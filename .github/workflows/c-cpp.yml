@@ -11,10 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
     - name: install dependencies
       run: |
         pip3 install tqdm
-        git submodule update --init --recursive
     - name: stresstest
       run: /usr/bin/time ./stresstest.py
 
@@ -22,8 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - name: install dependencies
-      run: |
-        git submodule update --init --recursive
+      with:
+        submodules: recursive
     - name: benchmark
       run: /usr/bin/time ./bench.sh
