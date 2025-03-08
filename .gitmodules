@@ -1,3 +1,6 @@
 [submodule "src/ext/flow-cutter-pace17"]
 	path = src/ext/flow-cutter-pace17
 	url = https://github.com/Kulezi/flow-cutter-pace17
+[submodule "in/PACE2025-instances"]
+	path = in/PACE2025-instances
+	url = https://github.com/MarioGrobler/PACE2025-instances
