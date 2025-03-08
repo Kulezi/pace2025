@@ -40,8 +40,6 @@ struct RootedTreeDecomposition {
         if (td.size() > 0) {
             make_nodes(root, td, NONE);
             DS_ASSERT([&]() {
-                td.print();
-
                 // Check if depth first search filled all nodes.
                 for (auto &node : decomp) {
                     if (node.id == UNASSIGNED) return false;

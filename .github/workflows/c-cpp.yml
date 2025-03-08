@@ -27,3 +27,12 @@ jobs:
         submodules: recursive
     - name: benchmark
       run: /usr/bin/time ./bench.sh
+
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: benchmark
+      run: /usr/bin/time ./eval_all.sh

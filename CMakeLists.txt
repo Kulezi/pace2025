@@ -34,6 +34,7 @@ set(SOURCE_FILES
     src/brute.cpp
     src/main.cpp
     src/random_graph_gen.cpp
+    src/eval.cpp
 )
 
 # Define each executable separately
@@ -56,6 +57,12 @@ foreach(SRC ${SOURCE_FILES})
 
     # For the 'bench' target, define DS_BENCHMARK
     if(EXEC_NAME STREQUAL "bench")
+        target_compile_definitions(${EXEC_NAME} PRIVATE DS_BENCHMARK)
+        target_compile_options(${EXEC_NAME} PRIVATE -O2)
+    endif()
+
+    # For the 'eval' target, define DS_BENCHMARK
+    if(EXEC_NAME STREQUAL "eval")
         target_compile_definitions(${EXEC_NAME} PRIVATE DS_BENCHMARK)
         target_compile_options(${EXEC_NAME} PRIVATE -O2)
     endif()
