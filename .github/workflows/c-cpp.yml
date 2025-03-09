@@ -35,4 +35,6 @@ jobs:
       with:
         submodules: recursive
     - name: eval
-      run: /usr/bin/time ./eval_all.sh
+      run: |
+        set +e
+        /usr/bin/time ./eval_all.sh

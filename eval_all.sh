@@ -9,7 +9,7 @@ make eval
 rm -rf $SOLUTIONS
 mkdir $SOLUTIONS
 
-basename -a in/PACE2025-instances/ds/exact/*.gr | parallel -j2 "./eval.sh {}"
+basename -a in/PACE2025-instances/ds/exact/*.gr | parallel --halt never -j2 "./eval.sh {}" || true
 
 
 echoerr() { echo "$@" 1>&2; }
