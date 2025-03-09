@@ -61,7 +61,7 @@ struct TransferGraph {
 
         int nextArc = 0;
         for (auto v : inputGraph.nodes) {
-            for (auto w : inputGraph.adj[v]) {
+            for (auto [w, _] : inputGraph.adj[v]) {
                 g.head[nextArc] = mapping[v];
                 g.tail[nextArc] = mapping[w];
                 ++nextArc;

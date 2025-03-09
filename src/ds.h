@@ -167,7 +167,7 @@ struct Exact {
         if (g.deg(v) != 1) take(g, v, best_ds, level + 1);
 
         // Branches 1, ..., deg(v): v doesn't belong to DS -> take any neighbour to DS.
-        for (auto u : g.adj[v]) {
+        for (auto [u, _] : g.adj[v]) {
             take(g, u, best_ds, level + 1);
         }
     }
@@ -194,7 +194,7 @@ struct Exact {
                 if (mask >> i & 1) {
                     ds.push_back(v);
                     dominated[v] = true;
-                    for (auto u : g.adj[v]) dominated[u] = true;
+                    for (auto [u, _] : g.adj[v]) dominated[u] = true;
                 }
 
                 ++node;

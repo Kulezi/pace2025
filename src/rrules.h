@@ -18,7 +18,7 @@ bool hasUndominatedNode(Instance& g, std::vector<int> nodes) {
 // Checks whether node u is an exit vertex with respect to node v.
 // Complexity: O(min(deg(u), deg(v)))
 bool isExit(const Instance& g, int u, int v) {
-    for (auto w : g.adj[u]) {
+    for (auto [w, _] : g.adj[u]) {
         // This will execute at most O(deg(v)) times, since g.hasEdge(v, w) can be true only
         // for deg(v) different vertices w.
         if (w != v && !g.hasEdge(v, w)) return true;
@@ -31,7 +31,7 @@ bool isExit(const Instance& g, int u, int v) {
 // to the closed neighbourhood of nodes v and w.
 // Complexity: O(min(deg(u), deg(v) + deg(w))
 bool isExit(const Instance& g, int u, int v, int w) {
-    for (auto x : g.adj[u]) {
+    for (auto [x, _] : g.adj[u]) {
         // This will execute at most O(deg(v) + deg(w)) times, since g.hasEdge(x, ?) can be true
         // only for deg(v) + deg(w) different vertices x.
         if (x != v && x != w && !g.hasEdge(x, v) && !g.hasEdge(x, w)) return true;
@@ -44,7 +44,7 @@ bool isExit(const Instance& g, int u, int v, int w) {
 // Complexity: O(deg(u)^2)
 std::vector<int> exitNeighbourhood(Instance& g, int u) {
     std::vector<int> N_exit;
-    for (auto v : g.adj[u]) {
+    for (auto [v, _] : g.adj[u]) {
         if (isExit(g, v, u)) N_exit.push_back(v);
     }
 
@@ -96,13 +96,13 @@ void applyCase1_1(Instance& g, int v, int w, const std::vector<int>& N_prison,
     int z2 = g.addNode();
     int z3 = g.addNode();
 
-    g.addEdge(v, z1);
-    g.addEdge(v, z2);
-    g.addEdge(v, z3);
+    g.addEdge(v, z1, UNCONSTRAINED);
+    g.addEdge(v, z2, UNCONSTRAINED);
+    g.addEdge(v, z3, UNCONSTRAINED);
 
-    g.addEdge(w, z1);
-    g.addEdge(w, z2);
-    g.addEdge(w, z3);
+    g.addEdge(w, z1, UNCONSTRAINED);
+    g.addEdge(w, z2, UNCONSTRAINED);
+    g.addEdge(w, z3, UNCONSTRAINED);
 
     g.removeNodes(N_prison);
     g.removeNodes(intersect(intersect(N_guard, N_v_without), N_w_without));
@@ -225,7 +225,7 @@ bool AlberMainRule2(Instance& g) {
             q.pop();
             if (dis[w] > zero_dist && ApplyAlberMainRule2(g, v, w)) return true;
             if (dis[w] < zero_dist + 4) {
-                for (auto x : g.adj[w]) {
+                for (auto [x, _] : g.adj[w]) {
                     if (dis[x] > dis[w] + 1) {
                         dis[x] = dis[w] + 1;
                         q.push(x);
@@ -245,7 +245,7 @@ bool AlberMainRule2(Instance& g) {
 bool AlberSimpleRule1(Instance& g) {
     std::vector<std::pair<int, int>> to_remove;
     for (auto v : g.nodes) {
-        for (auto w : g.adj[v]) {
+        for (auto [w, _] : g.adj[v]) {
             if (v > w) continue;
             if (g.getStatus(v) == DOMINATED && g.getStatus(w) == DOMINATED) {
                 to_remove.emplace_back(v, w);
@@ -277,8 +277,8 @@ bool AlberSimpleRule3(Instance& g) {
     std::vector<int> to_remove;
     for (auto v : g.nodes) {
         if (g.getStatus(v) != UNDOMINATED && g.deg(v) == 2) {
-            int u_1 = g.adj[v].front();
-            int u_2 = g.adj[v][1];
+            int u_1 = g.adj[v].front().to;
+            int u_2 = g.adj[v][1].to;
             if (g.getStatus(u_1) == UNDOMINATED && g.getStatus(u_2) == UNDOMINATED) {
                 if (g.hasEdge(u_1, u_2)) {
                     // 3.1
@@ -286,7 +286,7 @@ bool AlberSimpleRule3(Instance& g) {
                     return true;
                 } else {
                     // 3.2
-                    for (auto u : g.adj[u_1]) {
+                    for (auto [u, _] : g.adj[u_1]) {
                         if (u == v) continue;
                         if (g.hasEdge(u, u_2)) {
                             g.removeNode(v);
@@ -308,9 +308,9 @@ bool AlberSimpleRule4(Instance& g) {
     for (auto v : g.nodes) {
         if (g.getStatus(v) != UNDOMINATED && g.deg(v) == 3) {
             auto it = g.adj[v].begin();
-            int u_1 = *it;
-            int u_2 = *++it;
-            int u_3 = *++it;
+            int u_1 = it->to;
+            int u_2 = (++it)->to;
+            int u_3 = (++it)->to;
 
             if (g.getStatus(u_1) == UNDOMINATED && g.getStatus(u_2) == UNDOMINATED &&
                 g.getStatus(u_3) == UNDOMINATED) {
