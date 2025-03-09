@@ -15,6 +15,6 @@ basename -a in/PACE2025-instances/ds/exact/*.gr | parallel -j2 "./eval.sh {}"
 echoerr() { echo "$@" 1>&2; }
 
 echoerr -ne "file" 
-echo "p ds 0 0" | ./eval.out >/dev/null
+echo "p ds 0 0" | ./eval.out $SOLUTIONS/empty.gr >/dev/null
 ls $SOLUTIONS/*.content | xargs cat
 
