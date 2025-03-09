@@ -14,40 +14,44 @@
 
 // Computes A ∩ B.
 // Complexity: O(|A| + |B|)
-std::vector<int> intersect(const std::vector<int> a, const std::vector<int> b) {
+template <typename T>
+std::vector<T> intersect(const std::vector<T> a, const std::vector<T> b) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
     DS_ASSERT(is_sorted(b.begin(), b.end()));
 
-    std::vector<int> res;
+    std::vector<T> res;
     std::set_intersection(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(res));
     return res;
 }
 
 // Computes A ∪ B.
 // Complexity: O(|A| + |B|)
-std::vector<int> unite(const std::vector<int> &a, const std::vector<int> &b) {
+template <typename T>
+std::vector<T> unite(const std::vector<T> &a, const std::vector<T> &b) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
     DS_ASSERT(is_sorted(b.begin(), b.end()));
 
-    std::vector<int> res;
+    std::vector<T> res;
     std::set_union(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(res));
     return res;
 }
 
 // Computes A ∪ B.
 // Complexity: O(|A| + |B|)
-std::vector<int> unite(const std::vector<int> &&a, const std::vector<int> &&b) {
+template <typename T>
+std::vector<T> unite(const std::vector<T> &&a, const std::vector<T> &&b) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
     DS_ASSERT(is_sorted(b.begin(), b.end()));
 
-    std::vector<int> res;
+    std::vector<T> res;
     std::set_union(a.begin(), a.end(), b.begin(), b.end(), std::back_inserter(res));
     return res;
 }
 
 // Inserts v into a preserving ascending order.
 // Complexity: O(|A|)
-void insert(std::vector<int> &a, int v) {
+template <typename T>
+void insert(std::vector<T> &a, T v) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
 
     a.insert(std::upper_bound(a.begin(), a.end(), v), v);
@@ -56,7 +60,8 @@ void insert(std::vector<int> &a, int v) {
 
 // Computes A \ {v}.
 // Complexity: O(|A|)
-void remove(std::vector<int> &a, int v) {
+template <typename T>
+void remove(std::vector<T> &a, T v) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
 
     auto it = std::lower_bound(a.begin(), a.end(), v);
@@ -67,11 +72,12 @@ void remove(std::vector<int> &a, int v) {
 
 // Computes A \ B.
 // Complexity: O(|A| + |B|)
-std::vector<int> remove(std::vector<int> a, const std::vector<int> &b) {
+template <typename T>
+std::vector<T> remove(std::vector<T> a, const std::vector<T> &b) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
     DS_ASSERT(is_sorted(b.begin(), b.end()));
 
-    std::vector<int> res;
+    std::vector<T> res;
     
     // Pointers to smallest unhandled elements.
     size_t i = 0, j = 0;
@@ -104,7 +110,8 @@ std::string dbgv(const std::vector<int> v) {
 
 // Returns true if a contains b.
 // Complexity: O(|A| + |B|).
-bool contains(const std::vector<int> a, const std::vector<int> b) {
+template <typename T>
+bool contains(const std::vector<T> a, const std::vector<T> b) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
     DS_ASSERT(is_sorted(b.begin(), b.end()));
 
