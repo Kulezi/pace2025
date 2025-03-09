@@ -12,6 +12,6 @@ echo "Running test $1"
 
 echo -ne $1 > ${SOLUTIONS}/$1.content
 echo -ne file > ${SOLUTIONS}/$1.header
-timeout $TIMEOUT_SECONDS ./eval.out < ${INSTANCES}/$1 >> ${SOLUTIONS}/$1.content 2> ${SOLUTIONS}/$1.header
+timeout $TIMEOUT_SECONDS ./eval.out ${SOLUTIONS}/$1 < ${INSTANCES}/$1 >> ${SOLUTIONS}/$1.content 2> ${SOLUTIONS}/$1.header
 printf "\n" >>  ${SOLUTIONS}/$1.content
 printf "\n" >>  ${SOLUTIONS}/$1.header
