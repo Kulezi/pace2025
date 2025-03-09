@@ -2,8 +2,10 @@
 #define INSTANCE_H
 #include <algorithm>
 #include <cassert>
+#include <compare>
 #include <iostream>
 #include <queue>
+#include <ranges>
 #include <set>
 #include <sstream>
 #include <string>
@@ -11,7 +13,16 @@
 
 #include "utils.h"
 
-enum Status { UNDOMINATED, DOMINATED, TAKEN };
+enum NodeStatus { UNDOMINATED, DOMINATED, TAKEN };
+enum EdgeStatus { UNCONSTRAINED, FORCED, ANY };
+struct Endpoint {
+    int to;
+    EdgeStatus status;
+
+    // Multiple edges are disallowed, so we only need to compare the ends of the edge.
+    bool operator<(const Endpoint &rhs) const { return to < rhs.to; }
+    bool operator==(const Endpoint &rhs) const { return to == rhs.to; };
+};
 
 // Undirected graph representing an instance of dominating set problem.
 // Nodes are marked with a domination status.
@@ -24,8 +35,8 @@ struct Instance {
 
     // adj[v] = list of adjacent nodes sorted by increasing node id.
     // Order is maintained to make set union/intersection possible in O(|A| + |B|).
-    std::vector<std::vector<int>> adj;
-    std::vector<Status> status;
+    std::vector<std::vector<Endpoint>> adj;
+    std::vector<NodeStatus> status;
 
     // Extra vertices cannot be taken into the dominating set, we assume they mean if we take them
     // we should take all their neighbours instead.
@@ -50,7 +61,7 @@ struct Instance {
                 int b = 0;
                 tokens >> b;
                 --header_edges;
-                addEdge(a, b);
+                addEdge(a, b, UNCONSTRAINED);
             }
         }
 
@@ -96,9 +107,9 @@ struct Instance {
     // Returns the number of nodes in the graph.
     size_t nodeCount() const { return nodes.size(); }
 
-    void setStatus(int v, Status c) { status[v] = c; }
+    void setStatus(int v, NodeStatus c) { status[v] = c; }
 
-    Status getStatus(int v) const { return status[v]; }
+    NodeStatus getStatus(int v) const { return status[v]; }
 
     // Returns the degree of given node.
     int deg(int v) const { return (int)adj[v].size(); }
@@ -117,8 +128,8 @@ struct Instance {
     // Complexity: O(deg(v) + sum over deg(v) of neighbours)
     void removeNode(int v) {
         if (find(nodes.begin(), nodes.end(), v) == nodes.end()) return;
-        for (auto u : adj[v]) {
-            remove(adj[u], v);
+        for (auto [u, _] : adj[v]) {
+            remove(adj[u], Endpoint{v, ANY});
             DS_ASSERT(is_sorted(adj[u].begin(), adj[u].end()));
         }
         adj[v].clear();
@@ -135,22 +146,25 @@ struct Instance {
 
     // Adds an edge between nodes with id's u and v.
     // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
-    void addEdge(int u, int v) {
-        insert(adj[u], v);
-        insert(adj[v], u);
+    void addEdge(int u, int v, EdgeStatus status) {
+        insert(adj[u], Endpoint{v, status});
+        insert(adj[v], Endpoint{u, status});
     }
 
     // Removes edge (v, w) from the graph.
     // Complexity: O(deg(v) + deg(w))
     void removeEdge(int v, int w) {
-        remove(adj[v], w);
-        remove(adj[w], v);
+        remove(adj[v], {w, ANY});
+        remove(adj[w], {v, ANY});
     }
 
     // Same meaning as N[v] notation.
     // Complexity: O(deg(v)).
     const std::vector<int> neighbourhoodIncluding(int v) const {
-        auto res = adj[v];
+        std::vector<int> res(adj[v].size());
+        for (size_t i = 0; i < adj[v].size(); ++i) {
+            res[i] = adj[v][i].to;
+        }
         insert(res, v);
         return res;
     }
@@ -165,18 +179,24 @@ struct Instance {
 
     // Same meaning as N(v) notation.
     // Complexity: O(1)
-    const std::vector<int> neighbourhoodExcluding(int v) const { return adj[v]; }
+    std::vector<int> neighbourhoodExcluding(int v) const {
+        std::vector<int> res(adj[v].size());
+        for (size_t i = 0; i < adj[v].size(); ++i) {
+            res[i] = adj[v][i].to;
+        }
+        return res;
+    }
 
     // Returns true if and only if undirected edge (u, v) is present in the graph.
     // Complexity: O(deg(u)) !
     bool hasEdge(int u, int v) const {
-        return std::find(adj[u].begin(), adj[u].end(), v) != adj[u].end();
+        return std::find(adj[u].begin(), adj[u].end(), Endpoint{v, ANY}) != adj[u].end();
     }
 
     // Returns the minimum degree node of given status present in the graph.
     // Returns -1 if there is no such node.
     // Complexity: O(n)
-    int minDegNodeOfStatus(Status s) const {
+    int minDegNodeOfStatus(NodeStatus s) const {
         int best_v = -1;
         for (auto v : nodes)
             if (getStatus(v) == s && (best_v == -1 || deg(v) < deg(best_v))) best_v = v;
@@ -226,7 +246,7 @@ struct Instance {
                     int w = q.front();
                     q.pop();
 
-                    for (auto u : adj[w]) {
+                    for (auto [u, _] : adj[w]) {
                         if (component[u] < 0) {
                             component[u] = components;
                             q.push(u);
@@ -253,7 +273,7 @@ struct Instance {
             std::cerr << "color(" << i << ") = " << getStatus(i) << "\n";
         }
         for (int i : nodes) {
-            for (auto j : adj[i]) {
+            for (auto [j, _] : adj[i]) {
                 if (j > i) continue;
                 std::cerr << i << " " << j << "\n";
             }

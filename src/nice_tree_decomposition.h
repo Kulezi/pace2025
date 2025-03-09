@@ -168,7 +168,7 @@ struct NiceTreeDecomposition {
             // First we introduce an isolated node.
             int introduced = to_introduce.back();
             to_introduce.pop_back();
-            auto neighbours_in_bag = intersect(g.adj[introduced], tail_bag);
+            auto neighbours_in_bag = intersect(g.neighbourhoodExcluding(introduced), tail_bag);
 
             insert(tail_bag, introduced);
             tail_id = createNode(NiceTreeDecomposition::NodeType::IntroduceVertex, tail_bag,
