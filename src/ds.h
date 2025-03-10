@@ -182,6 +182,7 @@ struct Exact {
     }
 
     std::vector<int> solveBruteforce(Instance g, std::ostream &out) {
+        DS_ASSERT(rules.empty() && rules_branch.empty());
         int n = g.nodeCount();
         std::vector<int> best_ds;
 
