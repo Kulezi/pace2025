@@ -52,18 +52,18 @@ struct Exact {
     // Checks whether the given solution is a valid dominating set of the given instance.
     // Throws a std::logic_error if it isn't.
     static void verify_solution(Instance g, const std::vector<int> solution) {
-        for (auto u : g.nodes) g.setStatus(u, UNDOMINATED);
+        for (auto u : g.nodes) g.setNodeStatus(u, UNDOMINATED);
         for (auto u : solution) {
-            if (g.getStatus(u) == TAKEN)
+            if (g.getNodeStatus(u) == TAKEN)
                 throw std::logic_error("solution contains duplicates, one of which is vertex " +
                                        std::to_string(u));
 
-            g.setStatus(u, TAKEN);
-            for (auto v : g.neighbourhoodExcluding(u)) g.setStatus(v, DOMINATED);
+            g.setNodeStatus(u, TAKEN);
+            for (auto v : g.neighbourhoodExcluding(u)) g.setNodeStatus(v, DOMINATED);
         }
 
         for (auto u : g.nodes)
-            if (g.getStatus(u) == UNDOMINATED)
+            if (g.getNodeStatus(u) == UNDOMINATED)
                 throw std::logic_error("solution doesn't dominate vertex " + std::to_string(u));
     }
 
@@ -302,7 +302,7 @@ struct Exact {
                 int pos = bag_pos(node.bag, node.v);
                 Color f_v = at(f, pos);
                 // This vertex could already be dominated by some reduction rule.
-                if (f_v == Color::WHITE && g.getStatus(node.v) != DOMINATED)
+                if (f_v == Color::WHITE && g.getNodeStatus(node.v) != DOMINATED)
                     return c[t][f] = INF;
                 else {
                     return c[t][f] = getC(g, td, node.l_child, cut(f, pos));

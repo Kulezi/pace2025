@@ -11,7 +11,7 @@ namespace {
 constexpr int BFS_INF = INT_MAX;
 bool hasUndominatedNode(Instance& g, std::vector<int> nodes) {
     for (auto v : nodes)
-        if (g.getStatus(v) == UNDOMINATED) return true;
+        if (g.getNodeStatus(v) == UNDOMINATED) return true;
     return false;
 }
 
@@ -73,7 +73,7 @@ void populateGuardNodes(const Instance& g, const std::vector<int>& N_vw_without,
 std::vector<int> filterDominatedNodes(const Instance& g, const std::vector<int>& N_prison) {
     std::vector<int> N_prison_intersect_B = N_prison;
     const auto new_end = std::remove_if(N_prison_intersect_B.begin(), N_prison_intersect_B.end(),
-                                        [&](int u) { return g.getStatus(u) != UNDOMINATED; });
+                                        [&](int u) { return g.getNodeStatus(u) != UNDOMINATED; });
     N_prison_intersect_B.erase(new_end, N_prison_intersect_B.end());
     return N_prison_intersect_B;
 }
@@ -127,7 +127,7 @@ void applyCase2(Instance& g, int v, int w, const std::vector<int>& N_vw_without,
                 const std::vector<int>& N_prison, const std::vector<int>& N_guard) {
     // w might get removed when taking v, so we need to set statuses before taking v and w.
     for (auto u : N_vw_without) {
-        g.setStatus(u, DOMINATED);
+        g.setNodeStatus(u, DOMINATED);
     }
     g.take(v);
     g.take(w);
@@ -247,7 +247,7 @@ bool AlberSimpleRule1(Instance& g) {
     for (auto v : g.nodes) {
         for (auto [w, _] : g.adj[v]) {
             if (v > w) continue;
-            if (g.getStatus(v) == DOMINATED && g.getStatus(w) == DOMINATED) {
+            if (g.getNodeStatus(v) == DOMINATED && g.getNodeStatus(w) == DOMINATED) {
                 to_remove.emplace_back(v, w);
             }
         }
@@ -262,7 +262,7 @@ bool AlberSimpleRule1(Instance& g) {
 bool AlberSimpleRule2(Instance& g) {
     std::vector<int> to_remove;
     for (auto v : g.nodes) {
-        if (g.getStatus(v) == DOMINATED && g.deg(v) <= 1) {
+        if (g.getNodeStatus(v) == DOMINATED && g.deg(v) <= 1) {
             to_remove.push_back(v);
         }
     }
@@ -276,10 +276,10 @@ bool AlberSimpleRule2(Instance& g) {
 bool AlberSimpleRule3(Instance& g) {
     std::vector<int> to_remove;
     for (auto v : g.nodes) {
-        if (g.getStatus(v) != UNDOMINATED && g.deg(v) == 2) {
+        if (g.getNodeStatus(v) != UNDOMINATED && g.deg(v) == 2) {
             int u_1 = g.adj[v].front().to;
             int u_2 = g.adj[v][1].to;
-            if (g.getStatus(u_1) == UNDOMINATED && g.getStatus(u_2) == UNDOMINATED) {
+            if (g.getNodeStatus(u_1) == UNDOMINATED && g.getNodeStatus(u_2) == UNDOMINATED) {
                 if (g.hasEdge(u_1, u_2)) {
                     // 3.1
                     g.removeNode(v);
@@ -306,14 +306,14 @@ bool AlberSimpleRule3(Instance& g) {
 bool AlberSimpleRule4(Instance& g) {
     std::vector<int> to_remove;
     for (auto v : g.nodes) {
-        if (g.getStatus(v) != UNDOMINATED && g.deg(v) == 3) {
+        if (g.getNodeStatus(v) != UNDOMINATED && g.deg(v) == 3) {
             auto it = g.adj[v].begin();
             int u_1 = it->to;
             int u_2 = (++it)->to;
             int u_3 = (++it)->to;
 
-            if (g.getStatus(u_1) == UNDOMINATED && g.getStatus(u_2) == UNDOMINATED &&
-                g.getStatus(u_3) == UNDOMINATED) {
+            if (g.getNodeStatus(u_1) == UNDOMINATED && g.getNodeStatus(u_2) == UNDOMINATED &&
+                g.getNodeStatus(u_3) == UNDOMINATED) {
                 int n_edges = (g.hasEdge(u_1, u_2) + g.hasEdge(u_2, u_3) + g.hasEdge(u_1, u_3));
                 if (n_edges >= 2) {
                     to_remove.push_back(v);
