@@ -326,6 +326,42 @@ bool AlberSimpleRule4(Instance& g) {
     return !to_remove.empty();
 }
 
+// If a vertex of degree two is contained in the neighbourhoods of both its neighbours,
+// and they are connected by an edge, make the edge forced and remove this vertex, as there exists
+// an optimal solution not-taking this vertex and taking one of its neighbours.
+// Complexity: ~ O(|V| * (# removed nodes)) depending on the remove_node operation complexity.
+bool ForcedEdgeRule(Instance& g) {
+    auto nodes = g.nodes;
+    for (auto v : nodes) {
+        if (g.deg(v) == 2 && g.getNodeStatus(v) == UNDOMINATED) {
+            auto e1 = g.adj[v][0];
+            auto e2 = g.adj[v][1];
+            if (!g.hasEdge(e1.to, e2.to)) continue;
+            
+            if (e1.status == UNCONSTRAINED && e2.status == UNCONSTRAINED) {
+                g.setEdgeStatus(e1.to, e2.to, FORCED);
+                g.removeNode(v);
+                return true;
+            } else if (e1.status == FORCED && e2.status == UNCONSTRAINED) {
+                // Taking e1.to is optimal, as it's always better than taking v, and we are forced to take one of them.
+                g.take(e1.to);
+                return true;
+            } else if (e1.status == UNCONSTRAINED && e2.status == FORCED) {
+                // Taking e2.to is optimal, as it's always better than taking v, and we are forced to take one of them.
+                g.take(e2.to);
+                return true;
+            } else {
+                // We need to take either just u, or both e1.to and e2.to.
+                // TODO: contract them into a single vertex thats treated the following way:
+                // If it's taken into ds it adds e1.to and e2.to to the dominating set.
+                // If it's not taken it adds just v to the dominating set.
+            }
+        }
+    }
+
+    return false;
+}
+
 const std::vector<RRules::Rule> defaults_preprocess = {
     RRules::AlberSimpleRule1, RRules::AlberSimpleRule2, RRules::AlberSimpleRule3,
     RRules::AlberSimpleRule4, RRules::AlberMainRule1,   RRules::AlberMainRule2,
@@ -335,6 +371,7 @@ const std::vector<RRules::Rule> defaults_branching = {
     RRules::AlberSimpleRule1, RRules::AlberSimpleRule2, RRules::AlberSimpleRule3,
     RRules::AlberSimpleRule4, RRules::AlberMainRule1,
 };
+
 }  // namespace RRules
 
 #endif  // RRULES_H
