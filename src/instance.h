@@ -288,9 +288,9 @@ struct Instance {
             std::cerr << "color(" << i << ") = " << getNodeStatus(i) << "\n";
         }
         for (int i : nodes) {
-            for (auto [j, _] : adj[i]) {
+            for (auto [j, status] : adj[i]) {
                 if (j > i) continue;
-                std::cerr << i << " " << j << "\n";
+                std::cerr << i << " " << j << " " << dbg(status) "\n";
             }
         }
     }

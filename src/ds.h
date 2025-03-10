@@ -281,7 +281,8 @@ struct Exact {
 
     inline int cost(const Instance &g, int v) { return g.is_extra[v] ? INF : 1; }
 
-    // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3]
+    // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3] extended to handle forced
+    // edges.
     int getC(const Instance &g, NiceTreeDecomposition &td, int t, TernaryFun f) {
         const auto &node = td[t];
         DS_ASSERT(f < pow3[node.bag.size()]);
@@ -315,12 +316,27 @@ struct Exact {
                 Color f_u = at(f, pos_u);
                 Color f_v = at(f, pos_v);
 
-                if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    return c[t][f] = getC(g, td, node.l_child, set(f, pos_v, Color::GRAY));
-                else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    return c[t][f] = getC(g, td, node.l_child, set(f, pos_u, Color::GRAY));
-                else
-                    return c[t][f] = getC(g, td, node.l_child, f);
+                EdgeStatus edge_status = g.getEdgeStatus(node.to, node.v);
+                DS_ASSERT(edge_status == UNCONSTRAINED || edge_status == FORCED);
+                if (edge_status == FORCED) {
+                    // We are forced to take at least one of the endpoints of the edge to the
+                    // dominating set.
+                    if (f_u == Color::BLACK && f_v == Color::WHITE)
+                        return c[t][f] = getC(g, td, node.l_child, set(f, pos_v, Color::GRAY));
+                    else if (f_u == Color::WHITE && f_v == Color::BLACK)
+                        return c[t][f] = getC(g, td, node.l_child, set(f, pos_u, Color::GRAY));
+                    else if (f_u == Color::BLACK || f_v == Color::BLACK)
+                        return c[t][f] = getC(g, td, node.l_child, f);
+                    else
+                        return c[t][f] = INF;
+                } else {
+                    if (f_u == Color::BLACK && f_v == Color::WHITE)
+                        return c[t][f] = getC(g, td, node.l_child, set(f, pos_v, Color::GRAY));
+                    else if (f_u == Color::WHITE && f_v == Color::BLACK)
+                        return c[t][f] = getC(g, td, node.l_child, set(f, pos_u, Color::GRAY));
+                    else
+                        return c[t][f] = getC(g, td, node.l_child, f);
+                }
             }
             case NiceTreeDecomposition::NodeType::Forget: {
                 int pos_w = bag_pos(td[node.l_child].bag, node.v);
@@ -403,16 +419,32 @@ struct Exact {
                 Color f_u = at(f, pos_u);
                 Color f_v = at(f, pos_v);
 
-                if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    recoverDS(g, td, node.l_child, set(f, pos_v, Color::GRAY));
-                else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    recoverDS(g, td, node.l_child, set(f, pos_u, Color::GRAY));
-                else
-                    recoverDS(g, td, node.l_child, f);
+                EdgeStatus edge_status = g.getEdgeStatus(node.to, node.v);
+                DS_ASSERT(edge_status == UNCONSTRAINED || edge_status == FORCED);
+                if (edge_status == FORCED) {
+                    if (f_u == Color::BLACK && f_v == Color::WHITE)
+                        recoverDS(g, td, node.l_child, set(f, pos_v, Color::GRAY));
+                    else if (f_u == Color::WHITE && f_v == Color::BLACK)
+                        recoverDS(g, td, node.l_child, set(f, pos_u, Color::GRAY));
+                    else if (f_u == Color::BLACK || f_v == Color::BLACK)
+                        recoverDS(g, td, node.l_child, f);
+                    else
+                        throw logic_error(
+                            "entered IntroduceEdge state corresponding to no solution");
+                } else {
+                    if (f_u == Color::BLACK && f_v == Color::WHITE)
+                        recoverDS(g, td, node.l_child, set(f, pos_v, Color::GRAY));
+                    else if (f_u == Color::WHITE && f_v == Color::BLACK)
+                        recoverDS(g, td, node.l_child, set(f, pos_u, Color::GRAY));
+                    else
+                        recoverDS(g, td, node.l_child, f);
+                }
                 return;
             }
             case NiceTreeDecomposition::NodeType::Forget: {
                 int pos_w = bag_pos(td[node.l_child].bag, node.v);
+                std::cerr << dbg(t) << dbg(node.l_child) << dbg(f) << dbg(pos_w)
+                          << dbg(insert(f, pos_w, Color::WHITE)) << std::endl;
                 if (c[t][f] ==
                     cost(g, node.v) + getC(g, td, node.l_child, insert(f, pos_w, Color::BLACK))) {
                     g.ds.push_back(node.v);
@@ -489,7 +521,8 @@ struct Exact {
 
         c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
 
-        getC(g, td, td.root, 0);
+        std::cerr << dbg(getC(g, td, td.root, 0)) << std::endl;
+        td.print();
         recoverDS(g, td, td.root, 0);
 #endif
         return true;
