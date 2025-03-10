@@ -16,11 +16,11 @@ int greedy_upper_bound(const Instance &g) {
     std::priority_queue<std::pair<int, int>> pq;
     std::vector<int> undominated_neighbors(g.next_free_id, 0);
     for (auto u : nodes) {
-        if (g.getStatus(u) == UNDOMINATED) undominated_neighbors[u]++;
+        if (g.getNodeStatus(u) == UNDOMINATED) undominated_neighbors[u]++;
         for (auto v : g.neighbourhoodExcluding(u))
-            if (g.getStatus(v) == UNDOMINATED) undominated_neighbors[u]++;
+            if (g.getNodeStatus(v) == UNDOMINATED) undominated_neighbors[u]++;
 
-        if (g.getStatus(u) != TAKEN && undominated_neighbors[u] > 0)
+        if (g.getNodeStatus(u) != TAKEN && undominated_neighbors[u] > 0)
             pq.push({undominated_neighbors[u], u});
     }
 

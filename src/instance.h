@@ -107,9 +107,24 @@ struct Instance {
     // Returns the number of nodes in the graph.
     size_t nodeCount() const { return nodes.size(); }
 
-    void setStatus(int v, NodeStatus c) { status[v] = c; }
+    void setNodeStatus(int v, NodeStatus c) { status[v] = c; }
 
-    NodeStatus getStatus(int v) const { return status[v]; }
+    NodeStatus getNodeStatus(int v) const { return status[v]; }
+
+    void setEdgeStatus(int u, int v, EdgeStatus status) {
+        auto it_u = lower_bound(adj[u].begin(), adj[u].end(), Endpoint{v, ANY});
+        DS_ASSERT(it_u != adj[u].end());
+        auto it_v = lower_bound(adj[v].begin(), adj[v].end(), Endpoint{u, ANY});
+        DS_ASSERT(it_v != adj[v].end());
+
+        it_u->status = it_v->status = status;
+    }
+
+    EdgeStatus getEdgeStatus(int u, int v) const { 
+        auto it = lower_bound(adj[u].begin(), adj[u].end(), Endpoint{v, ANY});
+        DS_ASSERT(it != adj[u].end());
+        return it->status;
+    }
 
     // Returns the degree of given node.
     int deg(int v) const { return (int)adj[v].size(); }
@@ -199,7 +214,7 @@ struct Instance {
     int minDegNodeOfStatus(NodeStatus s) const {
         int best_v = -1;
         for (auto v : nodes)
-            if (getStatus(v) == s && (best_v == -1 || deg(v) < deg(best_v))) best_v = v;
+            if (getNodeStatus(v) == s && (best_v == -1 || deg(v) < deg(best_v))) best_v = v;
 
         return best_v;
     }
@@ -211,7 +226,7 @@ struct Instance {
         DS_ASSERT(status[v] != TAKEN);
         if (is_extra[v]) {
             for (auto u : neighbourhoodExcluding(v)) {
-                DS_ASSERT(getStatus(u) != TAKEN);
+                DS_ASSERT(getNodeStatus(u) != TAKEN);
                 take(u);
             }
 
@@ -221,8 +236,8 @@ struct Instance {
 
         ds.push_back(v);
         for (auto u : neighbourhoodExcluding(v)) {
-            DS_ASSERT(getStatus(u) != TAKEN);
-            setStatus(u, DOMINATED);
+            DS_ASSERT(getNodeStatus(u) != TAKEN);
+            setNodeStatus(u, DOMINATED);
         }
 
         removeNode(v);
@@ -270,7 +285,7 @@ struct Instance {
     void print() const {
         std::cerr << "[n = " << nodeCount() << ",\tm = " << edgeCount() << "]\n";
         for (int i : nodes) {
-            std::cerr << "color(" << i << ") = " << getStatus(i) << "\n";
+            std::cerr << "color(" << i << ") = " << getNodeStatus(i) << "\n";
         }
         for (int i : nodes) {
             for (auto [j, _] : adj[i]) {
