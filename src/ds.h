@@ -153,6 +153,7 @@ struct Exact {
     // TODO: Use heuristics to quit branching as soon as we know that the current branch is not
     // optimal.
     void solveBranching(const Instance g, std::vector<int> &best_ds, int level = 0) {
+        throw std::logic_error("reimplement for forced edges!");
 #if DS_BENCHMARK
         benchmark_info.branch_calls++;
 #endif
