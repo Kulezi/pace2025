@@ -64,8 +64,8 @@ struct Instance {
         int n_nodes = 0;
         tokens >> problem >> n_nodes >> header_edges;
 
-        if (problem != "ds")
-            throw std::logic_error("expected problem type to be 'ds', found '" + problem + "'");
+        // if (problem != "ds")
+        //     throw std::logic_error("expected problem type to be 'ds', found '" + problem + "'");
 
         adj.resize(n_nodes + 1);
         status.resize(n_nodes + 1, UNDOMINATED);
