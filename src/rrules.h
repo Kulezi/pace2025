@@ -295,7 +295,6 @@ bool haveCommonNeighbour(const Instance& g, int u, int v) {
 // Naive implementation of Simple Rule 3 - DOI 10.1007/s10479-006-0045-4, p. 6
 // ~ O(|V|^2 * (# removed nodes)) depending on the remove_node operation complexity.
 bool AlberSimpleRule3(Instance& g) {
-    std::vector<int> to_remove;
     for (auto v : g.nodes) {
         if (g.getNodeStatus(v) == DOMINATED && g.deg(v) == 2) {
             auto [u_1, s_1] = g.adj[v].front();
@@ -320,29 +319,42 @@ bool AlberSimpleRule3(Instance& g) {
     return false;
 }
 
+bool tryMidpoint(Instance& g, bool forced_by_edge, int u, int v, int w) {
+    if (g.hasEdge(u, v) && g.hasEdge(u, w)) {
+        if (forced_by_edge) g.take(u);
+        return true;
+    }
+
+    return false;
+}
+
 // Naive implementation of Simple Rule 4 - DOI 10.1007/s10479-006-0045-4, p. 6
 // ~ O(|V| * (# removed nodes)) depending on the remove_node operation complexity.
 bool AlberSimpleRule4(Instance& g) {
-    std::vector<int> to_remove;
     for (auto v : g.nodes) {
-        if (g.getNodeStatus(v) != UNDOMINATED && g.deg(v) == 3) {
-            auto it = g.adj[v].begin();
-            int u_1 = it->to;
-            int u_2 = (++it)->to;
-            int u_3 = (++it)->to;
+        if (g.getNodeStatus(v) == DOMINATED && g.deg(v) == 3) {
+            auto [u_1, s_1] = g.adj[v][0];
+            auto [u_2, s_2] = g.adj[v][1];
+            auto [u_3, s_3] = g.adj[v][2];
 
-            if (g.getNodeStatus(u_1) == UNDOMINATED && g.getNodeStatus(u_2) == UNDOMINATED &&
-                g.getNodeStatus(u_3) == UNDOMINATED) {
-                int n_edges = (g.hasEdge(u_1, u_2) + g.hasEdge(u_2, u_3) + g.hasEdge(u_1, u_3));
-                if (n_edges >= 2) {
-                    to_remove.push_back(v);
+            int n_forced_edges = s_1 + s_2 + s_3;
+            // There can be at most one forced edge, and it needs to lead to a vertex that can
+            // dominate all three others.
+            bool possibly_valid = g.getNodeStatus(u_1) == UNDOMINATED &&
+                                  g.getNodeStatus(u_2) == UNDOMINATED &&
+                                  g.getNodeStatus(u_3) == UNDOMINATED && n_forced_edges <= 1;
+
+            if (possibly_valid) {
+                if (tryMidpoint(g, s_1, u_1, u_2, u_3) || tryMidpoint(g, s_2, u_2, u_1, u_3) ||
+                    tryMidpoint(g, s_3, u_3, u_1, u_2)) {
+                    g.removeNode(v);
+                    return true;
                 }
             }
         }
     }
 
-    for (auto v : to_remove) g.removeNode(v);
-    return !to_remove.empty();
+    return false;
 }
 
 void forceEdge(Instance& g, int u, int v) {
