@@ -73,12 +73,14 @@ struct Exact {
         auto split = g.split();
         if (split.size() <= 1) {
             reduce(g);
-            solveTreewidth(g);
+            if (!solveTreewidth(g))
+                throw std::logic_error("components' treewidth too big to handle");
         } else {
             for (auto &cc : split) {
                 g.nodes = cc;
                 reduce(g);
-                solveTreewidth(g);
+                if (!solveTreewidth(g))
+                    throw std::logic_error("components' treewidth too big to handle");
             }
         }
 
@@ -462,10 +464,14 @@ struct Exact {
         }
     }
 
-    void solveTreewidth(Instance &g) {
+    // Returns true if instance was solved,
+    // false if the width of found decompositions was too big to handle.
+    bool solveTreewidth(Instance &g) {
 #ifdef DS_BENCHMARK
         auto start = std::chrono::high_resolution_clock::now();
         NiceTreeDecomposition td(g, GOOD_ENOUGH_TREEWIDTH);
+        if (td.width() > MAX_HANDLED_TREEWIDTH) return false;
+
         benchmark_info.treewidth_decomposition_time +=
             std::chrono::high_resolution_clock::now() - start;
         start = std::chrono::high_resolution_clock::now();
@@ -479,11 +485,14 @@ struct Exact {
             std::max(benchmark_info.max_encountered_treewidth, td.width());
 #else
         NiceTreeDecomposition td(g, GOOD_ENOUGH_TREEWIDTH);
+        if (td.width() > MAX_HANDLED_TREEWIDTH) return false;
+
         c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
 
         getC(g, td, td.root, 0);
         recoverDS(g, td, td.root, 0);
 #endif
+        return true;
     }
 };
 }  // namespace DomSet
