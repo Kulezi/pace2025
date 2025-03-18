@@ -1,17 +1,20 @@
 #!/bin/bash
-if [[ $# -ne 1 ]]; then
-    echo "usage: ./eval.sh <graph.gr>"
+if [[ $# -ne 2 ]]; then
+    echo "usage: ./eval.sh <graph.gr> <timeout_in_seconds>"
     exit 1
 fi
 
 INSTANCES="in/PACE2025-instances/ds/exact"
 SOLUTIONS="${INSTANCES}/.solutions"
-TIMEOUT_SECONDS=60
+TIMEOUT_SECONDS=$2
 
 echo "Running test $1"
 
-echo -ne $1 > ${SOLUTIONS}/$1.content
-echo -ne file > ${SOLUTIONS}/$1.header
-timeout $TIMEOUT_SECONDS ./eval.out ${SOLUTIONS}/$1 < ${INSTANCES}/$1 >> ${SOLUTIONS}/$1.content 2> ${SOLUTIONS}/$1.header
-printf "\n" >>  ${SOLUTIONS}/$1.content
-printf "\n" >>  ${SOLUTIONS}/$1.header
+CONTENT=${SOLUTIONS}/$1.content
+HEADER=${SOLUTIONS}/$1.header
+
+echo -ne $1 > $CONTENT
+echo -ne file > $HEADER
+timeout $TIMEOUT_SECONDS ./eval.out ${SOLUTIONS}/$1 < ${INSTANCES}/$1 >> $CONTENT 2>> $HEADER
+printf "\n" >>  $CONTENT
+printf "\n" >>  $HEADER
