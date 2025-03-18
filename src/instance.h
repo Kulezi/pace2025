@@ -129,6 +129,15 @@ struct Instance {
     // Returns the degree of given node.
     int deg(int v) const { return (int)adj[v].size(); }
 
+    
+    int forcedDeg(int v) const {
+        int res = 0;
+        for (auto e: adj[v]) 
+            if (e.status == FORCED) res++;
+        return res;
+    }
+
+
     // Creates and returns the id of the created node.
     // Complexity: O(1)
     int addNode() {
@@ -189,6 +198,12 @@ struct Instance {
     int edgeCount() const {
         int sum_deg = 0;
         for (auto i : nodes) sum_deg += deg(i);
+        return sum_deg / 2;
+    }
+
+    int forcedEdgeCount() const {
+        int sum_deg = 0;
+        for (auto i : nodes) sum_deg += forcedDeg(i);
         return sum_deg / 2;
     }
 
