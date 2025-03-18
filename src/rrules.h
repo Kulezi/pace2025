@@ -284,29 +284,35 @@ bool AlberSimpleRule2(Instance& g) {
     return !to_remove.empty();
 }
 
+bool haveCommonNeighbour(const Instance& g, int u, int v) {
+    for (auto [w, _] : g.adj[u]) {
+        if (v == w) continue;
+        if (g.hasEdge(v, v)) return true;
+    }
+    return false;
+}
+
 // Naive implementation of Simple Rule 3 - DOI 10.1007/s10479-006-0045-4, p. 6
 // ~ O(|V|^2 * (# removed nodes)) depending on the remove_node operation complexity.
 bool AlberSimpleRule3(Instance& g) {
     std::vector<int> to_remove;
     for (auto v : g.nodes) {
-        if (g.getNodeStatus(v) != UNDOMINATED && g.deg(v) == 2) {
-            int u_1 = g.adj[v].front().to;
-            int u_2 = g.adj[v][1].to;
-            if (g.getNodeStatus(u_1) == UNDOMINATED && g.getNodeStatus(u_2) == UNDOMINATED) {
-                if (g.hasEdge(u_1, u_2)) {
-                    // 3.1
-                    g.removeNode(v);
-                    return true;
-                } else {
-                    // 3.2
-                    for (auto [u, _] : g.adj[u_1]) {
-                        if (u == v) continue;
-                        if (g.hasEdge(u, u_2)) {
-                            g.removeNode(v);
-                            return true;
-                        }
-                    }
-                }
+        if (g.getNodeStatus(v) == DOMINATED && g.deg(v) == 2) {
+            auto [u_1, s_1] = g.adj[v].front();
+            auto [u_2, s_2] = g.adj[v][1];
+            // In this case it actually might be optimal to take this vertex instead of the two.
+            if (s_1 == FORCED && s_2 == FORCED) continue;
+            bool should_remove = g.getNodeStatus(u_1) == UNDOMINATED &&
+                                 g.getNodeStatus(u_2) == UNDOMINATED &&
+                                 (g.hasEdge(u_1, u_2) || haveCommonNeighbour(g, u_1, u_2));
+
+            if (should_remove) {
+                g.removeNode(v);
+
+                DS_ASSERT(s_1 != FORCED || s_2 != FORCED);
+                if (s_1 == FORCED) g.take(u_1);
+                if (s_2 == FORCED) g.take(u_2);
+                return true;
             }
         }
     }
