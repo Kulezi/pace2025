@@ -326,6 +326,21 @@ bool AlberSimpleRule4(Instance& g) {
     return !to_remove.empty();
 }
 
+void forceEdge(Instance &g, int u, int v) {
+    DS_ASSERT(g.hasEdge(u, v));
+    DS_ASSERT(g.getEdgeStatus(u, v) != FORCED);
+    g.setEdgeStatus(u, v, FORCED);
+    g.setNodeStatus(u, DOMINATED);
+    g.setNodeStatus(v, DOMINATED);
+
+    // All vertices that see both endpoints of this edge must be dominated by one of them,
+    // so we can mark them as dominated.
+    auto edgeNeighbourhood = intersect(g.neighbourhoodExcluding(u), g.neighbourhoodExcluding(v));
+    for (auto w : edgeNeighbourhood) {
+        g.setNodeStatus(w, DOMINATED);
+    }
+}
+
 // If a vertex of degree two is contained in the neighbourhoods of both its neighbours,
 // and they are connected by an edge, make the edge forced and remove this vertex, as there exists
 // an optimal solution not-taking this vertex and taking one of its neighbours.
@@ -339,7 +354,7 @@ bool ForcedEdgeRule(Instance& g) {
             if (!g.hasEdge(e1.to, e2.to)) continue;
             
             if (e1.status == UNCONSTRAINED && e2.status == UNCONSTRAINED) {
-                g.setEdgeStatus(e1.to, e2.to, FORCED);
+                forceEdge(g, e1.to, e2.to);
                 g.removeNode(v);
                 return true;
             } else if (e1.status == FORCED && e2.status == UNCONSTRAINED) {
