@@ -245,8 +245,8 @@ bool AlberMainRule2(Instance& g) {
 bool AlberSimpleRule1(Instance& g) {
     std::vector<std::pair<int, int>> to_remove;
     for (auto v : g.nodes) {
-        for (auto [w, _] : g.adj[v]) {
-            if (v > w) continue;
+        for (auto [w, status] : g.adj[v]) {
+            if (v > w || status == FORCED) continue;
             if (g.getNodeStatus(v) == DOMINATED && g.getNodeStatus(w) == DOMINATED) {
                 to_remove.emplace_back(v, w);
             }
