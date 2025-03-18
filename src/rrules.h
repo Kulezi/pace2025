@@ -240,7 +240,7 @@ bool AlberMainRule2(Instance& g) {
     return false;
 }
 
-// Naive implementation of Simple Rule 1 - DOI 10.1007/s10479-006-0045-4, p. 6
+// Batched implementation of Simple Rule 1 - DOI 10.1007/s10479-006-0045-4, p. 6
 // ~ O(|E| + |V| * (# removed edges)) depending on the remove_node operation complexity.
 bool AlberSimpleRule1(Instance& g) {
     std::vector<std::pair<int, int>> to_remove;
@@ -261,13 +261,26 @@ bool AlberSimpleRule1(Instance& g) {
 // ~ O(|V| * (# removed nodes)) depending on the remove_node operation complexity.
 bool AlberSimpleRule2(Instance& g) {
     std::vector<int> to_remove;
+    std::vector<int> to_take;
     for (auto v : g.nodes) {
         if (g.getNodeStatus(v) == DOMINATED && g.deg(v) <= 1) {
             to_remove.push_back(v);
+            if (g.deg(v) == 1) {
+                auto [w, status] = g.adj[v][0];
+                // The edge is forced so it's optimal to take the end that possibly could have
+                // larger degree. If the other end of the edge also would be a candidate for this
+                // reduction, apply it only to the vertex with smaller label.
+                if (status == FORCED &&
+                    !(g.deg(w) == 1 && g.getNodeStatus(w) == DOMINATED && v > w)) {
+                    to_take.push_back(w);
+                }
+            }
         }
     }
 
     for (auto v : to_remove) g.removeNode(v);
+    for (auto v : to_take)
+        if (g.getNodeStatus(v) != TAKEN) g.take(v);
     return !to_remove.empty();
 }
 
@@ -326,7 +339,7 @@ bool AlberSimpleRule4(Instance& g) {
     return !to_remove.empty();
 }
 
-void forceEdge(Instance &g, int u, int v) {
+void forceEdge(Instance& g, int u, int v) {
     DS_ASSERT(g.hasEdge(u, v));
     DS_ASSERT(g.getEdgeStatus(u, v) != FORCED);
     g.setEdgeStatus(u, v, FORCED);
@@ -352,17 +365,19 @@ bool ForcedEdgeRule(Instance& g) {
             auto e1 = g.adj[v][0];
             auto e2 = g.adj[v][1];
             if (!g.hasEdge(e1.to, e2.to)) continue;
-            
+
             if (e1.status == UNCONSTRAINED && e2.status == UNCONSTRAINED) {
                 forceEdge(g, e1.to, e2.to);
                 g.removeNode(v);
                 return true;
             } else if (e1.status == FORCED && e2.status == UNCONSTRAINED) {
-                // Taking e1.to is optimal, as it's always better than taking v, and we are forced to take one of them.
+                // Taking e1.to is optimal, as it's always better than taking v, and we are forced
+                // to take one of them.
                 g.take(e1.to);
                 return true;
             } else if (e1.status == UNCONSTRAINED && e2.status == FORCED) {
-                // Taking e2.to is optimal, as it's always better than taking v, and we are forced to take one of them.
+                // Taking e2.to is optimal, as it's always better than taking v, and we are forced
+                // to take one of them.
                 g.take(e2.to);
                 return true;
             } else {
