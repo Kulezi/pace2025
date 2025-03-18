@@ -1,5 +1,5 @@
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 #include "bounds.h"
 #include "ds.h"
@@ -14,8 +14,9 @@ void print_tw(Instance &g, std::string suffix) {
 }
 
 void print_info(Instance &g, std::string suffix) {
-    std::cerr << ",n" + suffix + ",m" + suffix + ",lb" + suffix + ",ub" + suffix << std::flush;
-    std::cout << "," << g.nodeCount() << "," << g.edgeCount() << "," << bounds::lower_bound(g)
+    std::cerr << ",n" + suffix << ",m" + suffix << ",m_forced" + suffix << ",lb" + suffix
+              << ",ub" + suffix << std::flush;
+    std::cout << "," << g.nodeCount() << "," << g.edgeCount() << "," << g.forcedEdgeCount() << "," << bounds::lower_bound(g)
               << "," << bounds::upper_bound(g) << std::flush;
     print_tw(g, suffix);
 }
