@@ -29,12 +29,16 @@ bool isExit(const Instance& g, int u, int v) {
 
 // Checks whether node u is an exit vertex with respect
 // to the closed neighbourhood of nodes v and w.
+// Vertices with a red edge pointing to somewhere else than v and w
+// are considered exit vertices, since the edge means there was an additional vertex
+// that would be reachable outside of the neighbourhood, hence we would be able to exit.
 // Complexity: O(min(deg(u), deg(v) + deg(w))
 bool isExit(const Instance& g, int u, int v, int w) {
-    for (auto [x, _] : g.adj[u]) {
+    for (auto [x, status] : g.adj[u]) {
         // This will execute at most O(deg(v) + deg(w)) times, since g.hasEdge(x, ?) can be true
         // only for deg(v) + deg(w) different vertices x.
-        if (x != v && x != w && !g.hasEdge(x, v) && !g.hasEdge(x, w)) return true;
+        if (x != v && x != w && (status == FORCED || (!g.hasEdge(x, v) && !g.hasEdge(x, w))))
+            return true;
     }
 
     return false;
@@ -89,41 +93,59 @@ bool canBeDominatedBySingleNode(const Instance& g, const std::vector<int>& N_pri
            intersection_can_be_dominated_by_single_from(N_prison);
 }
 
-void applyCase1_1(Instance& g, int v, int w, const std::vector<int>& N_prison,
+bool applyCase1_1(Instance& g, int v, int w, const std::vector<int>& N_prison,
                   const std::vector<int>& N_guard, const std::vector<int>& N_v_without,
                   const std::vector<int>& N_w_without) {
-    int z1 = g.addNode();
-    int z2 = g.addNode();
-    int z3 = g.addNode();
+    if (!g.hasEdge(v, w)) {
+        std::cerr << __func__ << "_1" << dbg(v) << dbg(w) << dbgv(N_prison) << dbgv(N_guard)
+                  << dbgv(N_v_without) << dbgv(N_w_without) << std::endl;
+        // Don't apply the reduction if it doesn't reduce the size of the graph.
+        if (N_prison.size() + intersect(intersect(N_guard, N_v_without), N_w_without).size() <= 3)
+            return false;
+        int z1 = g.addNode();
+        int z2 = g.addNode();
+        int z3 = g.addNode();
 
-    g.addEdge(v, z1, UNCONSTRAINED);
-    g.addEdge(v, z2, UNCONSTRAINED);
-    g.addEdge(v, z3, UNCONSTRAINED);
+        g.addEdge(v, z1);
+        g.addEdge(v, z2);
+        g.addEdge(v, z3);
 
-    g.addEdge(w, z1, UNCONSTRAINED);
-    g.addEdge(w, z2, UNCONSTRAINED);
-    g.addEdge(w, z3, UNCONSTRAINED);
+        g.addEdge(w, z1);
+        g.addEdge(w, z2);
+        g.addEdge(w, z3);
 
+        g.removeNodes(N_prison);
+        g.removeNodes(intersect(intersect(N_guard, N_v_without), N_w_without));
+        return true;
+    }
+
+    // The edge was already there, but could be forced already.
+    if (g.getEdgeStatus(v, w) == UNCONSTRAINED) {
+        g.forceEdge(v, w);
+    }
     g.removeNodes(N_prison);
     g.removeNodes(intersect(intersect(N_guard, N_v_without), N_w_without));
+    return true;
 }
 
-void applyCase1_2(Instance& g, int v, const std::vector<int>& N_prison,
+bool applyCase1_2(Instance& g, int v, const std::vector<int>& N_prison,
                   const std::vector<int>& N_v_without, const std::vector<int>& N_guard) {
     g.take(v);
     g.removeNodes(N_prison);
     g.removeNodes(intersect(N_v_without, N_guard));
+    return true;
 }
 
-void applyCase1_3(Instance& g, int w, const std::vector<int>& N_prison,
+bool applyCase1_3(Instance& g, int w, const std::vector<int>& N_prison,
                   const std::vector<int>& N_w_without, const std::vector<int>& N_guard) {
     g.take(w);
     g.removeNode(w);
     g.removeNodes(N_prison);
     g.removeNodes(intersect(N_w_without, N_guard));
+    return true;
 }
 
-void applyCase2(Instance& g, int v, int w, const std::vector<int>& N_vw_without,
+bool applyCase2(Instance& g, int v, int w, const std::vector<int>& N_vw_without,
                 const std::vector<int>& N_prison, const std::vector<int>& N_guard) {
     // w might get removed when taking v, so we need to set statuses before taking v and w.
     for (auto u : N_vw_without) {
@@ -134,6 +156,14 @@ void applyCase2(Instance& g, int v, int w, const std::vector<int>& N_vw_without,
 
     g.removeNodes(N_prison);
     g.removeNodes(N_guard);
+    return true;
+}
+
+std::vector<int> redNeighbours(Instance& g, int v) {
+    std::vector<int> res;
+    for (auto [u, status] : g.adj[v])
+        if (status == FORCED) res.push_back(u);
+    return res;
 }
 
 // Tries to apply Main Rule 2 for a given pair of vertices - DOI 10.1007/s10479-006-0045-4, p. 4
@@ -151,28 +181,27 @@ bool ApplyAlberMainRule2(Instance& g, int v, int w) {
 
     auto N_prison_intersect_B = filterDominatedNodes(g, N_prison);
 
-    if (canBeDominatedBySingleNode(g, N_prison_intersect_B, N_guard, N_prison)) {
+    std::vector<int> N_red = unite(redNeighbours(g, v), redNeighbours(g, w));
+    if (N_red.size() == 0 &&
+        canBeDominatedBySingleNode(g, N_prison_intersect_B, N_guard, N_prison)) {
         return false;
-    }
+    } else if (N_red.size() == 1 &&
+               contains(g.neighbourhoodIncluding(N_red.front()), N_prison_intersect_B))
+        return false;
 
     bool can_be_dominated_by_just_v = contains(N_v_without, N_prison_intersect_B);
     bool can_be_dominated_by_just_w = contains(N_w_without, N_prison_intersect_B);
 
     if (can_be_dominated_by_just_v && can_be_dominated_by_just_w) {
-        // Don't apply the reduction if it doesn't reduce the size of the graph.
-        if (N_prison.size() + intersect(intersect(N_guard, N_v_without), N_w_without).size() <= 3) {
-            return false;
-        }
-        applyCase1_1(g, v, w, N_prison, N_guard, N_v_without, N_w_without);
-    } else if (can_be_dominated_by_just_v) {
-        applyCase1_2(g, v, N_prison, N_v_without, N_guard);
-    } else if (can_be_dominated_by_just_w) {
-        applyCase1_3(g, w, N_prison, N_w_without, N_guard);
-    } else {
-        applyCase2(g, v, w, N_vw_without, N_prison, N_guard);
+        return applyCase1_1(g, v, w, N_prison, N_guard, N_v_without, N_w_without);
     }
-
-    return true;
+    if (can_be_dominated_by_just_v) {
+        return applyCase1_2(g, v, N_prison, N_v_without, N_guard);
+    }
+    if (can_be_dominated_by_just_w) {
+        return applyCase1_3(g, w, N_prison, N_w_without, N_guard);
+    }
+    return applyCase2(g, v, w, N_vw_without, N_prison, N_guard);
 }
 }  // namespace
 
@@ -357,21 +386,6 @@ bool AlberSimpleRule4(Instance& g) {
     return false;
 }
 
-void forceEdge(Instance& g, int u, int v) {
-    DS_ASSERT(g.hasEdge(u, v));
-    DS_ASSERT(g.getEdgeStatus(u, v) != FORCED);
-    g.setEdgeStatus(u, v, FORCED);
-    g.setNodeStatus(u, DOMINATED);
-    g.setNodeStatus(v, DOMINATED);
-
-    // All vertices that see both endpoints of this edge must be dominated by one of them,
-    // so we can mark them as dominated.
-    auto edgeNeighbourhood = intersect(g.neighbourhoodExcluding(u), g.neighbourhoodExcluding(v));
-    for (auto w : edgeNeighbourhood) {
-        g.setNodeStatus(w, DOMINATED);
-    }
-}
-
 // If a vertex of degree two is contained in the neighbourhoods of both its neighbours,
 // and they are connected by an edge, make the edge forced and remove this vertex, as there exists
 // an optimal solution not-taking this vertex and taking one of its neighbours.
@@ -385,7 +399,7 @@ bool ForcedEdgeRule(Instance& g) {
             if (!g.hasEdge(e1.to, e2.to)) continue;
 
             if (e1.status == UNCONSTRAINED && e2.status == UNCONSTRAINED) {
-                forceEdge(g, e1.to, e2.to);
+                g.forceEdge(e1.to, e2.to);
                 g.removeNode(v);
                 return true;
             } else if (e1.status == FORCED && e2.status == UNCONSTRAINED) {

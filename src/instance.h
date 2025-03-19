@@ -61,7 +61,7 @@ struct Instance {
                 int b = 0;
                 tokens >> b;
                 --header_edges;
-                addEdge(a, b, UNCONSTRAINED);
+                addEdge(a, b);
             }
         }
 
@@ -111,16 +111,23 @@ struct Instance {
 
     NodeStatus getNodeStatus(int v) const { return status[v]; }
 
-    void setEdgeStatus(int u, int v, EdgeStatus status) {
-        auto it_u = lower_bound(adj[u].begin(), adj[u].end(), Endpoint{v, ANY});
-        DS_ASSERT(it_u != adj[u].end());
-        auto it_v = lower_bound(adj[v].begin(), adj[v].end(), Endpoint{u, ANY});
-        DS_ASSERT(it_v != adj[v].end());
+    void forceEdge(int u, int v) {
+        DS_ASSERT(hasEdge(u, v));
+        DS_ASSERT(getEdgeStatus(u, v) != FORCED);
+        setEdgeStatus(u, v, FORCED);
+        setNodeStatus(u, DOMINATED);
+        setNodeStatus(v, DOMINATED);
 
-        it_u->status = it_v->status = status;
+        // All vertices that see both endpoints of this edge must be dominated by one of them,
+        // so we can mark them as dominated.
+        auto edgeNeighbourhood =
+            intersect(neighbourhoodExcluding(u), neighbourhoodExcluding(v));
+        for (auto w : edgeNeighbourhood) {
+            setNodeStatus(w, DOMINATED);
+        }
     }
 
-    EdgeStatus getEdgeStatus(int u, int v) const { 
+    EdgeStatus getEdgeStatus(int u, int v) const {
         auto it = lower_bound(adj[u].begin(), adj[u].end(), Endpoint{v, ANY});
         DS_ASSERT(it != adj[u].end());
         return it->status;
@@ -129,14 +136,12 @@ struct Instance {
     // Returns the degree of given node.
     int deg(int v) const { return (int)adj[v].size(); }
 
-    
     int forcedDeg(int v) const {
         int res = 0;
-        for (auto e: adj[v]) 
+        for (auto e : adj[v])
             if (e.status == FORCED) res++;
         return res;
     }
-
 
     // Creates and returns the id of the created node.
     // Complexity: O(1)
@@ -168,11 +173,11 @@ struct Instance {
         for (auto &v : l) removeNode(v);
     }
 
-    // Adds an edge between nodes with id's u and v.
+    // Adds an unconstrained edge between nodes with id's u and v.
     // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
-    void addEdge(int u, int v, EdgeStatus status) {
-        insert(adj[u], Endpoint{v, status});
-        insert(adj[v], Endpoint{u, status});
+    void addEdge(int u, int v) {
+        insert(adj[u], Endpoint{v, UNCONSTRAINED});
+        insert(adj[v], Endpoint{u, UNCONSTRAINED});
     }
 
     // Removes edge (v, w) from the graph.
@@ -308,6 +313,16 @@ struct Instance {
                 std::cerr << i << " " << j << " " << dbg(status) "\n";
             }
         }
+    }
+
+   private:
+    void setEdgeStatus(int u, int v, EdgeStatus status) {
+        auto it_u = lower_bound(adj[u].begin(), adj[u].end(), Endpoint{v, ANY});
+        DS_ASSERT(it_u != adj[u].end());
+        auto it_v = lower_bound(adj[v].begin(), adj[v].end(), Endpoint{u, ANY});
+        DS_ASSERT(it_v != adj[v].end());
+
+        it_u->status = it_v->status = status;
     }
 };
 
