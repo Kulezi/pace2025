@@ -5,7 +5,7 @@ project(SourceCode)
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 23)
   
-set(CMAKE_CXX_FLAGS "-Wall -g")
+set(CMAKE_CXX_FLAGS "-Wall -g -DDEBUG_MODE")
 
 # Include the src directory
 include_directories(${CMAKE_SOURCE_DIR}/src)

@@ -33,8 +33,8 @@ struct BenchmarkInfo {
 constexpr size_t MAX_HANDLED_TREEWIDTH = 16;
 constexpr size_t GOOD_ENOUGH_TREEWIDTH = 15;
 constexpr size_t pow3[MAX_HANDLED_TREEWIDTH + 1] = {
-    1,     3,      9,      27,      81,      243,      729,      2187,      6561,      19683,
-    59049, 177147, 531441, 1594323, 4782969, 14348907, 43046721,
+    1,     3,     9,      27,     81,      243,     729,      2187,     6561,
+    19683, 59049, 177147, 531441, 1594323, 4782969, 14348907, 43046721,
 };
 
 struct Exact {
@@ -100,7 +100,10 @@ struct Exact {
 #else
             bool reduced = f(g);
 #endif
-            if (reduced) goto _start;
+            if (reduced) {
+                std::cerr << "reduced" << dbg(i) << dbg(g.nodeCount()) << dbg(g.edgeCount()) << dbg(g.forcedEdgeCount()) << std::endl; 
+                goto _start;
+            }
         }
     }
 

@@ -10,6 +10,13 @@
 #define DS_ASSERT(cond)
 #endif
 
+#ifdef TRACING_MODE
+#define DS_DEBUG(x) x
+#else
+#define DS_DEBUG(x)
+#endif
+
+
 #define dbg(x) #x << " = " << x << " "
 
 // Computes A ∩ B.

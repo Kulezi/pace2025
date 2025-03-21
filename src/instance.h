@@ -107,11 +107,14 @@ struct Instance {
     // Returns the number of nodes in the graph.
     size_t nodeCount() const { return nodes.size(); }
 
-    void setNodeStatus(int v, NodeStatus c) { status[v] = c; }
+    void setNodeStatus(int v, NodeStatus c) { 
+        DS_DEBUG(std::cerr << __func__ << dbg(v) << dbg(c) <<  std::endl);
+        status[v] = c; }
 
     NodeStatus getNodeStatus(int v) const { return status[v]; }
 
     void forceEdge(int u, int v) {
+        DS_DEBUG(std::cerr << __func__ << dbg(u) << dbg(v) << std::endl);
         DS_ASSERT(hasEdge(u, v));
         DS_ASSERT(getEdgeStatus(u, v) != FORCED);
         setEdgeStatus(u, v, FORCED);
@@ -146,6 +149,7 @@ struct Instance {
     // Creates and returns the id of the created node.
     // Complexity: O(1)
     int addNode() {
+        DS_DEBUG(std::cerr << __func__ << std::endl);
         adj.push_back({});
         nodes.push_back(next_free_id);
         status.push_back(UNDOMINATED);
@@ -156,15 +160,24 @@ struct Instance {
     // Removes the node with given id.
     // Complexity: O(deg(v) + sum over deg(v) of neighbours)
     void removeNode(int v) {
+        std::vector<int> to_take;
+
+        DS_DEBUG(std::cerr << __func__ << dbg(v) << std::endl);
         if (find(nodes.begin(), nodes.end(), v) == nodes.end()) return;
-        for (auto [u, _] : adj[v]) {
-            remove(adj[u], Endpoint{v, ANY});
+        for (auto [u, status] : adj[v]) {
+            if (status == FORCED && getNodeStatus(v) != TAKEN) {
+                // We are removing an end of a forced edge, so the other end must be in the dominating set by its definition.
+                to_take.push_back(u);
+            }
+            remove(adj[u], Endpoint{v, status});
             DS_ASSERT(is_sorted(adj[u].begin(), adj[u].end()));
         }
         adj[v].clear();
 
         remove(nodes, v);
         DS_ASSERT(std::is_sorted(adj[v].begin(), adj[v].end()));
+
+        for (auto u : to_take) take(u);
     }
 
     // Removes nodes in the given list from the graph.
@@ -176,6 +189,7 @@ struct Instance {
     // Adds an unconstrained edge between nodes with id's u and v.
     // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
     void addEdge(int u, int v) {
+        DS_DEBUG(std::cerr << __func__ << dbg(u) << dbg(v) << std::endl);
         insert(adj[u], Endpoint{v, UNCONSTRAINED});
         insert(adj[v], Endpoint{u, UNCONSTRAINED});
     }
@@ -183,6 +197,7 @@ struct Instance {
     // Removes edge (v, w) from the graph.
     // Complexity: O(deg(v) + deg(w))
     void removeEdge(int v, int w) {
+        DS_DEBUG(std::cerr << __func__ << dbg(v) << dbg(w) << std::endl);
         remove(adj[v], {w, ANY});
         remove(adj[w], {v, ANY});
     }
@@ -243,6 +258,7 @@ struct Instance {
     // it's neighours to DOMINATED if they are not, the node is removed from the graph afterwards.
     // Complexity: O(deg(v)) or O(sum of degrees of neighbours) in case of extra vertices.
     void take(int v) {
+        DS_DEBUG(std::cerr << __func__ << dbg(v) << std::endl);
         DS_ASSERT(status[v] != TAKEN);
         if (is_extra[v]) {
             for (auto u : neighbourhoodExcluding(v)) {

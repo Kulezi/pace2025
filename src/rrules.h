@@ -37,7 +37,7 @@ bool isExit(const Instance& g, int u, int v, int w) {
     for (auto [x, status] : g.adj[u]) {
         // This will execute at most O(deg(v) + deg(w)) times, since g.hasEdge(x, ?) can be true
         // only for deg(v) + deg(w) different vertices x.
-        if (x != v && x != w && (status == FORCED || (!g.hasEdge(x, v) && !g.hasEdge(x, w))))
+        if (x != v && x != w && ((!g.hasEdge(x, v) && !g.hasEdge(x, w)) || status == FORCED))
             return true;
     }
 
@@ -97,8 +97,8 @@ bool applyCase1_1(Instance& g, int v, int w, const std::vector<int>& N_prison,
                   const std::vector<int>& N_guard, const std::vector<int>& N_v_without,
                   const std::vector<int>& N_w_without) {
     if (!g.hasEdge(v, w)) {
-        std::cerr << __func__ << "_1" << dbg(v) << dbg(w) << dbgv(N_prison) << dbgv(N_guard)
-                  << dbgv(N_v_without) << dbgv(N_w_without) << std::endl;
+        DS_DEBUG(std::cerr << __func__ << "_1_1_GADGET" << dbg(v) << dbg(w) << dbgv(N_prison)
+                           << dbgv(N_guard) << dbgv(N_v_without) << dbgv(N_w_without) << std::endl);
         // Don't apply the reduction if it doesn't reduce the size of the graph.
         if (N_prison.size() + intersect(intersect(N_guard, N_v_without), N_w_without).size() <= 3)
             return false;
@@ -118,18 +118,22 @@ bool applyCase1_1(Instance& g, int v, int w, const std::vector<int>& N_prison,
         g.removeNodes(intersect(intersect(N_guard, N_v_without), N_w_without));
         return true;
     }
-
+    DS_DEBUG(std::cerr << __func__ << "_1_1_FORCE" << dbg(v) << dbg(w) << dbgv(N_prison)
+                       << dbgv(N_guard) << dbgv(N_v_without) << dbgv(N_w_without) << std::endl);
     // The edge was already there, but could be forced already.
     if (g.getEdgeStatus(v, w) == UNCONSTRAINED) {
         g.forceEdge(v, w);
     }
     g.removeNodes(N_prison);
     g.removeNodes(intersect(intersect(N_guard, N_v_without), N_w_without));
+
     return true;
 }
 
 bool applyCase1_2(Instance& g, int v, const std::vector<int>& N_prison,
                   const std::vector<int>& N_v_without, const std::vector<int>& N_guard) {
+    DS_DEBUG(std::cerr << __func__ << "_1_2" << dbg(v) << dbgv(N_prison) << dbgv(N_guard)
+                       << dbgv(N_v_without) << std::endl);
     g.take(v);
     g.removeNodes(N_prison);
     g.removeNodes(intersect(N_v_without, N_guard));
@@ -138,6 +142,8 @@ bool applyCase1_2(Instance& g, int v, const std::vector<int>& N_prison,
 
 bool applyCase1_3(Instance& g, int w, const std::vector<int>& N_prison,
                   const std::vector<int>& N_w_without, const std::vector<int>& N_guard) {
+    DS_DEBUG(std::cerr << __func__ << "_1_3" << dbg(w) << dbgv(N_prison) << dbgv(N_guard)
+                       << dbgv(N_w_without) << std::endl);
     g.take(w);
     g.removeNode(w);
     g.removeNodes(N_prison);
@@ -147,6 +153,8 @@ bool applyCase1_3(Instance& g, int w, const std::vector<int>& N_prison,
 
 bool applyCase2(Instance& g, int v, int w, const std::vector<int>& N_vw_without,
                 const std::vector<int>& N_prison, const std::vector<int>& N_guard) {
+    DS_DEBUG(std::cerr << __func__ << "_2" << dbg(v) << dbg(w) << dbgv(N_prison) << dbgv(N_guard)
+                       << std::endl);
     // w might get removed when taking v, so we need to set statuses before taking v and w.
     for (auto u : N_vw_without) {
         g.setNodeStatus(u, DOMINATED);
@@ -156,6 +164,7 @@ bool applyCase2(Instance& g, int v, int w, const std::vector<int>& N_vw_without,
 
     g.removeNodes(N_prison);
     g.removeNodes(N_guard);
+
     return true;
 }
 
@@ -176,22 +185,33 @@ bool ApplyAlberMainRule2(Instance& g, int v, int w) {
 
     std::vector<int> N_exit, N_guard, N_prison;
     populateExitNodes(g, N_vw_without, v, w, N_exit);
+
+    // The only forced edges must have an end in {v, w}.
+    for (auto from : N_exit) {
+        for (auto [to, status] : g.adj[from]) {
+            if (status == FORCED && to != v && to != w) return false;
+        }
+    }
+
     populateGuardNodes(g, N_vw_without, N_exit, N_guard);
     N_prison = remove(remove(N_vw_without, N_exit), N_guard);
 
     auto N_prison_intersect_B = filterDominatedNodes(g, N_prison);
+    if (N_prison_intersect_B.empty()) return false;
 
-    std::vector<int> N_red = unite(redNeighbours(g, v), redNeighbours(g, w));
-    if (N_red.size() == 0 &&
-        canBeDominatedBySingleNode(g, N_prison_intersect_B, N_guard, N_prison)) {
+    auto red_v = redNeighbours(g, v);
+    auto red_w = redNeighbours(g, w);
+
+    if (canBeDominatedBySingleNode(g, N_prison_intersect_B, N_guard, N_prison)) {
         return false;
-    } else if (N_red.size() == 1 &&
-               contains(g.neighbourhoodIncluding(N_red.front()), N_prison_intersect_B))
-        return false;
+    }
 
-    bool can_be_dominated_by_just_v = contains(N_v_without, N_prison_intersect_B);
-    bool can_be_dominated_by_just_w = contains(N_w_without, N_prison_intersect_B);
+    bool can_be_dominated_by_just_v =
+        contains(N_v_without, N_prison_intersect_B);  // && red_w.size() == 0;
+    bool can_be_dominated_by_just_w =
+        contains(N_w_without, N_prison_intersect_B);  // && red_v.size() == 0;
 
+    DS_DEBUG(std::cerr << __func__ << dbg(v) << dbg(w) << std::endl);
     if (can_be_dominated_by_just_v && can_be_dominated_by_just_w) {
         return applyCase1_1(g, v, w, N_prison, N_guard, N_v_without, N_w_without);
     }
@@ -399,18 +419,23 @@ bool ForcedEdgeRule(Instance& g) {
             if (!g.hasEdge(e1.to, e2.to)) continue;
 
             if (e1.status == UNCONSTRAINED && e2.status == UNCONSTRAINED) {
-                g.forceEdge(e1.to, e2.to);
                 g.removeNode(v);
+                if (g.getEdgeStatus(e1.to, e2.to) != FORCED) g.forceEdge(e1.to, e2.to);
+                std::cerr << __func__ << "1 " << v << std::endl;
                 return true;
             } else if (e1.status == FORCED && e2.status == UNCONSTRAINED) {
                 // Taking e1.to is optimal, as it's always better than taking v, and we are forced
                 // to take one of them.
                 g.take(e1.to);
+                std::cerr << __func__ << "2 " << dbg(v) << dbg(e1.to) << std::endl;
+
                 return true;
             } else if (e1.status == UNCONSTRAINED && e2.status == FORCED) {
                 // Taking e2.to is optimal, as it's always better than taking v, and we are forced
                 // to take one of them.
                 g.take(e2.to);
+                std::cerr << __func__ << "3 " << dbg(v) << dbg(e2.to) << std::endl;
+
                 return true;
             } else {
                 // We need to take either just u, or both e1.to and e2.to.
@@ -430,7 +455,8 @@ const std::vector<RRules::Rule> defaults_preprocess = {
 };
 
 const std::vector<RRules::Rule> defaults_branching = {
-    ForcedEdgeRule, AlberSimpleRule1, AlberSimpleRule2, AlberSimpleRule3, AlberSimpleRule4, AlberMainRule1,
+    ForcedEdgeRule,   AlberSimpleRule1, AlberSimpleRule2,
+    AlberSimpleRule3, AlberSimpleRule4, AlberMainRule1,
 };
 
 }  // namespace RRules
