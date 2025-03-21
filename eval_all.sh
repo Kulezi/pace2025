@@ -3,7 +3,7 @@
 INSTANCES="in/PACE2025-instances/ds/exact"
 SOLUTIONS="${INSTANCES}/.solutions"
 N_CORES=$(nproc --all)
-TIME_LIMIT_SECONDS=360
+TIME_LIMIT_SECONDS=600
 
 cmake .
 make eval
