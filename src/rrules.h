@@ -425,13 +425,12 @@ bool ForcedEdgeRule(Instance& g) {
 }
 
 const std::vector<RRules::Rule> defaults_preprocess = {
-    RRules::AlberSimpleRule1, RRules::AlberSimpleRule2, RRules::AlberSimpleRule3,
-    RRules::AlberSimpleRule4, RRules::AlberMainRule1,   RRules::AlberMainRule2,
+    ForcedEdgeRule,   AlberSimpleRule1, AlberSimpleRule2, AlberSimpleRule3,
+    AlberSimpleRule4, AlberMainRule1,   AlberMainRule2,
 };
 
 const std::vector<RRules::Rule> defaults_branching = {
-    RRules::AlberSimpleRule1, RRules::AlberSimpleRule2, RRules::AlberSimpleRule3,
-    RRules::AlberSimpleRule4, RRules::AlberMainRule1,
+    ForcedEdgeRule, AlberSimpleRule1, AlberSimpleRule2, AlberSimpleRule3, AlberSimpleRule4, AlberMainRule1,
 };
 
 }  // namespace RRules
