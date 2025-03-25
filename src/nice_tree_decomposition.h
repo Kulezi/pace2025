@@ -43,10 +43,10 @@ struct NiceTreeDecomposition {
                                                             rooted_decomposition.root);
     }
 
-    Node &operator[](int v) { return decomp[v]; }
+    const Node &operator[](int v) const { return decomp[v]; }
     int root;
 
-    int n_nodes() { return decomp.size(); }
+    int n_nodes() const { return decomp.size(); }
 
     size_t width() {
         size_t max_width = 0;

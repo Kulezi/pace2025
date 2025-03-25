@@ -30,11 +30,12 @@ struct BenchmarkInfo {
 };
 #endif
 
-constexpr size_t MAX_HANDLED_TREEWIDTH = 16;
+constexpr uint64_t MAX_MEMORY_IN_BYTES = (1UL << 30);
+constexpr size_t MAX_HANDLED_TREEWIDTH = 18;
 constexpr size_t GOOD_ENOUGH_TREEWIDTH = 15;
 constexpr size_t pow3[MAX_HANDLED_TREEWIDTH + 1] = {
-    1,     3,     9,      27,     81,      243,     729,      2187,     6561,
-    19683, 59049, 177147, 531441, 1594323, 4782969, 14348907, 43046721,
+    1,     3,      9,      27,      81,      243,      729,      2187,      6561,      19683,
+    59049, 177147, 531441, 1594323, 4782969, 14348907, 43046721, 129140163, 387420489,
 };
 
 struct Exact {
@@ -101,7 +102,8 @@ struct Exact {
             bool reduced = f(g);
 #endif
             if (reduced) {
-                DS_DEBUG(std::cerr << "reduced " << dbg(i) << dbg(g.nodeCount()) << dbg(g.edgeCount()) << dbg(g.forcedEdgeCount()) << std::endl);
+                DS_DEBUG(std::cerr << "reduced " << dbg(i) << dbg(g.nodeCount())
+                                   << dbg(g.edgeCount()) << dbg(g.forcedEdgeCount()) << std::endl);
                 goto _start;
             }
         }
@@ -499,13 +501,24 @@ struct Exact {
         }
     }
 
+    uint64_t memoryUsage(const NiceTreeDecomposition &td) {
+        DS_ASSERT(td.width() <= MAX_HANDLED_TREEWIDTH);
+        uint64_t res = 0;
+        for (int i = 0; i < td.n_nodes(); i++) {
+            res += pow3[td[i].bag.size()] * sizeof(int) + sizeof(std::vector<int>);
+        }
+
+        return res;
+    }
+
     // Returns true if instance was solved,
     // false if the width of found decompositions was too big to handle.
     bool solveTreewidth(Instance &g) {
 #ifdef DS_BENCHMARK
         auto start = std::chrono::high_resolution_clock::now();
         NiceTreeDecomposition td(g, GOOD_ENOUGH_TREEWIDTH);
-        if (td.width() > MAX_HANDLED_TREEWIDTH) return false;
+        if (td.width() > MAX_HANDLED_TREEWIDTH || memoryUsage(td) > MAX_MEMORY_IN_BYTES)
+            return false;
 
         benchmark_info.treewidth_decomposition_time +=
             std::chrono::high_resolution_clock::now() - start;
@@ -520,7 +533,8 @@ struct Exact {
             std::max(benchmark_info.max_encountered_treewidth, td.width());
 #else
         NiceTreeDecomposition td(g, GOOD_ENOUGH_TREEWIDTH);
-        if (td.width() > MAX_HANDLED_TREEWIDTH) return false;
+        if (td.width() > MAX_HANDLED_TREEWIDTH || memoryUsage(td) > MAX_MEMORY_IN_BYTES)
+            return false;
 
         c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
 
