@@ -421,20 +421,20 @@ bool ForcedEdgeRule(Instance& g) {
             if (e1.status == UNCONSTRAINED && e2.status == UNCONSTRAINED) {
                 g.removeNode(v);
                 if (g.getEdgeStatus(e1.to, e2.to) != FORCED) g.forceEdge(e1.to, e2.to);
-                std::cerr << __func__ << "1 " << v << std::endl;
+                DS_DEBUG(std::cerr << __func__ << "_case_1" << v << std::endl);
                 return true;
             } else if (e1.status == FORCED && e2.status == UNCONSTRAINED) {
                 // Taking e1.to is optimal, as it's always better than taking v, and we are forced
                 // to take one of them.
                 g.take(e1.to);
-                std::cerr << __func__ << "2 " << dbg(v) << dbg(e1.to) << std::endl;
+                DS_DEBUG(std::cerr << __func__ << "_case_2" << dbg(v) << dbg(e1.to) << std::endl);
 
                 return true;
             } else if (e1.status == UNCONSTRAINED && e2.status == FORCED) {
                 // Taking e2.to is optimal, as it's always better than taking v, and we are forced
                 // to take one of them.
                 g.take(e2.to);
-                std::cerr << __func__ << "3 " << dbg(v) << dbg(e2.to) << std::endl;
+                std::cerr << __func__ << "_case_3" << dbg(v) << dbg(e2.to) << std::endl;
 
                 return true;
             } else {

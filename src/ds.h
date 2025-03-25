@@ -101,7 +101,7 @@ struct Exact {
             bool reduced = f(g);
 #endif
             if (reduced) {
-                std::cerr << "reduced" << dbg(i) << dbg(g.nodeCount()) << dbg(g.edgeCount()) << dbg(g.forcedEdgeCount()) << std::endl; 
+                DS_DEBUG(std::cerr << "reduced " << dbg(i) << dbg(g.nodeCount()) << dbg(g.edgeCount()) << dbg(g.forcedEdgeCount()) << std::endl);
                 goto _start;
             }
         }
@@ -448,8 +448,6 @@ struct Exact {
             }
             case NiceTreeDecomposition::NodeType::Forget: {
                 int pos_w = bag_pos(td[node.l_child].bag, node.v);
-                std::cerr << dbg(t) << dbg(node.l_child) << dbg(f) << dbg(pos_w)
-                          << dbg(insert(f, pos_w, Color::WHITE)) << std::endl;
                 if (c[t][f] ==
                     cost(g, node.v) + getC(g, td, node.l_child, insert(f, pos_w, Color::BLACK))) {
                     g.ds.push_back(node.v);
@@ -526,8 +524,7 @@ struct Exact {
 
         c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
 
-        std::cerr << dbg(getC(g, td, td.root, 0)) << std::endl;
-        td.print();
+        getC(g, td, td.root, 0);
         recoverDS(g, td, td.root, 0);
 #endif
         return true;

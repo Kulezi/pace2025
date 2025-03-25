@@ -17,7 +17,7 @@
 #endif
 
 
-#define dbg(x) #x << " = " << x << " "
+#define dbg(x) " " << #x << " = " << x << " "
 
 // Computes A ∩ B.
 // Complexity: O(|A| + |B|)
