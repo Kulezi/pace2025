@@ -48,14 +48,14 @@ struct NiceTreeDecomposition {
 
     int n_nodes() const { return decomp.size(); }
 
-    size_t width() {
+    size_t width() const {
         size_t max_width = 0;
         for (auto &v : decomp)
             if (max_width < v.bag.size()) max_width = v.bag.size();
         return max_width;
     }
 
-    void print() {
+    void print() const {
         std::cerr << "n_nodes: " << n_nodes() << ", width: " << width() << "\n";
         printDecomp(root, 0);
     }
@@ -79,7 +79,7 @@ struct NiceTreeDecomposition {
         return decomp.back().id;
     }
 
-    void printDecomp(int v, int level) {
+    void printDecomp(int v, int level) const {
         std::cerr << std::string(level, ' ');
         std::string vertex_label = "UNKNOWN";
 
