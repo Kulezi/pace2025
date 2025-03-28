@@ -209,10 +209,11 @@ bool ApplyAlberMainRule2(Instance& g, int v, int w) {
     }
 
     bool can_be_dominated_by_just_v =
-        contains(N_v_without, N_prison_intersect_B);  // && red_w.size() == 0;
+        contains(N_v_without, N_prison_intersect_B) && red_w.size() == 0;
     bool can_be_dominated_by_just_w =
-        contains(N_w_without, N_prison_intersect_B);  // && red_v.size() == 0;
+        contains(N_w_without, N_prison_intersect_B) && red_v.size() == 0;
 
+    DS_TRACE(std::cerr << "trying to apply " << __func__ << dbg(v) << dbg(w) << std::endl);
     if (can_be_dominated_by_just_v && can_be_dominated_by_just_w) {
         return applyCase1_1(g, v, w, N_prison, N_guard, N_v_without, N_w_without);
     }
