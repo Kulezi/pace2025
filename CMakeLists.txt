@@ -35,6 +35,7 @@ set(SOURCE_FILES
     src/main.cpp
     src/random_graph_gen.cpp
     src/eval.cpp
+    src/small_graph_test.cpp
 )
 
 # Define each executable separately

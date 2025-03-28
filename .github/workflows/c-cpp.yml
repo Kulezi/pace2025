@@ -7,6 +7,17 @@ on:
     branches: [ "main" ]
 
 jobs:
+  test_all_small_graphs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: small_graph_test
+      run: |
+        cmake .
+        make small_graph_test
+        ./small_graph_test.out 2> err.log || tail err.log
   stresstest:
     runs-on: ubuntu-latest
     steps:
