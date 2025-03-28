@@ -102,7 +102,7 @@ struct Exact {
             bool reduced = f(g);
 #endif
             if (reduced) {
-                DS_DEBUG(std::cerr << "reduced " << dbg(i) << dbg(g.nodeCount())
+                DS_TRACE(std::cerr << "reduced " << dbg(i) << dbg(g.nodeCount())
                                    << dbg(g.edgeCount()) << dbg(g.forcedEdgeCount()) << std::endl);
                 goto _start;
             }

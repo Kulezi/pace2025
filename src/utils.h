@@ -11,13 +11,14 @@
 #endif
 
 #ifdef TRACING_MODE
-#define DS_DEBUG(x) x
+#define DS_TRACE(x) x
 #else
-#define DS_DEBUG(x)
+#define DS_TRACE(x)
 #endif
 
 
 #define dbg(x) " " << #x << " = " << x << " "
+#define dbgv(x) " " << #x << " = " << to_string(x) << " "
 
 // Computes A ∩ B.
 // Complexity: O(|A| + |B|)
@@ -108,7 +109,7 @@ std::vector<T> remove(std::vector<T> a, const std::vector<T> &b) {
 }
 
 // Returns a human-readable string representing given vector.
-std::string dbgv(const std::vector<int> v) {
+std::string to_string(const std::vector<int> v) {
     std::string s = "[ ";
     for (auto i : v) s += std::to_string(i) + " ";
     s += "]";
