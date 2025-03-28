@@ -97,11 +97,12 @@ bool applyCase1_1(Instance& g, int v, int w, const std::vector<int>& N_prison,
                   const std::vector<int>& N_guard, const std::vector<int>& N_v_without,
                   const std::vector<int>& N_w_without) {
     if (!g.hasEdge(v, w)) {
-        DS_DEBUG(std::cerr << __func__ << "_1_1_GADGET" << dbg(v) << dbg(w) << dbgv(N_prison)
-                           << dbgv(N_guard) << dbgv(N_v_without) << dbgv(N_w_without) << std::endl);
         // Don't apply the reduction if it doesn't reduce the size of the graph.
         if (N_prison.size() + intersect(intersect(N_guard, N_v_without), N_w_without).size() <= 3)
             return false;
+        DS_TRACE(std::cerr << "applying " << __func__ << " (with gadget vertex) " << dbg(v)
+                           << dbg(w) << dbgv(N_prison) << dbgv(N_guard) << dbgv(N_v_without)
+                           << dbgv(N_w_without) << std::endl);
         int z1 = g.addNode();
         int z2 = g.addNode();
         int z3 = g.addNode();
@@ -118,8 +119,9 @@ bool applyCase1_1(Instance& g, int v, int w, const std::vector<int>& N_prison,
         g.removeNodes(intersect(intersect(N_guard, N_v_without), N_w_without));
         return true;
     }
-    DS_DEBUG(std::cerr << __func__ << "_1_1_FORCE" << dbg(v) << dbg(w) << dbgv(N_prison)
-                       << dbgv(N_guard) << dbgv(N_v_without) << dbgv(N_w_without) << std::endl);
+    DS_TRACE(std::cerr << "applying " << __func__ << " (edge forcing) " << dbg(v) << dbg(w)
+                       << dbgv(N_prison) << dbgv(N_guard) << dbgv(N_v_without) << dbgv(N_w_without)
+                       << std::endl);
     // The edge was already there, but could be forced already.
     if (g.getEdgeStatus(v, w) == UNCONSTRAINED) {
         g.forceEdge(v, w);
@@ -132,7 +134,7 @@ bool applyCase1_1(Instance& g, int v, int w, const std::vector<int>& N_prison,
 
 bool applyCase1_2(Instance& g, int v, const std::vector<int>& N_prison,
                   const std::vector<int>& N_v_without, const std::vector<int>& N_guard) {
-    DS_DEBUG(std::cerr << __func__ << "_1_2" << dbg(v) << dbgv(N_prison) << dbgv(N_guard)
+    DS_TRACE(std::cerr << "applying " << __func__ << dbg(v) << dbgv(N_prison) << dbgv(N_guard)
                        << dbgv(N_v_without) << std::endl);
     g.take(v);
     g.removeNodes(N_prison);
@@ -142,7 +144,7 @@ bool applyCase1_2(Instance& g, int v, const std::vector<int>& N_prison,
 
 bool applyCase1_3(Instance& g, int w, const std::vector<int>& N_prison,
                   const std::vector<int>& N_w_without, const std::vector<int>& N_guard) {
-    DS_DEBUG(std::cerr << __func__ << "_1_3" << dbg(w) << dbgv(N_prison) << dbgv(N_guard)
+    DS_TRACE(std::cerr << "applying " << __func__ << dbg(w) << dbgv(N_prison) << dbgv(N_guard)
                        << dbgv(N_w_without) << std::endl);
     g.take(w);
     g.removeNode(w);
@@ -153,8 +155,8 @@ bool applyCase1_3(Instance& g, int w, const std::vector<int>& N_prison,
 
 bool applyCase2(Instance& g, int v, int w, const std::vector<int>& N_vw_without,
                 const std::vector<int>& N_prison, const std::vector<int>& N_guard) {
-    DS_DEBUG(std::cerr << __func__ << "_2" << dbg(v) << dbg(w) << dbgv(N_prison) << dbgv(N_guard)
-                       << std::endl);
+    DS_TRACE(std::cerr << "applying " << __func__ << dbg(v) << dbg(w) << dbgv(N_prison)
+                       << dbgv(N_guard) << std::endl);
     // w might get removed when taking v, so we need to set statuses before taking v and w.
     for (auto u : N_vw_without) {
         g.setNodeStatus(u, DOMINATED);
@@ -211,7 +213,6 @@ bool ApplyAlberMainRule2(Instance& g, int v, int w) {
     bool can_be_dominated_by_just_w =
         contains(N_w_without, N_prison_intersect_B);  // && red_v.size() == 0;
 
-    DS_DEBUG(std::cerr << __func__ << dbg(v) << dbg(w) << std::endl);
     if (can_be_dominated_by_just_v && can_be_dominated_by_just_w) {
         return applyCase1_1(g, v, w, N_prison, N_guard, N_v_without, N_w_without);
     }
@@ -245,8 +246,10 @@ bool AlberMainRule1(Instance& g) {
         N_prison = remove(remove(N_v_without, N_exit), N_guard);
 
         if (!N_prison.empty() && hasUndominatedNode(g, N_prison)) {
+            DS_TRACE(std::cerr << "applying " << __func__ << dbg(u) << dbgv(N_prison)
+                               << dbgv(N_guard) << dbgv(N_exit) << std::endl);
             g.take(u);
-            
+
             for (auto v : N_prison) g.removeNode(v);
             for (auto v : N_guard) g.removeNode(v);
             return true;
@@ -301,7 +304,10 @@ bool AlberSimpleRule1(Instance& g) {
             }
         }
     }
-    for (auto [v, w] : to_remove) g.removeEdge(v, w);
+    for (auto [v, w] : to_remove) {
+        DS_TRACE(std::cerr << "applying " << __func__ << dbg(v) << dbg(w) << std::endl);
+        g.removeEdge(v, w);
+    }
 
     return !to_remove.empty();
 }
@@ -327,9 +333,19 @@ bool AlberSimpleRule2(Instance& g) {
         }
     }
 
-    for (auto v : to_take) if (g.getNodeStatus(v) != TAKEN) g.take(v);
-    for (auto v : to_remove) g.removeNode(v);
-    return !to_remove.empty();
+    for (auto v : to_take) {
+        if (g.getNodeStatus(v) != TAKEN) {
+            DS_TRACE(std::cerr << "applying " << __func__ << " (take) " << dbg(v) << std::endl);
+            g.take(v);
+        }
+    }
+
+    for (auto v : to_remove) {
+        DS_TRACE(std::cerr << "applying " << __func__ << " (remove) " << dbg(v) << std::endl);
+        g.removeNode(v);
+    }
+
+    return !to_remove.empty() || !to_take.empty();
 }
 
 bool haveCommonNeighbour(const Instance& g, int u, int v) {
@@ -354,11 +370,14 @@ bool AlberSimpleRule3(Instance& g) {
                                  (g.hasEdge(u_1, u_2) || haveCommonNeighbour(g, u_1, u_2));
 
             if (should_remove) {
-                g.removeNode(v);
+                DS_TRACE(std::cerr << "applying " << __func__ << dbg(v) << std::endl);
 
                 DS_ASSERT(s_1 != FORCED || s_2 != FORCED);
                 if (s_1 == FORCED) g.take(u_1);
                 if (s_2 == FORCED) g.take(u_2);
+
+                g.removeNode(v);
+
                 return true;
             }
         }
@@ -369,7 +388,10 @@ bool AlberSimpleRule3(Instance& g) {
 
 bool tryMidpoint(Instance& g, bool forced_by_edge, int u, int v, int w) {
     if (g.hasEdge(u, v) && g.hasEdge(u, w)) {
-        if (forced_by_edge) g.take(u);
+        if (forced_by_edge) {
+            DS_TRACE(std::cerr << "applying " << __func__ << "(take)" << dbg(u) << std::endl);
+            g.take(u);
+        }
         return true;
     }
 
@@ -395,6 +417,7 @@ bool AlberSimpleRule4(Instance& g) {
             if (possibly_valid) {
                 if (tryMidpoint(g, s_1, u_1, u_2, u_3) || tryMidpoint(g, s_2, u_2, u_1, u_3) ||
                     tryMidpoint(g, s_3, u_3, u_1, u_2)) {
+                    DS_TRACE(std::cerr << "applying " << __func__ << dbg(v) << std::endl);
                     g.removeNode(v);
                     return true;
                 }
@@ -406,8 +429,8 @@ bool AlberSimpleRule4(Instance& g) {
 }
 
 // If a vertex of degree two is contained in the neighbourhoods of both its neighbours,
-// and they are connected by an edge, make the edge forced and remove this vertex, as there exists
-// an optimal solution not-taking this vertex and taking one of its neighbours.
+// and they are connected by an edge, make the edge forced and remove this vertex, as there
+// exists an optimal solution not-taking this vertex and taking one of its neighbours.
 // Complexity: ~ O(|V| * (# removed nodes)) depending on the remove_node operation complexity.
 bool ForcedEdgeRule(Instance& g) {
     auto nodes = g.nodes;
@@ -418,22 +441,22 @@ bool ForcedEdgeRule(Instance& g) {
             if (!g.hasEdge(e1.to, e2.to)) continue;
 
             if (e1.status == UNCONSTRAINED && e2.status == UNCONSTRAINED) {
+                DS_TRACE(std::cerr << __func__ << "(1)" << dbg(v) << std::endl);
                 g.removeNode(v);
                 if (g.getEdgeStatus(e1.to, e2.to) != FORCED) g.forceEdge(e1.to, e2.to);
-                DS_DEBUG(std::cerr << __func__ << "_case_1" << dbg(v) << std::endl);
                 return true;
             } else if (e1.status == FORCED && e2.status == UNCONSTRAINED) {
-                // Taking e1.to is optimal, as it's always better than taking v, and we are forced
-                // to take one of them.
+                DS_TRACE(std::cerr << __func__ << "(2)" << dbg(v) << dbg(e1.to) << std::endl);
+                // Taking e1.to is optimal, as it's always better than taking v, and we are
+                // forced to take one of them.
                 g.take(e1.to);
-                DS_DEBUG(std::cerr << __func__ << "_case_2" << dbg(v) << dbg(e1.to) << std::endl);
 
                 return true;
             } else if (e1.status == UNCONSTRAINED && e2.status == FORCED) {
-                // Taking e2.to is optimal, as it's always better than taking v, and we are forced
-                // to take one of them.
+                DS_TRACE(std::cerr << __func__ << "(3)" << dbg(v) << dbg(e2.to) << std::endl);
+                // Taking e2.to is optimal, as it's always better than taking v, and we are
+                // forced to take one of them.
                 g.take(e2.to);
-                std::cerr << __func__ << "_case_3" << dbg(v) << dbg(e2.to) << std::endl;
 
                 return true;
             } else {
