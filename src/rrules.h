@@ -18,10 +18,10 @@ bool hasUndominatedNode(Instance& g, std::vector<int> nodes) {
 // Checks whether node u is an exit vertex with respect to node v.
 // Complexity: O(min(deg(u), deg(v)))
 bool isExit(const Instance& g, int u, int v) {
-    for (auto [w, _] : g.adj[u]) {
+    for (auto [w, status] : g.adj[u]) {
         // This will execute at most O(deg(v)) times, since g.hasEdge(v, w) can be true only
         // for deg(v) different vertices w.
-        if (w != v && !g.hasEdge(v, w)) return true;
+        if (w != v && (!g.hasEdge(v, w) || status == FORCED)) return true;
     }
 
     return false;
@@ -245,10 +245,10 @@ bool AlberMainRule1(Instance& g) {
         N_prison = remove(remove(N_v_without, N_exit), N_guard);
 
         if (!N_prison.empty() && hasUndominatedNode(g, N_prison)) {
+            g.take(u);
+            
             for (auto v : N_prison) g.removeNode(v);
             for (auto v : N_guard) g.removeNode(v);
-
-            g.take(u);
             return true;
         }
     }
@@ -327,9 +327,8 @@ bool AlberSimpleRule2(Instance& g) {
         }
     }
 
+    for (auto v : to_take) if (g.getNodeStatus(v) != TAKEN) g.take(v);
     for (auto v : to_remove) g.removeNode(v);
-    for (auto v : to_take)
-        if (g.getNodeStatus(v) != TAKEN) g.take(v);
     return !to_remove.empty();
 }
 
@@ -421,7 +420,7 @@ bool ForcedEdgeRule(Instance& g) {
             if (e1.status == UNCONSTRAINED && e2.status == UNCONSTRAINED) {
                 g.removeNode(v);
                 if (g.getEdgeStatus(e1.to, e2.to) != FORCED) g.forceEdge(e1.to, e2.to);
-                DS_DEBUG(std::cerr << __func__ << "_case_1" << v << std::endl);
+                DS_DEBUG(std::cerr << __func__ << "_case_1" << dbg(v) << std::endl);
                 return true;
             } else if (e1.status == FORCED && e2.status == UNCONSTRAINED) {
                 // Taking e1.to is optimal, as it's always better than taking v, and we are forced
