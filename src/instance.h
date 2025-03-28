@@ -107,9 +107,10 @@ struct Instance {
     // Returns the number of nodes in the graph.
     size_t nodeCount() const { return nodes.size(); }
 
-    void setNodeStatus(int v, NodeStatus c) { 
-        DS_DEBUG(std::cerr << __func__ << dbg(v) << dbg(c) <<  std::endl);
-        status[v] = c; }
+    void setNodeStatus(int v, NodeStatus c) {
+        DS_DEBUG(std::cerr << __func__ << dbg(v) << dbg(c) << std::endl);
+        status[v] = c;
+    }
 
     NodeStatus getNodeStatus(int v) const { return status[v]; }
 
@@ -123,8 +124,7 @@ struct Instance {
 
         // All vertices that see both endpoints of this edge must be dominated by one of them,
         // so we can mark them as dominated.
-        auto edgeNeighbourhood =
-            intersect(neighbourhoodExcluding(u), neighbourhoodExcluding(v));
+        auto edgeNeighbourhood = intersect(neighbourhoodExcluding(u), neighbourhoodExcluding(v));
         for (auto w : edgeNeighbourhood) {
             setNodeStatus(w, DOMINATED);
         }
@@ -160,15 +160,11 @@ struct Instance {
     // Removes the node with given id.
     // Complexity: O(deg(v) + sum over deg(v) of neighbours)
     void removeNode(int v) {
-        std::vector<int> to_take;
-
         DS_DEBUG(std::cerr << __func__ << dbg(v) << std::endl);
         if (find(nodes.begin(), nodes.end(), v) == nodes.end()) return;
         for (auto [u, status] : adj[v]) {
-            if (status == FORCED && getNodeStatus(v) != TAKEN) {
-                // We are removing an end of a forced edge, so the other end must be in the dominating set by its definition.
-                to_take.push_back(u);
-            }
+            // Edges like this can only be removed by calling take().
+            DS_ASSERT(status != FORCED || getNodeStatus(v) == TAKEN);
             remove(adj[u], Endpoint{v, status});
             DS_ASSERT(is_sorted(adj[u].begin(), adj[u].end()));
         }
@@ -176,8 +172,6 @@ struct Instance {
 
         remove(nodes, v);
         DS_ASSERT(std::is_sorted(adj[v].begin(), adj[v].end()));
-
-        for (auto u : to_take) take(u);
     }
 
     // Removes nodes in the given list from the graph.
