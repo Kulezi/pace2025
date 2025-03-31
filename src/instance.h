@@ -60,10 +60,12 @@ struct Instance {
                 int a = stoi(s);
                 int b = 0;
                 tokens >> b;
-                --header_edges;
-                addEdge(a, b);
+                adj[a].emplace_back(b, UNCONSTRAINED);
+                adj[b].emplace_back(a, UNCONSTRAINED);
             }
         }
+
+        for (auto v : nodes) sort(adj[v].begin(), adj[v].end());
 
         if (header_edges != read_edges)
             throw std::logic_error("expected " + std::to_string(header_edges) + " edges, found " +
