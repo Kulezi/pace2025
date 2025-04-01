@@ -60,6 +60,7 @@ struct Instance {
                 int a = stoi(s);
                 int b = 0;
                 tokens >> b;
+                ++read_edges;
                 adj[a].emplace_back(b, UNCONSTRAINED);
                 adj[b].emplace_back(a, UNCONSTRAINED);
             }
@@ -311,6 +312,53 @@ struct Instance {
             result[component[v]].push_back(v);
         }
         return result;
+    }
+
+    void saveVCInstance(std::ostream &out) {
+        DS_ASSERT(forcedEdgeCount() == edgeCount());
+        out << "c presolved ds_size: " << ds.size() << "\n";
+        out << "p td " << nodeCount() << " " << edgeCount() << "\n";
+        out << "c nodes: ";
+        std::vector<int> mapping(nodes.back() + 1);
+
+        for (size_t i = 0; i < nodes.size(); i++) {
+            out << " " << nodes[i];
+            mapping[nodes[i]] = i + 1;
+        }
+
+        out << "\n";
+
+        for (auto u : nodes) {
+            for (auto [v, status] : adj[u]) {
+                DS_ASSERT(status == FORCED);
+                if (u < v) {
+                    out << mapping[u] << " " << mapping[v] << "\n";
+                }
+            }
+        }
+    }
+
+    void saveAnnotatedDominatingSetInstance(std::ostream &out) {
+        DS_ASSERT(forcedEdgeCount() == edgeCount());
+        out << "c presolved ds_size: " << ds.size() << "\n";
+        out << "p ads " << nodeCount() << " " << edgeCount() << "\n";
+        out << "c nodes: ";
+        std::vector<int> mapping(nodes.back() + 1);
+
+        for (size_t i = 0; i < nodes.size(); i++) {
+            out << " " << nodes[i];
+            mapping[nodes[i]] = i + 1;
+        }
+
+        out << "\n";
+
+        for (auto u : nodes) {
+            for (auto [v, status] : adj[u]) {
+                if (u < v) {
+                    out << mapping[u] << " " << mapping[v] << " " << status << "\n";
+                }
+            }
+        }
     }
 
     // Prints the graph to stdout in a human-readable format.
