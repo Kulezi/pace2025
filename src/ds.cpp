@@ -1,7 +1,7 @@
 #include "ds.h"
 #include "ternary.h"
 namespace DSHunter {
-void Exact::verify_solution(Instance g, const std::vector<int> solution) {
+void verify_solution(Instance g, const std::vector<int> solution) {
     for (auto u : g.nodes) g.setNodeStatus(u, UNDOMINATED);
     for (auto u : solution) {
         if (g.getNodeStatus(u) == TAKEN)
@@ -388,7 +388,7 @@ void Exact::recoverDS(Instance &g, NiceTreeDecomposition &td, int t, TernaryFun 
     }
 }
 
-uint64_t Exact::memoryUsage(const NiceTreeDecomposition &td) {
+uint64_t Exact::getMemoryUsage(const NiceTreeDecomposition &td) {
     DS_ASSERT(td.width() <= MAX_HANDLED_TREEWIDTH);
     uint64_t res = 0;
     for (int i = 0; i < td.n_nodes(); i++) {
@@ -418,7 +418,7 @@ bool Exact::solveTreewidth(Instance &g) {
         std::max(benchmark_info.max_encountered_treewidth, td.width());
 #else
     NiceTreeDecomposition td(g, GOOD_ENOUGH_TREEWIDTH);
-    if (td.width() > MAX_HANDLED_TREEWIDTH || memoryUsage(td) > MAX_MEMORY_IN_BYTES) return false;
+    if (td.width() > MAX_HANDLED_TREEWIDTH || getMemoryUsage(td) > MAX_MEMORY_IN_BYTES) return false;
 
     c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
 

@@ -3,8 +3,8 @@
 #include "instance.h"
 #include "nice_tree_decomposition.h"
 #include "rrules.h"
-#include "utils.h"
 #include "ternary.h"
+#include "utils.h"
 #ifdef DS_BENCHMARK
 #include <chrono>
 #endif
@@ -39,11 +39,16 @@ constexpr uint64_t MAX_MEMORY_IN_BYTES = (1UL << 30);
 constexpr size_t MAX_HANDLED_TREEWIDTH = 18;
 constexpr size_t GOOD_ENOUGH_TREEWIDTH = 15;
 
+// Checks whether the given solution is a valid dominating set of the given instance.
+// Throws a std::logic_error if it isn't.
+void verify_solution(Instance g, const std::vector<int> solution);
+
 struct Exact {
     std::vector<RRules::Rule> rules, rules_branch;
-#ifdef DS_BENCHMARK
+    std::vector<std::vector<int>> c;
+    #ifdef DS_BENCHMARK
     BenchmarkInfo benchmark_info;
-#endif  // DS_BENCHMARK
+    #endif  // DS_BENCHMARK
     Exact(std::vector<RRules::Rule> _rules, std::vector<RRules::Rule> _rules_branch)
         : rules(_rules), rules_branch(_rules_branch) {
 #ifdef DS_BENCHMARK
@@ -51,37 +56,34 @@ struct Exact {
 #endif
     }
 
-    // Checks whether the given solution is a valid dominating set of the given instance.
-    // Throws a std::logic_error if it isn't.
-    static void verify_solution(Instance g, const std::vector<int> solution);
-
     std::vector<int> solve(Instance g, std::ostream &out);
+
+    // Returns true if instance was solved,
+    // false if the width of found decompositions was too big to handle.
+    bool solveTreewidth(Instance &g);
+
+    void solveBranching(const Instance g, std::vector<int> &best_ds, int level = 0);
+
+    std::vector<int> solveBruteforce(Instance g, std::ostream &out);
 
     void reduce(Instance &g);
 
     void reduce_branch(Instance &g);
 
-    void take(Instance g, int v, std::vector<int> &best_ds, int level);
-
-    void solveBranching(const Instance g, std::vector<int> &best_ds, int level = 0);
     void print(std::vector<int> ds, std::ostream &out);
 
-    std::vector<int> solveBruteforce(Instance g, std::ostream &out);
-
-    std::vector<std::vector<int>> c;
+   private:
+    void take(Instance g, int v, std::vector<int> &best_ds, int level);
 
     inline int cost(const Instance &g, int v);
+
     // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3] extended to handle forced
     // edges.
     int getC(const Instance &g, NiceTreeDecomposition &td, int t, TernaryFun f);
 
     void recoverDS(Instance &g, NiceTreeDecomposition &td, int t, TernaryFun f);
 
-    uint64_t memoryUsage(const NiceTreeDecomposition &td);
-
-    // Returns true if instance was solved,
-    // false if the width of found decompositions was too big to handle.
-    bool solveTreewidth(Instance &g);
+    uint64_t getMemoryUsage(const NiceTreeDecomposition &td);
 };
 }  // namespace DSHunter
 #endif  // DS_H
