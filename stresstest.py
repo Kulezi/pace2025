@@ -27,19 +27,16 @@ def main():
     subprocess.run(["make"], check=True)
     
     for i in tqdm(range(1, 10001), desc="Stress test progress"):
-        # Generowanie losowego wejścia
         if run_command(["./random_graph_gen.out", str(i)], output_file="rg.gr") != 0:
             print("Runtime error in rg.out")
             sys.exit(1)
-        
-        # Uruchomienie rozwiązania brutalnego
-        if run_command(["./brute.out"], input_file="rg.gr", output_file="brute.sol") != 0:
+
+        if run_command(["./main.out", "--method", "bruteforce", "--presolve", "none"], input_file="rg.gr", output_file="brute.sol") != 0:
             print("Runtime error in brute.out")
             with open("rg.gr") as f:
                 print(f.read())
             sys.exit(1)
         
-        # Uruchomienie głównego rozwiązania
         if run_command(["./main.out"], input_file="rg.gr", output_file="main.sol", error_file="main.log") != 0:
             print("Runtime error in main.out")
             with open("rg.gr") as f:
@@ -48,7 +45,6 @@ def main():
                 print(f.read())
             sys.exit(1)
         
-        # Sprawdzenie pierwszej linii wyniku
         with open("main.sol") as f:
             main_count = f.readline().strip()
         with open("brute.sol") as f:

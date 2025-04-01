@@ -30,15 +30,19 @@ target_include_directories(flow_cutter SYSTEM PUBLIC
 
 # List of implementation files for header files
 set(HEADER_IMPLEMENTATIONS
-    src/ds.cpp
-    src/flow_cutter_wrapper.cpp
-    src/instance.cpp
-    src/nice_tree_decomposition.cpp
-    src/rooted_tree_decomposition.cpp
-    src/rrules.cpp
-    src/ternary.cpp
-    src/tree_decomposition.cpp
-    src/utils.cpp
+    src/dshunter/solver/solver.cpp
+    src/dshunter/solver/td/flow_cutter_wrapper.cpp
+    src/dshunter/instance.cpp
+    src/dshunter/solver/td/nice_tree_decomposition.cpp
+    src/dshunter/solver/td/rooted_tree_decomposition.cpp
+    src/dshunter/rrules.cpp
+    src/dshunter/solver/ternary.cpp
+    src/dshunter/solver/td/tree_decomposition.cpp
+    src/dshunter/solver/treewidth_solver.cpp
+    src/dshunter/solver/branching_solver.cpp
+    src/dshunter/solver/bruteforce_solver.cpp
+    src/dshunter/solver/verifier.cpp
+    src/dshunter/utils.cpp
 )
 
 # Create a library for shared components
@@ -52,12 +56,10 @@ target_link_libraries(core PUBLIC flow_cutter)
 
 # List of source files for each executable
 set(SOURCE_FILES
-    src/bench.cpp
-    src/brute.cpp
     src/main.cpp
-    src/random_graph_gen.cpp
+    src/dshunter/testing/random_graph_gen.cpp
     src/eval.cpp
-    src/small_graph_test.cpp
+    src/dshunter/testing/small_graph_test.cpp
 )
 
 # Define each executable separately

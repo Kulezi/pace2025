@@ -50,4 +50,5 @@ build/
 .solutions/
 rg.gr
 *.log
+*.sol
 .gdb_history

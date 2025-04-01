@@ -184,7 +184,7 @@ std::vector<int> redNeighbours(DSHunter::Instance& g, int v) {
 
 // Tries to apply Main Rule 2 for a given pair of vertices - DOI 10.1007/s10479-006-0045-4, p. 4
 // Complexity: O((deg(v) + deg(w))^2)
-bool ApplyAlberMainRule2(DSHunter::Instance& g, int v, int w) {
+bool applyAlberMainRule2(DSHunter::Instance& g, int v, int w) {
     auto N_v_without = g.neighbourhoodExcluding(v);
     auto N_w_without = g.neighbourhoodExcluding(w);
     auto N_vw_with = unite(g.neighbourhoodIncluding(v), g.neighbourhoodIncluding(w));
@@ -254,14 +254,29 @@ bool tryMidpoint(DSHunter::Instance& g, bool forced_by_edge, int u, int v, int w
 }  // namespace
 
 namespace DSHunter {
+bool ReductionRule::apply(Instance& g) {
+    DS_TRACE(std::cerr << "trying to apply " << name << " (n=" << g.nodeCount()
+                       << ", m=" << g.edgeCount() << ", f=" << g.forcedEdgeCount());
 
-namespace RRules {
+    bool applied = f(g);
 
-using Rule = std::function<bool(Instance&)>;
+    DS_TRACE(if (applied) std::cerr << "succesfully applied " << name << " (n=" << g.nodeCount()
+                                    << ", m=" << g.edgeCount() << ", f=" << g.forcedEdgeCount()
+                                    << std::endl;
+             else std::cerr << "failed to apply " << name << std::endl;);
+    return applied;
+}
 
-// Naive implementation of Main Rule 1 - DOI 10.1007/s10479-006-0045-4, p. 4
-// ~ O(|V|^2) or O(|V|^3) depending on the remove_node operation complexity.
-bool AlberMainRule1(Instance& g) {
+void reduce(Instance& g, const std::vector<ReductionRule>& reduction_rules, int complexity) {
+_start:
+    for (auto rule : reduction_rules) {
+        if (rule.complexity_dense > complexity) continue;
+        bool reduced = rule.apply(g);
+        if (reduced) goto _start;
+    }
+}
+
+bool alberMainRule1(Instance& g) {
     for (auto u : g.nodes) {
         auto N_v_without = g.neighbourhoodExcluding(u);
 
@@ -288,9 +303,7 @@ bool AlberMainRule1(Instance& g) {
     return false;
 }
 
-// Naive implementation of Main Rule 2 - DOI 10.1007/s10479-006-0045-4, p. 4
-// ~ O(|V|^2) or O(|V|^3) depending on the remove_node operation complexity.
-bool AlberMainRule2(Instance& g) {
+bool alberMainRule2(Instance& g) {
     // Allocate the array once for use in breadth-first search.
     std::vector<int> dis(g.next_free_id, BFS_INF);
 
@@ -304,7 +317,7 @@ bool AlberMainRule2(Instance& g) {
         while (!q.empty()) {
             int w = q.front();
             q.pop();
-            if (dis[w] > zero_dist && ApplyAlberMainRule2(g, v, w)) return true;
+            if (dis[w] > zero_dist && applyAlberMainRule2(g, v, w)) return true;
             if (dis[w] < zero_dist + 4) {
                 for (auto [x, _] : g.adj[w]) {
                     if (dis[x] > dis[w] + 1) {
@@ -321,9 +334,7 @@ bool AlberMainRule2(Instance& g) {
     return false;
 }
 
-// Batched implementation of Simple Rule 1 - DOI 10.1007/s10479-006-0045-4, p. 6
-// ~ O(|E| + |V| * (# removed edges)) depending on the remove_node operation complexity.
-bool AlberSimpleRule1(Instance& g) {
+bool alberSimpleRule1(Instance& g) {
     std::vector<std::pair<int, int>> to_remove;
     for (auto v : g.nodes) {
         for (auto [w, status] : g.adj[v]) {
@@ -341,9 +352,7 @@ bool AlberSimpleRule1(Instance& g) {
     return !to_remove.empty();
 }
 
-// Naive implementation of Simple Rule 2 - DOI 10.1007/s10479-006-0045-4, p. 6
-// ~ O(|V| * (# removed nodes)) depending on the remove_node operation complexity.
-bool AlberSimpleRule2(Instance& g) {
+bool alberSimpleRule2(Instance& g) {
     std::vector<int> to_remove;
     std::vector<int> to_take;
     for (auto v : g.nodes) {
@@ -352,8 +361,8 @@ bool AlberSimpleRule2(Instance& g) {
             if (g.deg(v) == 1) {
                 auto [w, status] = g.adj[v][0];
                 // The edge is forced so it's optimal to take the end that possibly could have
-                // larger degree. If the other end of the edge also would be a candidate for this
-                // reduction, apply it only to the vertex with smaller label.
+                // larger degree. If the other end of the edge also would be a candidate for
+                // this reduction, apply it only to the vertex with smaller label.
                 if (status == FORCED &&
                     !(g.deg(w) == 1 && g.getNodeStatus(w) == DOMINATED && v > w)) {
                     to_take.push_back(w);
@@ -377,9 +386,7 @@ bool AlberSimpleRule2(Instance& g) {
     return !to_remove.empty() || !to_take.empty();
 }
 
-// Naive implementation of Simple Rule 3 - DOI 10.1007/s10479-006-0045-4, p. 6
-// ~ O(|V|^2 * (# removed nodes)) depending on the remove_node operation complexity.
-bool AlberSimpleRule3(Instance& g) {
+bool alberSimpleRule3(Instance& g) {
     for (auto v : g.nodes) {
         if (g.getNodeStatus(v) == DOMINATED && g.deg(v) == 2) {
             auto [u_1, s_1] = g.adj[v].front();
@@ -407,9 +414,7 @@ bool AlberSimpleRule3(Instance& g) {
     return false;
 }
 
-// Naive implementation of Simple Rule 4 - DOI 10.1007/s10479-006-0045-4, p. 6
-// ~ O(|V| * (# removed nodes)) depending on the remove_node operation complexity.
-bool AlberSimpleRule4(Instance& g) {
+bool alberSimpleRule4(Instance& g) {
     for (auto v : g.nodes) {
         if (g.getNodeStatus(v) == DOMINATED && g.deg(v) == 3) {
             auto [u_1, s_1] = g.adj[v][0];
@@ -437,11 +442,7 @@ bool AlberSimpleRule4(Instance& g) {
     return false;
 }
 
-// If a vertex of degree two is contained in the neighbourhoods of both its neighbours,
-// and they are connected by an edge, make the edge forced and remove this vertex, as there
-// exists an optimal solution not-taking this vertex and taking one of its neighbours.
-// Complexity: ~ O(|V| * (# removed nodes)) depending on the remove_node operation complexity.
-bool ForcedEdgeRule(Instance& g) {
+bool forcedEdgeRule(Instance& g) {
     auto nodes = g.nodes;
     for (auto v : nodes) {
         if (g.deg(v) == 2 && g.getNodeStatus(v) == UNDOMINATED) {
@@ -479,5 +480,24 @@ bool ForcedEdgeRule(Instance& g) {
 
     return false;
 }
-}  // namespace RRules
+
+ReductionRule AlberMainRule1{"AlberMainRule1", alberMainRule1, 3, 1};
+ReductionRule AlberMainRule2{"AlberMainRule2", alberMainRule2, 4, 2};
+ReductionRule AlberSimpleRule1{"AlberSimpleRule1 (dominated edge removal)", alberSimpleRule1, 2, 1};
+ReductionRule AlberSimpleRule2{"AlberSimpleRule2 (dominated leaf removal)", alberSimpleRule2, 2, 1};
+ReductionRule AlberSimpleRule3{"AlberSimpleRule3 (dominated degree 2 vertex removal)",
+                               alberSimpleRule3, 2, 1};
+ReductionRule AlberSimpleRule4{"AlberSimpleRule4 (dominated degree 3 vertex removal)",
+                               alberSimpleRule4, 2, 1};
+ReductionRule ForcedEdgeRule{"ForcedEdgeRule", forcedEdgeRule, 1, 1};
+
+const std::vector<ReductionRule> default_reduction_rules = {
+    // First the cheap rules that only remove vertices.
+    AlberSimpleRule1, AlberSimpleRule2, AlberSimpleRule3, AlberSimpleRule4,
+
+    // Then rules that don't affect the graph structure.
+    ForcedEdgeRule,
+
+    // Then more expensive rules.
+    AlberMainRule1, AlberMainRule2};
 }  // namespace DSHunter

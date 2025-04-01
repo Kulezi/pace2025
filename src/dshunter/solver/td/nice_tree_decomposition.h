@@ -1,7 +1,7 @@
 #ifndef DS_NICE_TREE_DECOMPOSITION_H
 #define DS_NICE_TREE_DECOMPOSITION_H
 
-#include "instance.h"
+#include "../../instance.h"
 #include "rooted_tree_decomposition.h"
 
 namespace DSHunter {

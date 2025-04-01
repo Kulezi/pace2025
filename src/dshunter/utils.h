@@ -18,7 +18,7 @@
 #endif
 
 #define dbg(x) " " << #x << " = " << x << " "
-#define dbgv(x) " " << #x << " = " << to_string(x) << " "
+#define dbgv(x) " " << #x << " = " << DSHunter::stringify(x) << " "
 
 namespace DSHunter {
 
@@ -111,7 +111,7 @@ std::vector<T> remove(std::vector<T> a, const std::vector<T> &b) {
 }
 
 // Returns a human-readable string representing given vector.
-std::string to_string(const std::vector<int> &v);
+std::string stringify(const std::vector<int> v);
 
 // Returns true if a contains b.
 // Complexity: O(|A| + |B|).

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <random>
 using namespace std;
-constexpr int MIN_NODES = 1, MAX_NODES = 16;
+constexpr int MIN_NODES = 1, MAX_NODES = 13;
 
 int32_t main() {
     mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());

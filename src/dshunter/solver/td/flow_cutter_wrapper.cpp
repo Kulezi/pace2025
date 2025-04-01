@@ -536,13 +536,12 @@ void test_new_order(const ArrayIDIDFunc& order, DSHunter::TreeDecomposition& bes
 }  // namespace
 
 namespace DSHunter::FlowCutter {
-
 // Finds a tree decomposition with approximately low treewidth.
 // Returns the first decomposition that will have treewidth under treewidth_threshold.
 // Note that time_limit only tells the FlowCutter to stop looking for new solutions, so it might
 // terminate a lot later.
 TreeDecomposition decompose(DSHunter::Instance input_graph, int random_seed,
-                                      chrono::milliseconds time_limit, int treewidth_threshold) {
+                            chrono::milliseconds time_limit, int treewidth_threshold) {
     TransferGraph g(input_graph);
     DSHunter::TreeDecomposition best_decomposition;
     best_decomposition.width = numeric_limits<int>::max();
