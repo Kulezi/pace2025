@@ -1,9 +1,10 @@
+
 #ifndef UTILS_H
 #define UTILS_H
-#include <algorithm>
-#include <string>
-#include <vector>
 
+#include <cassert>
+#include <vector>
+#include <algorithm>
 #ifdef DEBUG_MODE
 #define DS_ASSERT(cond) assert(cond)
 #else
@@ -16,9 +17,10 @@
 #define DS_TRACE(x)
 #endif
 
-
 #define dbg(x) " " << #x << " = " << x << " "
 #define dbgv(x) " " << #x << " = " << to_string(x) << " "
+
+namespace DSHunter {
 
 // Computes A ∩ B.
 // Complexity: O(|A| + |B|)
@@ -86,7 +88,7 @@ std::vector<T> remove(std::vector<T> a, const std::vector<T> &b) {
     DS_ASSERT(is_sorted(b.begin(), b.end()));
 
     std::vector<T> res;
-    
+
     // Pointers to smallest unhandled elements.
     size_t i = 0, j = 0;
     while (i < a.size() && j < b.size()) {
@@ -109,12 +111,7 @@ std::vector<T> remove(std::vector<T> a, const std::vector<T> &b) {
 }
 
 // Returns a human-readable string representing given vector.
-std::string to_string(const std::vector<int> v) {
-    std::string s = "[ ";
-    for (auto i : v) s += std::to_string(i) + " ";
-    s += "]";
-    return s;
-}
+std::string to_string(const std::vector<int> &v);
 
 // Returns true if a contains b.
 // Complexity: O(|A| + |B|).
@@ -125,5 +122,6 @@ bool contains(const std::vector<T> a, const std::vector<T> b) {
 
     return remove(b, a).empty();
 }
+}  // namespace DSHunter
 
 #endif  // UTILS_H

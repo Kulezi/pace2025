@@ -1,17 +1,19 @@
+#include <chrono>
 #include <iostream>
 
+#include "bounds.h"
 #include "ds.h"
 #include "instance.h"
 #include "rrules.h"
-#include "bounds.h"
 int main() {
-    DomSet::Exact ds(RRules::defaults_preprocess, RRules::defaults_preprocess);
+    DSHunter::Exact ds(DSHunter::RRules::defaults_preprocess,
+                       DSHunter::RRules::defaults_preprocess);
 
-    Instance g(std::cin);
+    DSHunter::Instance g(std::cin);
     std::cout << "nodes: " << g.nodeCount() << "\n";
     std::cout << "edges: " << g.edgeCount() << "\n";
-    std::cout << "initial upper_bound: " << bounds::upper_bound(g) << "\n";
-    std::cout << "initial lower_bound: " << bounds::lower_bound(g) << "\n";
+    std::cout << "initial upper_bound: " << DSHunter::upper_bound(g) << "\n";
+    std::cout << "initial lower_bound: " << DSHunter::lower_bound(g) << "\n";
 
     auto start = std::chrono::high_resolution_clock::now();
     auto ans = ds.solve(g, std::cerr);
@@ -32,8 +34,8 @@ int main() {
     for (auto v : c) {
         total_dp_values += v.size();
         for (auto u : v) {
-            if (u >= DomSet::INF) inf_values++;
-            if (u == DomSet::UNSET) unset_values++;
+            if (u >= DSHunter::INF) inf_values++;
+            if (u == DSHunter::UNSET) unset_values++;
         }
     }
 

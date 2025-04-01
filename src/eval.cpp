@@ -5,29 +5,32 @@
 #include "instance.h"
 #include "nice_tree_decomposition.h"
 #include "rrules.h"
+using namespace std;
 
 template <typename T>
 void log_column(string name, string suffix, T value) {
     std::cerr << "," << name + (suffix == "" ? "" : "_") + suffix;
-    std::cout << fixed << setprecision(6) <<  "," << value;
+    std::cout << fixed <<  "," << value;
 }
+
 
 // Prints the csv header to cerr.
 int main(int argc, char *argv[]) {
+    std::cout.precision(3);
     // n_init, m_init, lb_init, ub_init, tw_init, n_cheap, m_cheap, lb_cheap, ub_cheap, tw_cheap,
     // ruletimes..., n_exp, m_exp, lb_exp, ub_exp, tw_exp, ruletimes...
-    Instance g_init(std::cin);
-    DomSet::Exact ds_init(RRules::defaults_preprocess, RRules::defaults_branching);
+    DSHunter::Instance g_init(std::cin);
+    DSHunter::Exact ds_init(DSHunter::RRules::defaults_preprocess, DSHunter::RRules::defaults_branching);
 
-    Instance g_cheap(g_init);
-    DomSet::Exact ds_cheap(RRules::defaults_preprocess, RRules::defaults_branching);
+    DSHunter::Instance g_cheap(g_init);
+    DSHunter::Exact ds_cheap(DSHunter::RRules::defaults_preprocess, DSHunter::RRules::defaults_branching);
     ds_cheap.reduce_branch(g_cheap);
 
-    Instance g_exp(g_cheap);
-    DomSet::Exact ds_exp(RRules::defaults_preprocess, RRules::defaults_branching);
+    DSHunter::Instance g_exp(g_cheap);
+    DSHunter::Exact ds_exp(DSHunter::RRules::defaults_preprocess, DSHunter::RRules::defaults_branching);
     ds_exp.reduce(g_exp);
 
-    vector<pair<string, Instance>> instances = {
+    vector<pair<string, DSHunter::Instance>> instances = {
         {"init", g_init}, {"cheap", g_cheap}, {"exp", g_exp}};
 
     for (auto &[suffix, instance] : instances) log_column("n", suffix, instance.nodeCount());
@@ -35,9 +38,9 @@ int main(int argc, char *argv[]) {
     for (auto &[suffix, instance] : instances)
         log_column("m_forced", suffix, instance.forcedEdgeCount());
     for (auto &[suffix, instance] : instances)
-        log_column("lb", suffix, bounds::lower_bound(instance));
+        log_column("lb", suffix, DSHunter::lower_bound(instance));
     for (auto &[suffix, instance] : instances)
-        log_column("ub", suffix, bounds::upper_bound(instance));
+        log_column("ub", suffix, DSHunter::upper_bound(instance));
 
     int cnt = 0;
     for (auto i : ds_cheap.benchmark_info.rule_branch_time) {
@@ -48,10 +51,10 @@ int main(int argc, char *argv[]) {
         log_column("rule" + to_string(cnt), "exp", i.count());
     }
 
-    vector<pair<string, NiceTreeDecomposition>> decompositions;
+    vector<pair<string, DSHunter::NiceTreeDecomposition>> decompositions;
     for (auto &[suffix, instance] : instances) {
         decompositions.push_back(
-            {suffix, NiceTreeDecomposition(instance, DomSet::GOOD_ENOUGH_TREEWIDTH)});
+            {suffix, DSHunter::NiceTreeDecomposition(instance, DSHunter::GOOD_ENOUGH_TREEWIDTH)});
     }
 
     for (auto &[suffix, decomposition] : decompositions)

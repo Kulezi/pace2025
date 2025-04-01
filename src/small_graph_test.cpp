@@ -10,10 +10,10 @@
 // This test checks whether a brute-force solution gives the same result as the model solution
 // on all graphs with at most 7 vertices.
 int main() {
-    DomSet::Exact sol({RRules::defaults_preprocess}, RRules::defaults_branching);
-    DomSet::Exact brute({}, {});
+    DSHunter::Exact sol(DSHunter::RRules::defaults_preprocess, DSHunter::RRules::defaults_branching);
+    DSHunter::Exact brute({}, {});
 
-    ofstream trash("/dev/null");
+    std::ofstream trash("/dev/null");
     for (int n = 1; n <= 7; n++) {
         int max_edges = n * (n - 1) / 2;
         for (int mask = 0; mask < (1 << max_edges); mask++) {
@@ -28,10 +28,10 @@ int main() {
                 }
             };
 
-            stringstream g_str;
+            std::stringstream g_str;
             print_graph(g_str);
 
-            Instance g(g_str);
+            DSHunter::Instance g(g_str);
 
             try {
                 DS_TRACE(print_graph(std::cerr));

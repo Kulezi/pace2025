@@ -4,8 +4,8 @@
 #include "instance.h"
 #include "rrules.h"
 int main() {
-    DomSet::Exact ds({}, {});
+    DSHunter::Exact ds({}, {});
 
-    Instance g(std::cin);
+    DSHunter::Instance g(std::cin);
     auto sol = ds.solveBruteforce(g, std::cout);
 }

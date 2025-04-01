@@ -4,8 +4,8 @@
 #include "instance.h"
 #include "rrules.h"
 int main() {
-    DomSet::Exact ds(RRules::defaults_preprocess, RRules::defaults_preprocess);
+    DSHunter::Exact ds(DSHunter::RRules::defaults_preprocess, DSHunter::RRules::defaults_preprocess);
 
-    Instance g(std::cin);
+    DSHunter::Instance g(std::cin);
     auto ans = ds.solve(g, std::cout);
 }
