@@ -7,6 +7,16 @@ set(CMAKE_CXX_STANDARD 23)
   
 set(CMAKE_CXX_FLAGS "-Wall -g -DDEBUG_MODE")
 
+include(FetchContent)
+
+FetchContent_Declare(
+    highs
+    GIT_REPOSITORY "https://github.com/ERGO-Code/HiGHS.git"
+    GIT_TAG        "latest"
+)
+
+FetchContent_MakeAvailable(highs)
+
 # Include the src directory
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/src/ext/flow-cutter-pace17)
@@ -35,6 +45,7 @@ set(SOURCE_FILES
     src/main.cpp
     src/random_graph_gen.cpp
     src/eval.cpp
+    src/run_highs.cpp
 )
 
 # Define each executable separately
@@ -45,7 +56,7 @@ foreach(SRC ${SOURCE_FILES})
     # Create the executable for each source file
     add_executable(${EXEC_NAME} ${SRC})
 
-    target_link_libraries(${EXEC_NAME} PRIVATE flow_cutter)
+    target_link_libraries(${EXEC_NAME} PRIVATE flow_cutter highs::highs)
 
     # Link against the necessary headers
     target_include_directories(${EXEC_NAME} PRIVATE
