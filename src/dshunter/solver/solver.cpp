@@ -3,7 +3,7 @@
 #include "../rrules.h"
 #include "branching_solver.h"
 #include "bruteforce_solver.h"
-#include "ternary.h"
+#include "gurobi_solver.h"
 #include "treewidth_solver.h"
 #include "verifier.h"
 namespace DSHunter {
@@ -11,6 +11,11 @@ namespace DSHunter {
 std::vector<int> Solver::solve(Instance g) {
     auto initial_instance = g;
     presolve(g);
+
+    if (g.nodes.empty()) {
+        verify_solution(initial_instance, g.ds);
+        return g.ds;
+    }
 
     switch (config.solver_type) {
         case SolverType::Default:
@@ -39,6 +44,12 @@ std::vector<int> Solver::solve(Instance g) {
                     "given instance contains unconstrained edges, making VC reduction "
                     "inapplicable");
             }
+            break;
+        }
+
+        case SolverType::Gurobi: {
+            GurobiSolver gs;
+            gs.solve(g);
             break;
         }
 

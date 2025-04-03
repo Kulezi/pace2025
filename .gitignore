@@ -52,3 +52,5 @@ rg.gr
 *.log
 *.sol
 .gdb_history
+
+src/ext/gurobi1201/
