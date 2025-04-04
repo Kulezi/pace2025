@@ -173,6 +173,7 @@ void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::
     if (mode == PRESOLUTION) {
         solver.presolve(g);
         export_presolution(g, output);
+        std::cerr << dbg(g.edgeCount()) << dbg(g.forcedEdgeCount()) << std::endl;
         return;
     }
 
