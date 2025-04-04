@@ -7,6 +7,41 @@ set(CMAKE_CXX_STANDARD 23)
 
 set(CMAKE_CXX_FLAGS "-Wall -g -DDEBUG_MODE")
 
+# Ścieżka do PACE 2019
+set(PACE_DIR "${CMAKE_SOURCE_DIR}/src/ext/pace-2019")
+
+# Dodaj katalogi nagłówkowe dla PACE 2019
+include_directories(${PACE_DIR})
+include_directories(${PACE_DIR}/app)
+include_directories(${PACE_DIR}/lib)
+include_directories(${PACE_DIR}/lib/tools)
+include_directories(${PACE_DIR}/lib/data_structure)
+include_directories(${PACE_DIR}/lib/mis)
+include_directories(${PACE_DIR}/lib/mis/ils)
+include_directories(${PACE_DIR}/lib/mis/initial_mis)
+include_directories(${PACE_DIR}/lib/mis/evolutionary)
+include_directories(${PACE_DIR}/extern)
+include_directories(${PACE_DIR}/extern/cliqueSolver)
+include_directories(${PACE_DIR}/extern/KaHIP) # Dodajemy KaHIP
+include_directories(${PACE_DIR}/extern/KaHIP/lib)
+include_directories(${PACE_DIR}/extern/KaHIP/interface)
+include_directories(${PACE_DIR}/extern/KaHIP/lib/tools)
+include_directories(${PACE_DIR}/extern/KaHIP/lib/partition)
+include_directories(${PACE_DIR}/extern/KaHIP/lib/data_structure)
+include_directories(${PACE_DIR}/extern/KaHIP/lib/mis)
+include_directories(${PACE_DIR}/extern/KaHIP/lib/io)
+
+# Znalezienie wszystkich plików źródłowych z PACE 2019
+file(GLOB_RECURSE PACE_SRC
+    "${PACE_DIR}/lib/*.cpp"
+)
+
+# Tworzenie biblioteki statycznej dla PACE 2019
+add_library(pace STATIC ${PACE_SRC})
+
+# Opcjonalnie, wyłącz niektóre ostrzeżenia dla PACE 2019
+target_compile_options(pace PRIVATE -w)
+
 # Find required packages
 find_package(Threads REQUIRED)
 
@@ -56,6 +91,7 @@ set(HEADER_IMPLEMENTATIONS
     src/dshunter/solver/treewidth_solver.cpp
     src/dshunter/solver/branching_solver.cpp
     src/dshunter/solver/bruteforce_solver.cpp
+    src/dshunter/solver/vc_solver.cpp
     src/dshunter/solver/gurobi_solver.cpp
     src/dshunter/solver/verifier.cpp
     src/dshunter/utils.cpp
@@ -68,10 +104,11 @@ add_library(core STATIC ${HEADER_IMPLEMENTATIONS})
 target_include_directories(core PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
 # Link against necessary libraries (order is important: C++ wrapper first, then shared lib)
-target_link_libraries(core PUBLIC 
-    flow_cutter 
-    gurobi_c++ 
-    gurobi_shared 
+target_link_libraries(core PUBLIC
+    flow_cutter
+    gurobi_c++
+    gurobi_shared
+    pace
 )
 
 # List of source files for each executable
@@ -91,7 +128,7 @@ foreach(SRC ${SOURCE_FILES})
     add_executable(${EXEC_NAME} ${SRC})
 
     target_link_libraries(${EXEC_NAME} PRIVATE core)
-    
+
     target_compile_definitions(${EXEC_NAME} PRIVATE DEBUG_MODE)
 
     # For the 'bench' and 'eval' targets, define DS_BENCHMARK
