@@ -492,11 +492,12 @@ ReductionRule AlberSimpleRule4{"AlberSimpleRule4 (dominated degree 3 vertex remo
 ReductionRule ForcedEdgeRule{"ForcedEdgeRule", forcedEdgeRule, 1, 1};
 
 const std::vector<ReductionRule> default_reduction_rules = {
-    // First the cheap rules that only remove vertices.
-    AlberSimpleRule1, AlberSimpleRule2, AlberSimpleRule3, AlberSimpleRule4,
 
     // Then rules that don't affect the graph structure.
     ForcedEdgeRule,
+    
+    // First the cheap rules that only remove vertices.
+    AlberSimpleRule1, AlberSimpleRule2, AlberSimpleRule3, AlberSimpleRule4,
 
     // Then more expensive rules.
     AlberMainRule1, AlberMainRule2};

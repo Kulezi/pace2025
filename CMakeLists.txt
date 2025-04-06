@@ -5,15 +5,20 @@ project(SourceCode)
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 23)
 
-set(CMAKE_CXX_FLAGS "-Wall -g -DDEBUG_MODE")
+set(CMAKE_CXX_FLAGS "-Wall -g -O3 -fPIC")
 
 # Find required packages
 find_package(Threads REQUIRED)
+
+# Add the pace-2019 library as a subdirectory
+set(PACE_2019_DIR src/ext/pace-2019)
+add_subdirectory(${PACE_2019_DIR} EXCLUDE_FROM_ALL)
 
 # Include the src directory
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/src/ext/flow-cutter-pace17)
 include_directories(${CMAKE_SOURCE_DIR}/src/ext/gurobi1201/linux64/include)
+include_directories(${CMAKE_SOURCE_DIR}/src/ext/pace-2019/lib)
 
 # Set Gurobi library paths
 set(GUROBI_DIR "${CMAKE_SOURCE_DIR}/src/ext/gurobi1201/linux64")
@@ -62,6 +67,7 @@ set(HEADER_IMPLEMENTATIONS
     src/dshunter/utils.cpp
 )
 
+
 # Create a library for shared components
 add_library(core STATIC ${HEADER_IMPLEMENTATIONS})
 
@@ -71,6 +77,7 @@ target_include_directories(core PUBLIC ${CMAKE_SOURCE_DIR}/src)
 # Link against necessary libraries (order is important: C++ wrapper first, then shared lib)
 target_link_libraries(core PUBLIC 
     flow_cutter 
+    pace2019-vc
     gurobi_c++ 
     gurobi_shared 
 )

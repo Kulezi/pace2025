@@ -30,7 +30,7 @@ void print_help() {
         << "--input_file flag overrides this behaviour making it read from a file.\n\n"
 
         << "To force dshunter to use a certain method of solving the instance\n"
-        << "--method flag can be used with its respective value.\n\n"
+        << "--solver flag can be used with its respective value.\n\n"
 
         << "By default dshunter will decide by itself whether to presolve the instance or not.\n"
         << "--presolve flag can be used to force certain presolver behaviour.\n\n"

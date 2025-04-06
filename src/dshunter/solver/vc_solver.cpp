@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include "../utils.h"
+#include "vc_lib.h"
 
 namespace DSHunter {
 std::vector<int> VCSolver::solve(Instance &g) {
@@ -26,10 +27,12 @@ std::vector<int> VCSolver::solve(Instance &g) {
         }
     }
 
-    std::vector<bool> MIS; // = getVC(graph);
+    std::vector<bool> MIS = getVC(graph);
 
     for (size_t i = 0; i < MIS.size(); i++) {
-        if (MIS[i]) g.ds.push_back(g.nodes[i]);
+        if (!MIS[i]) {
+            g.ds.push_back(g.nodes[i]);
+        }
     }
     return g.ds;
 }
