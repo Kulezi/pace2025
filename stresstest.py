@@ -31,7 +31,7 @@ def main():
             print("Runtime error in rg.out")
             sys.exit(1)
 
-        if run_command(["./main.out", "--method", "bruteforce", "--presolve", "none"], input_file="rg.gr", output_file="brute.sol") != 0:
+        if run_command(["./main.out", "--solver", "bruteforce", "--presolve", "none"], input_file="rg.gr", output_file="brute.sol") != 0:
             print("Runtime error in brute.out")
             with open("rg.gr") as f:
                 print(f.read())
