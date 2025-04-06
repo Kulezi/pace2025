@@ -105,6 +105,5 @@ foreach(SRC ${SOURCE_FILES})
     # For the 'bench' and 'eval' targets, define DS_BENCHMARK
     if(EXEC_NAME STREQUAL "bench" OR EXEC_NAME STREQUAL "eval")
         target_compile_definitions(${EXEC_NAME} PRIVATE DS_BENCHMARK)
-        target_compile_options(${EXEC_NAME} PRIVATE -O2)
     endif()
 endforeach()
