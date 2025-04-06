@@ -5,6 +5,7 @@
 #include "bruteforce_solver.h"
 #include "gurobi_solver.h"
 #include "treewidth_solver.h"
+#include "vc_solver.h"
 #include "verifier.h"
 namespace DSHunter {
 
@@ -44,6 +45,9 @@ std::vector<int> Solver::solve(Instance g) {
                     "given instance contains unconstrained edges, making VC reduction "
                     "inapplicable");
             }
+
+            VCSolver vs;
+            g.ds = vs.solve(g);
             break;
         }
 

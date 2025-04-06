@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "dshunter/dshunter.h"
-
+namespace {
 void print_help() {
     std::cout
         << "Usage:\n"
@@ -50,7 +50,7 @@ enum SolverMode {
 };
 
 void parse_arguments(int argc, char* argv[], std::string& input_file, std::string& output_file,
-                   DSHunter::SolverConfig& config, SolverMode& mode) {
+                     DSHunter::SolverConfig& config, SolverMode& mode) {
     struct option long_options[] = {{"input_file", required_argument, nullptr, 'i'},
                                     {"output_file", required_argument, nullptr, 'o'},
                                     {"solver", required_argument, nullptr, 's'},
@@ -166,7 +166,8 @@ void export_presolution(const DSHunter::Instance& g, std::ostream& output) {
     }
 }
 
-void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::ostream& output, SolverMode mode) {
+void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::ostream& output,
+                      SolverMode mode) {
     DSHunter::Instance g(input);
     DSHunter::Solver solver(config);
 
@@ -186,7 +187,7 @@ void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::
         }
     }
 }
-
+}  // namespace
 int main(int argc, char* argv[]) {
     std::string input_file, output_file;
     DSHunter::SolverConfig config;
