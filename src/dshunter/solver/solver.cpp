@@ -53,7 +53,9 @@ std::vector<int> Solver::solve(Instance g) {
 
         case SolverType::Gurobi: {
             GurobiSolver gs;
-            gs.solve(g);
+            if (!gs.solve(g)) {
+                throw std::logic_error("gurobi didn't find a solution in time");
+            }
             break;
         }
 

@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  test_all_small_graphs:
+  correctness_tests:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -18,27 +18,21 @@ jobs:
         wget https://packages.gurobi.com/12.0/gurobi12.0.1_linux64.tar.gz
         mv gurobi12.0.1_linux64.tar.gz src/ext
         cd src/ext
-        tar -xvzf gurobi10.0.3_linux64.tar.gz
+        tar -xvzf gurobi12.0.1_linux64.tar.gz
+    - name: build
+      run: |
+        cmake -B build
+        cd build
+        make
     - name: small_graph_test
       run: |
-        cmake .
-        make small_graph_test
+        cd build
         ./small_graph_test.out 2> err.log || tail err.log
-  stresstest:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-    - name: install dependencies
-      run: |
-        pip3 install tqdm
-        wget https://packages.gurobi.com/12.0/gurobi12.0.1_linux64.tar.gz
-        mv gurobi12.0.1_linux64.tar.gz src/ext
-        cd src/ext
-        tar -xvzf gurobi10.0.3_linux64.tar.gz
     - name: stresstest
-      run: /usr/bin/time ./stresstest.py
+      run: |
+        cd build
+        python3 ../scripts/stresstest.py
+
   eval:
     runs-on: ubuntu-latest
     steps:
@@ -50,8 +44,16 @@ jobs:
         wget https://packages.gurobi.com/12.0/gurobi12.0.1_linux64.tar.gz
         mv gurobi12.0.1_linux64.tar.gz src/ext
         cd src/ext
-        tar -xvzf gurobi10.0.3_linux64.tar.gz
+        tar -xvzf gurobi12.0.1_linux64.tar.gz
+    - name: build
+      run: |
+        cmake -B build
+        cd build
+        make
     - name: eval
       run: |
         set +e
-        /usr/bin/time ./eval_all.sh
+        cd scripts
+        /usr/bin/time ./run_all.sh ../build/main.out ../in/PACE2025-instances/ds/exact 600
+        python3 report.py
+        cat summary.csv

@@ -1,6 +1,7 @@
 #include "gurobi_solver.h"
 
 #include "gurobi_c++.h"
+#include "../utils.h"
 namespace DSHunter {
 bool GurobiSolver::solve(Instance &g) {
     try {
@@ -11,8 +12,13 @@ bool GurobiSolver::solve(Instance &g) {
         
         env.start();
         GRBModel m = GRBModel(env);
-        m.set(GRB_DoubleParam_TimeLimit, 60.0);
-        
+
+        std::vector<int> rv(g.next_free_id);
+        for (size_t i = 0; i < g.nodes.size(); i++) {
+            int v = g.nodes[i];
+            rv[v] = i;
+        }
+
         std::vector<GRBVar> is_selected(g.nodes.size());
         for (size_t i = 0; i < g.nodes.size(); ++i) {
             is_selected[i] =
@@ -22,28 +28,29 @@ bool GurobiSolver::solve(Instance &g) {
         for (int v : g.nodes) {
             GRBLinExpr node_constraint = 0;
             for (auto [u, status] : g.adj[v]) {
-                node_constraint += is_selected[u - 1];
+                node_constraint += is_selected[rv[u]];
 
                 if (status == FORCED) {
                     GRBLinExpr edge_constraint = 0;
-                    edge_constraint += is_selected[u - 1];
-                    edge_constraint += is_selected[v - 1];
+                    edge_constraint += is_selected[rv[u]];
+                    edge_constraint += is_selected[rv[v]];
                     m.addConstr(edge_constraint >= 1);
                 }
             }
-            node_constraint += is_selected[v - 1];
+            node_constraint += is_selected[rv[v]];
             m.addConstr(node_constraint >= 1);
         }
 
         GRBLinExpr obj = 0;
         for (int v : g.nodes) {
-            obj += is_selected[v - 1];
+            obj += is_selected[rv[v]];
         }
 
         m.setObjective(obj, GRB_MINIMIZE);
 
         m.optimize();
 
+        if (m.get(GRB_IntAttr_Status) != GRB_OPTIMAL) return false;
         for (size_t i = 0; i < g.nodes.size(); ++i) {
             if (is_selected[i].get(GRB_DoubleAttr_X) > 0) g.ds.push_back(g.nodes[i]);
         }

@@ -1,10 +1,12 @@
 #include <getopt.h>
 
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <memory>
 
 #include "dshunter/dshunter.h"
+#include "dshunter/solver/td/flow_cutter_wrapper.h"
 namespace {
 void print_help() {
     std::cout
@@ -13,7 +15,7 @@ void print_help() {
         << "[--output_file <file.ds>] "
         << "[--solver <bruteforce/branching/treewidth_dp/mip/vc/gurobi>] "
         << "[--export] <graph.ads>"
-        << "[--mode] <presolve/ds_size>"
+        << "[--mode] <presolve/ds_size/treewidth>"
         << "[--presolve <full/cheap/none>] [--short] [--help]\n\n"
 
         << "Options:\n"
@@ -39,7 +41,9 @@ void print_help() {
            "format.\n"
         << "This can be overriden by passing the --mode flag with one of the following options:\n"
         << "    --mode ds_size makes dshunter output only the solution set size.\n"
-        << "    --mode presolve makes dshunter output only the instance after presolving.\n\n";
+        << "    --mode presolve makes dshunter output only the instance after presolving.\n"
+        << "    --mode treewidth makes dshunter output only the instance treewidth after "
+           "presolving.\n\n";
     exit(EXIT_SUCCESS);
 }
 
@@ -47,6 +51,7 @@ enum SolverMode {
     SOLUTION,
     PRESOLUTION,
     SOLUTION_SIZE,
+    TREEWIDTH,
 };
 
 void parse_arguments(int argc, char* argv[], std::string& input_file, std::string& output_file,
@@ -99,6 +104,8 @@ void parse_arguments(int argc, char* argv[], std::string& input_file, std::strin
                     mode = SOLUTION_SIZE;
                 else if (std::string(optarg) == "presolve")
                     mode = PRESOLUTION;
+                else if (std::string(optarg) == "treewidth")
+                    mode = TREEWIDTH;
                 else
                     throw std::logic_error(std::string(optarg) + " is not a valid --mode value");
                 break;
@@ -150,6 +157,8 @@ std::unique_ptr<std::ostream> get_output_stream(const std::string& output_file) 
 //      reductions
 //          0 means original node,
 //          1 means extra node.
+// comments starting with c can be only at the beginning of the file.
+
 void export_presolution(const DSHunter::Instance& g, std::ostream& output) {
     output << "p ads " << g.nodeCount() << " " << g.edgeCount() << " " << g.ds.size() << "\n";
     for (auto v : g.ds) output << v << " ";
@@ -170,6 +179,14 @@ void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::
                       SolverMode mode) {
     DSHunter::Instance g(input);
     DSHunter::Solver solver(config);
+
+    if (mode == TREEWIDTH) {
+        solver.presolve(g);
+        auto decomposition = DSHunter::FlowCutter::decompose(g, 0, std::chrono::seconds(60), 15);
+        auto treewidth = decomposition.width;
+        output << treewidth << std::endl;
+        return;
+    }
 
     if (mode == PRESOLUTION) {
         solver.presolve(g);
