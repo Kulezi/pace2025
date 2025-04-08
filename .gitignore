@@ -45,9 +45,13 @@ CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
 build/
+*.cmake
 
 .vscode/
 .solutions/
 rg.gr
 *.log
+*.sol
 .gdb_history
+
+src/ext/gurobi1201/

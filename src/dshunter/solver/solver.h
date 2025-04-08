@@ -1,0 +1,37 @@
+#ifndef DS_SOLVER_H
+#define DS_SOLVER_H
+#include <chrono>
+
+#include "../instance.h"
+#include "../rrules.h"
+#include "../utils.h"
+namespace DSHunter {
+
+enum class SolverType { Branching, TreewidthDP, Bruteforce, ReduceToVertexCover, Default, Gurobi };
+enum class PresolverType { Full, Cheap, None };
+
+struct SolverConfig {
+    std::vector<ReductionRule> reduction_rules;
+    SolverType solver_type;
+    PresolverType presolver_type;
+
+    SolverConfig(std::vector<ReductionRule> rrules, SolverType st, PresolverType pt)
+        : reduction_rules(rrules), solver_type(st), presolver_type(pt) {}
+
+    SolverConfig()
+        : reduction_rules(default_reduction_rules),
+          solver_type(SolverType::Default),
+          presolver_type(PresolverType::Full) {}
+};
+
+struct Solver {
+    SolverConfig config;
+    Solver() : config(SolverConfig()) {}
+    Solver(SolverConfig sc) : config(sc) {}
+
+    std::vector<int> solve(Instance g);
+    void presolve(Instance &g);
+};
+
+}  // namespace DSHunter
+#endif  // DS_SOLVER_H
