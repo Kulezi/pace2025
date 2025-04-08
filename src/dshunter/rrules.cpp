@@ -495,7 +495,7 @@ const std::vector<ReductionRule> default_reduction_rules = {
 
     // Then rules that don't affect the graph structure.
     ForcedEdgeRule,
-    
+
     // First the cheap rules that only remove vertices.
     AlberSimpleRule1, AlberSimpleRule2, AlberSimpleRule3, AlberSimpleRule4,
 

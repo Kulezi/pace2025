@@ -16,7 +16,7 @@ struct ReductionRule {
     bool apply(Instance& g);
 };
 
-void reduce(Instance& g, const std::vector<ReductionRule>& reduction_rules, int complexity=999);
+void reduce(Instance& g, const std::vector<ReductionRule>& reduction_rules, int complexity = 999);
 
 // Source: DOI 10.1007/s10479-006-0045-4, p. 4 (extended to handle forced edges)
 // ~ O(|V|^3) for dense graphs, O(|V|) for sparse graphs.

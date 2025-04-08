@@ -2,9 +2,10 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <algorithm>
 #include <cassert>
 #include <vector>
-#include <algorithm>
+#include <string>
 #ifdef DEBUG_MODE
 #define DS_ASSERT(cond) assert(cond)
 #else

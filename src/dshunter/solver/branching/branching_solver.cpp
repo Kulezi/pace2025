@@ -1,4 +1,5 @@
 #include "branching_solver.h"
+
 #include <vector>
 
 #include "../../instance.h"

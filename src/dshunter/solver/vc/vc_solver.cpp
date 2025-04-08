@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <iostream>
+
 #include "../../utils.h"
 #include "vc_lib.h"
 
@@ -16,7 +17,7 @@ std::vector<int> VCSolver::solve(Instance &g) {
         int v = g.nodes[i];
         rv[v] = i;
     }
-    
+
     std::vector<std::vector<int>> graph(g.nodeCount());
     for (size_t i = 0; i < g.nodes.size(); i++) {
         int v = g.nodes[i];

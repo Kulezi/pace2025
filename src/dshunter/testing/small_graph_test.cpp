@@ -42,15 +42,15 @@ int main() {
                 auto sol = default_solver.solve(g);
 
                 if (sol_brute_reduce.size() != sol_brute_reductionless.size()) {
-                    std::cerr << "brute_reduce found ds of size " << sol_brute_reduce.size() << ", expected "
-                              << sol_brute_reductionless.size() << "\n";
+                    std::cerr << "brute_reduce found ds of size " << sol_brute_reduce.size()
+                              << ", expected " << sol_brute_reductionless.size() << "\n";
 
                     return 1;
-                }                
+                }
 
                 if (sol_brute_reduce.size() != sol_brute_reductionless.size()) {
-                    std::cerr << "default_solver found ds of size " << sol_brute_reduce.size() << ", expected "
-                              << sol_brute_reductionless.size() << "\n";
+                    std::cerr << "default_solver found ds of size " << sol_brute_reduce.size()
+                              << ", expected " << sol_brute_reductionless.size() << "\n";
                     return 1;
                 }
             } catch (std::logic_error &e) {

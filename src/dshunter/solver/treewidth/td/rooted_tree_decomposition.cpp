@@ -1,4 +1,5 @@
 #include "rooted_tree_decomposition.h"
+
 #include "../../../utils.h"
 namespace DSHunter {
 

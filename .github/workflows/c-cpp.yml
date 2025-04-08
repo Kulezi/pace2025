@@ -15,10 +15,7 @@ jobs:
         submodules: recursive
     - name: install dependencies
       run: |
-        wget https://packages.gurobi.com/12.0/gurobi12.0.1_linux64.tar.gz
-        mv gurobi12.0.1_linux64.tar.gz src/ext
-        cd src/ext
-        tar -xvzf gurobi12.0.1_linux64.tar.gz
+        ./scripts/install_dependencies.sh
     - name: build
       run: |
         cmake -B build
@@ -41,10 +38,7 @@ jobs:
         submodules: recursive
     - name: install dependencies
       run: |
-        wget https://packages.gurobi.com/12.0/gurobi12.0.1_linux64.tar.gz
-        mv gurobi12.0.1_linux64.tar.gz src/ext
-        cd src/ext
-        tar -xvzf gurobi12.0.1_linux64.tar.gz
+        ./scripts/install_dependencies.sh
     - name: build
       run: |
         cmake -B build

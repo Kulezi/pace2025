@@ -1,7 +1,7 @@
 #include "gurobi_solver.h"
 
-#include "gurobi_c++.h"
 #include "../../utils.h"
+#include "gurobi_c++.h"
 namespace DSHunter {
 bool GurobiSolver::solve(Instance &g) {
     try {
@@ -9,7 +9,7 @@ bool GurobiSolver::solve(Instance &g) {
         GRBEnv env = GRBEnv(true);
         env.set("LogToConsole", "0");
         env.set("LogFile", "gurobi.log");
-        
+
         env.start();
         GRBModel m = GRBModel(env);
 
