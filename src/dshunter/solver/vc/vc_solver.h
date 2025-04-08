@@ -1,6 +1,6 @@
 #ifndef DS_VC_SOLVER_H
 #define DS_VC_SOLVER_H
-#include "../instance.h"
+#include "../../instance.h"
 
 namespace DSHunter {
 

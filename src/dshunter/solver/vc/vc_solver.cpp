@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include <iostream>
-#include "../utils.h"
+#include "../../utils.h"
 #include "vc_lib.h"
 
 namespace DSHunter {

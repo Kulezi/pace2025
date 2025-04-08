@@ -1,6 +1,6 @@
 #include "ternary.h"
 
-#include "../utils.h"
+#include "../../utils.h"
 
 namespace DSHunter {
 // Remove x'th argument of f from the domain.

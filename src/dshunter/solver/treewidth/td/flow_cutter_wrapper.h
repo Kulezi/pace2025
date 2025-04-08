@@ -6,7 +6,7 @@
 #define DS_FLOW_CUTTER_WRAPPER_H
 #include <chrono>
 
-#include "../../instance.h"
+#include "../../../instance.h"
 #include "tree_decomposition.h"
 namespace DSHunter::FlowCutter {
 

@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "dshunter/dshunter.h"
+#include "dshunter/solver/treewidth/treewidth_solver.h"
 using namespace std;
 
 template <typename T>

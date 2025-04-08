@@ -9,7 +9,7 @@
 using namespace std::chrono_literals;
 
 #include "flow_cutter_wrapper.h"
-#include "../../utils.h"
+#include "../../../utils.h"
 namespace DSHunter {
 
 NiceTreeDecomposition::NiceTreeDecomposition(Instance& g, int treewidth_threshold)

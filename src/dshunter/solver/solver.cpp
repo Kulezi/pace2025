@@ -1,11 +1,11 @@
 #include "solver.h"
 
 #include "../rrules.h"
-#include "branching_solver.h"
-#include "bruteforce_solver.h"
-#include "gurobi_solver.h"
-#include "treewidth_solver.h"
-#include "vc_solver.h"
+#include "branching/branching_solver.h"
+#include "bruteforce/bruteforce_solver.h"
+#include "gurobi/gurobi_solver.h"
+#include "treewidth/treewidth_solver.h"
+#include "vc/vc_solver.h"
 #include "verifier.h"
 namespace DSHunter {
 

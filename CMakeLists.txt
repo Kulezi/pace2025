@@ -51,18 +51,18 @@ add_library(flow_cutter STATIC
 # List of implementation files for header files
 set(HEADER_IMPLEMENTATIONS
     src/dshunter/solver/solver.cpp
-    src/dshunter/solver/td/flow_cutter_wrapper.cpp
+    src/dshunter/solver/treewidth/td/flow_cutter_wrapper.cpp
     src/dshunter/instance.cpp
-    src/dshunter/solver/td/nice_tree_decomposition.cpp
-    src/dshunter/solver/td/rooted_tree_decomposition.cpp
+    src/dshunter/solver/treewidth/td/nice_tree_decomposition.cpp
+    src/dshunter/solver/treewidth/td/rooted_tree_decomposition.cpp
     src/dshunter/rrules.cpp
-    src/dshunter/solver/ternary.cpp
-    src/dshunter/solver/td/tree_decomposition.cpp
-    src/dshunter/solver/treewidth_solver.cpp
-    src/dshunter/solver/branching_solver.cpp
-    src/dshunter/solver/bruteforce_solver.cpp
-    src/dshunter/solver/vc_solver.cpp
-    src/dshunter/solver/gurobi_solver.cpp
+    src/dshunter/solver/treewidth/ternary.cpp
+    src/dshunter/solver/treewidth/td/tree_decomposition.cpp
+    src/dshunter/solver/treewidth/treewidth_solver.cpp
+    src/dshunter/solver/branching/branching_solver.cpp
+    src/dshunter/solver/bruteforce/bruteforce_solver.cpp
+    src/dshunter/solver/vc/vc_solver.cpp
+    src/dshunter/solver/gurobi/gurobi_solver.cpp
     src/dshunter/solver/verifier.cpp
     src/dshunter/utils.cpp
 )
@@ -75,11 +75,11 @@ add_library(core STATIC ${HEADER_IMPLEMENTATIONS})
 target_include_directories(core PUBLIC ${CMAKE_SOURCE_DIR}/src)
 
 # Link against necessary libraries (order is important: C++ wrapper first, then shared lib)
-target_link_libraries(core PUBLIC 
-    flow_cutter 
+target_link_libraries(core PUBLIC
+    flow_cutter
     pace2019-vc
-    gurobi_c++ 
-    gurobi_shared 
+    gurobi_c++
+    gurobi_shared
 )
 
 # List of source files for each executable
@@ -99,7 +99,7 @@ foreach(SRC ${SOURCE_FILES})
     add_executable(${EXEC_NAME} ${SRC})
 
     target_link_libraries(${EXEC_NAME} PRIVATE core)
-    
+
     target_compile_definitions(${EXEC_NAME} PRIVATE DEBUG_MODE)
 
     # For the 'bench' and 'eval' targets, define DS_BENCHMARK

@@ -1,6 +1,6 @@
 #include "tree_decomposition.h"
 
-#include "../../utils.h"
+#include "../../../utils.h"
 namespace DSHunter {
 int TreeDecomposition::size() const { return bag.size(); }
 

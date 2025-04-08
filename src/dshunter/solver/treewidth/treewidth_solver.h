@@ -1,6 +1,7 @@
 #ifndef DS_TREEWIDTH_SOLVER_H
 #define DS_TREEWIDTH_SOLVER_H
-#include "../instance.h"
+#include <cstdint>
+#include "../../instance.h"
 #include "td/nice_tree_decomposition.h"
 #include "ternary.h"
 

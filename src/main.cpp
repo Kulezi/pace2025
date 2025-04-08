@@ -6,7 +6,7 @@
 #include <memory>
 
 #include "dshunter/dshunter.h"
-#include "dshunter/solver/td/flow_cutter_wrapper.h"
+#include "dshunter/solver/treewidth/td/flow_cutter_wrapper.h"
 namespace {
 void print_help() {
     std::cout

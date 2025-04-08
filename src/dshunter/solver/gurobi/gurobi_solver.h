@@ -1,6 +1,6 @@
 #ifndef DS_GUROBI_SOLVER_H
 #define DS_GUROBI_SOLVER_H
-#include "../instance.h"
+#include "../../instance.h"
 
 namespace DSHunter {
 

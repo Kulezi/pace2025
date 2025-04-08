@@ -2,8 +2,8 @@
 #define DS_BRUTEFORCE_SOLVER_H
 #include <vector>
 
-#include "../instance.h"
-#include "../rrules.h"
+#include "../../instance.h"
+#include "../../rrules.h"
 namespace DSHunter {
 struct BruteforceSolver {
     std::vector<ReductionRule> reduction_rules;

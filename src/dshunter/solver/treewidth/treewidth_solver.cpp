@@ -1,6 +1,6 @@
 #include "treewidth_solver.h"
 
-#include "../utils.h"
+#include "../../utils.h"
 namespace DSHunter {
 constexpr int UNSET = -1, INF = 1'000'000'000;
 

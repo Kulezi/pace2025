@@ -1,7 +1,7 @@
 #include "gurobi_solver.h"
 
 #include "gurobi_c++.h"
-#include "../utils.h"
+#include "../../utils.h"
 namespace DSHunter {
 bool GurobiSolver::solve(Instance &g) {
     try {

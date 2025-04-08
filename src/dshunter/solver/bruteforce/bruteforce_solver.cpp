@@ -1,8 +1,8 @@
 
 #include "bruteforce_solver.h"
 
-#include "../rrules.h"
-#include "../utils.h"
+#include "../../rrules.h"
+#include "../../utils.h"
 namespace DSHunter {
 void BruteforceSolver::solve(Instance &g) {
     reduce(g, reduction_rules);

@@ -5,9 +5,6 @@
 #include "../instance.h"
 #include "../rrules.h"
 #include "../utils.h"
-#include "td/nice_tree_decomposition.h"
-#include "ternary.h"
-#include "treewidth_solver.h"
 namespace DSHunter {
 
 enum class SolverType { Branching, TreewidthDP, Bruteforce, ReduceToVertexCover, Default, Gurobi };
