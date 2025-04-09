@@ -13,12 +13,14 @@ namespace {
 void print_help() {
     std::cout
         << "Usage:\n"
-        << "  dshunter [--input_file <graph.gr/graph.ads>] "
-        << "[--output_file <file.ds>] "
-        << "[--solver <bruteforce/branching/treewidth_dp/mip/vc/gurobi>] "
-        << "[--export] <graph.ads>"
-        << "[--mode] <presolve/ds_size/treewidth>"
-        << "[--presolve <full/cheap/none>] [--short] [--help]\n\n"
+        << "  dshunter [--input_file <graph.gr/graph.ads>]\n"
+        << "           [--output_file <file.ds>]\n"
+        << "           [--solver <bruteforce/branching/treewidth_dp/mip/vc/gurobi>]\n"
+        << "           [--export] <graph.ads>\n"
+        << "           [--mode] <presolve/ds_size/treewidth>\n"
+        << "           [--presolve <full/cheap/none>]\n"
+        << "           [--short]\n"
+        << "           [--help]\n\n"
 
         << "Options:\n"
         << "  --input_file    Read instance from specified file (default: stdin)\n"
