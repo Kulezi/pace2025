@@ -7,6 +7,7 @@
 
 #include "dshunter/dshunter.h"
 #include "dshunter/solver/treewidth/td/flow_cutter_wrapper.h"
+#include "dshunter/solver/treewidth/td/nice_tree_decomposition.h"
 namespace {
 void print_help() {
     std::cout
@@ -43,7 +44,9 @@ void print_help() {
         << "    --mode ds_size makes dshunter output only the solution set size.\n"
         << "    --mode presolve makes dshunter output only the instance after presolving.\n"
         << "    --mode treewidth makes dshunter output only the instance treewidth after "
-           "presolving.\n\n";
+           "presolving.\n"
+        << "    --mode histogram makes dshunter output only a histogram of sizes of bags in a nice "
+           "decomposition after presolving\n\n";
     exit(EXIT_SUCCESS);
 }
 
@@ -52,6 +55,7 @@ enum SolverMode {
     PRESOLUTION,
     SOLUTION_SIZE,
     TREEWIDTH,
+    HISTOGRAM,
 };
 
 void parse_arguments(int argc, char* argv[], std::string& input_file, std::string& output_file,
@@ -106,6 +110,8 @@ void parse_arguments(int argc, char* argv[], std::string& input_file, std::strin
                     mode = PRESOLUTION;
                 else if (std::string(optarg) == "treewidth")
                     mode = TREEWIDTH;
+                else if (std::string(optarg) == "histogram")
+                    mode = HISTOGRAM;
                 else
                     throw std::logic_error(std::string(optarg) + " is not a valid --mode value");
                 break;
@@ -185,6 +191,22 @@ void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::
         auto decomposition = DSHunter::FlowCutter::decompose(g, 0, std::chrono::seconds(60), 15);
         auto treewidth = decomposition.width;
         output << treewidth << std::endl;
+        return;
+    }
+
+    if (mode == HISTOGRAM) {
+        solver.presolve(g);
+        DSHunter::NiceTreeDecomposition td(g, 15);
+        int width = td.width();
+        std::vector<int> counts(width + 1);
+        for (int i = 0; i < td.n_nodes(); i++)
+            if (td[i].type == DSHunter::NiceTreeDecomposition::NodeType::Join)
+                ++counts[td[i].bag.size()];
+
+        std::cout << width << "\n";
+        for (int i = 0; i <= width; i++) {
+            std::cout << i << " " << counts[i] << "\n";
+        }
         return;
     }
 

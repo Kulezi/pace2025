@@ -49,5 +49,5 @@ jobs:
         set +e
         cd scripts
         /usr/bin/time ./run_all.sh ../build/main.out ../in/PACE2025-instances/ds/exact 600
-        python3 report.py
+        python3 report.py .solutions
         cat summary.csv

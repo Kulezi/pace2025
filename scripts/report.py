@@ -48,10 +48,10 @@ def main(root_dir):
         writer.writeheader()
         writer.writerows(rows)
 
-    print(f"Gotowe! Plik zapisany jako {output_csv} w katalogu roboczym.")
+    print(f"Success! {output_csv} saved in working directory")
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print(f"Użycie: {sys.argv[0]} <ścieżka_do_katalogu>")
+        print(f"Usage: {sys.argv[0]} <path>")
         sys.exit(1)
     main(sys.argv[1])
