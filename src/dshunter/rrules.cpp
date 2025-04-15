@@ -19,7 +19,7 @@ bool hasUndominatedNode(DSHunter::Instance& g, std::vector<int> nodes) {
 // Checks whether node u is an exit vertex with respect to node v.
 // Complexity: O(min(deg(u), deg(v)))
 bool isExit(const DSHunter::Instance& g, int u, int v) {
-    for (auto [w, status] : g.adj[u]) {
+    for (auto [w, status] : g[u].adj) {
         // This will execute at most O(deg(v)) times, since g.hasEdge(v, w) can be true only
         // for deg(v) different vertices w.
         if (w != v && (!g.hasEdge(v, w) || status == DSHunter::EdgeStatus::FORCED)) return true;
@@ -35,7 +35,7 @@ bool isExit(const DSHunter::Instance& g, int u, int v) {
 // that would be reachable outside of the neighbourhood, hence we would be able to exit.
 // Complexity: O(min(deg(u), deg(v) + deg(w))
 bool isExit(const DSHunter::Instance& g, int u, int v, int w) {
-    for (auto [x, status] : g.adj[u]) {
+    for (auto [x, status] : g[u].adj) {
         // This will execute at most O(deg(v) + deg(w)) times, since g.hasEdge(x, ?) can be true
         // only for deg(v) + deg(w) different vertices x.
         if (x != v && x != w &&
@@ -50,7 +50,7 @@ bool isExit(const DSHunter::Instance& g, int u, int v, int w) {
 // Complexity: O(deg(u)^2)
 std::vector<int> exitNeighbourhood(DSHunter::Instance& g, int u) {
     std::vector<int> N_exit;
-    for (auto [v, _] : g.adj[u]) {
+    for (auto [v, _] : g[u].adj) {
         if (isExit(g, v, u)) N_exit.push_back(v);
     }
 
@@ -177,7 +177,7 @@ bool applyCase2(DSHunter::Instance& g, int v, int w, const std::vector<int>& N_v
 
 std::vector<int> redNeighbours(DSHunter::Instance& g, int v) {
     std::vector<int> res;
-    for (auto [u, status] : g.adj[v])
+    for (auto [u, status] : g[v].adj)
         if (status == DSHunter::EdgeStatus::FORCED) res.push_back(u);
     return res;
 }
@@ -195,7 +195,7 @@ bool applyAlberMainRule2(DSHunter::Instance& g, int v, int w) {
 
     // The only forced edges must have an end in {v, w}.
     for (auto from : N_exit) {
-        for (auto [to, status] : g.adj[from]) {
+        for (auto [to, status] : g[from].adj) {
             if (status == DSHunter::EdgeStatus::FORCED && to != v && to != w) return false;
         }
     }
@@ -232,7 +232,7 @@ bool applyAlberMainRule2(DSHunter::Instance& g, int v, int w) {
 }
 
 bool haveCommonNeighbour(const DSHunter::Instance& g, int u, int v) {
-    for (auto [w, _] : g.adj[u]) {
+    for (auto [w, _] : g[u].adj) {
         if (v == w) continue;
         if (g.hasEdge(v, v)) return true;
     }
@@ -305,7 +305,7 @@ bool alberMainRule1(Instance& g) {
 
 bool alberMainRule2(Instance& g) {
     // Allocate the array once for use in breadth-first search.
-    std::vector<int> dis(g.next_free_id, BFS_INF);
+    std::vector<int> dis(g.all_nodes.size(), BFS_INF);
 
     // Avoid rewriting the distances by considering zero to be INF - 4 * (# checked nodes),
     // since we only look at distances upto 3.
@@ -319,7 +319,7 @@ bool alberMainRule2(Instance& g) {
             q.pop();
             if (dis[w] > zero_dist && applyAlberMainRule2(g, v, w)) return true;
             if (dis[w] < zero_dist + 4) {
-                for (auto [x, _] : g.adj[w]) {
+                for (auto [x, _] : g[w].adj) {
                     if (dis[x] > dis[w] + 1) {
                         dis[x] = dis[w] + 1;
                         q.push(x);
@@ -337,7 +337,7 @@ bool alberMainRule2(Instance& g) {
 bool alberSimpleRule1(Instance& g) {
     std::vector<std::pair<int, int>> to_remove;
     for (auto v : g.nodes) {
-        for (auto [w, status] : g.adj[v]) {
+        for (auto [w, status] : g[v].adj) {
             if (v > w || status == FORCED) continue;
             if (g.getNodeStatus(v) == DOMINATED && g.getNodeStatus(w) == DOMINATED) {
                 to_remove.emplace_back(v, w);
@@ -359,7 +359,7 @@ bool alberSimpleRule2(Instance& g) {
         if (g.getNodeStatus(v) == DOMINATED && g.deg(v) <= 1) {
             to_remove.push_back(v);
             if (g.deg(v) == 1) {
-                auto [w, status] = g.adj[v][0];
+                auto [w, status] = g[v].adj[0];
                 // The edge is forced so it's optimal to take the end that possibly could have
                 // larger degree. If the other end of the edge also would be a candidate for
                 // this reduction, apply it only to the vertex with smaller label.
@@ -389,8 +389,8 @@ bool alberSimpleRule2(Instance& g) {
 bool alberSimpleRule3(Instance& g) {
     for (auto v : g.nodes) {
         if (g.getNodeStatus(v) == DOMINATED && g.deg(v) == 2) {
-            auto [u_1, s_1] = g.adj[v].front();
-            auto [u_2, s_2] = g.adj[v][1];
+            auto [u_1, s_1] = g[v].adj.front();
+            auto [u_2, s_2] = g[v].adj[1];
             // In this case it actually might be optimal to take this vertex instead of the two.
             if (s_1 == FORCED && s_2 == FORCED) continue;
             bool should_remove = g.getNodeStatus(u_1) == UNDOMINATED &&
@@ -417,9 +417,9 @@ bool alberSimpleRule3(Instance& g) {
 bool alberSimpleRule4(Instance& g) {
     for (auto v : g.nodes) {
         if (g.getNodeStatus(v) == DOMINATED && g.deg(v) == 3) {
-            auto [u_1, s_1] = g.adj[v][0];
-            auto [u_2, s_2] = g.adj[v][1];
-            auto [u_3, s_3] = g.adj[v][2];
+            auto [u_1, s_1] = g[v].adj[0];
+            auto [u_2, s_2] = g[v].adj[1];
+            auto [u_3, s_3] = g[v].adj[2];
 
             int n_forced_edges = s_1 + s_2 + s_3;
             // There can be at most one forced edge, and it needs to lead to a vertex that can
@@ -446,8 +446,8 @@ bool forcedEdgeRule(Instance& g) {
     auto nodes = g.nodes;
     for (auto v : nodes) {
         if (g.deg(v) == 2 && g.getNodeStatus(v) == UNDOMINATED) {
-            auto e1 = g.adj[v][0];
-            auto e2 = g.adj[v][1];
+            auto e1 = g[v].adj[0];
+            auto e2 = g[v].adj[1];
             if (!g.hasEdge(e1.to, e2.to)) continue;
 
             if (e1.status == UNCONSTRAINED && e2.status == UNCONSTRAINED) {

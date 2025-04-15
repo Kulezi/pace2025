@@ -26,7 +26,7 @@ bool TreewidthSolver::solve(Instance &g, std::chrono::seconds decomposition_time
     return true;
 }
 
-inline int TreewidthSolver::cost(const Instance &g, int v) { return g.is_extra[v] ? INF : 1; }
+inline int TreewidthSolver::cost(const Instance &g, int v) { return g[v].is_extra ? INF : 1; }
 
 // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3] extended to handle forced
 // edges.

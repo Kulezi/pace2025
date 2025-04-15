@@ -172,11 +172,11 @@ void export_presolution(const DSHunter::Instance& g, std::ostream& output) {
     output << "\n";
 
     for (auto v : g.nodes) {
-        output << v << " " << g.getNodeStatus(v) << " " << g.is_extra[v] << "\n";
+        output << v << " " << g.getNodeStatus(v) << " " << g[v].is_extra << "\n";
     }
 
     for (auto u : g.nodes) {
-        for (auto [v, status] : g.adj[u]) {
+        for (auto [v, status] : g[u].adj) {
             if (u < v) output << u << " " << v << " " << (int)status << "\n";
         }
     }

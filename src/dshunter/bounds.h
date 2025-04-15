@@ -16,7 +16,7 @@ int greedy_upper_bound(const DSHunter::Instance &g) {
     int upper_bound = 0;
     auto nodes = g.nodes;
     std::priority_queue<std::pair<int, int>> pq;
-    std::vector<int> undominated_neighbors(g.next_free_id, 0);
+    std::vector<int> undominated_neighbors(g.all_nodes.size(), 0);
     for (auto u : nodes) {
         if (g.getNodeStatus(u) == DSHunter::NodeStatus::UNDOMINATED) undominated_neighbors[u]++;
         for (auto v : g.neighbourhoodExcluding(u))
@@ -26,7 +26,10 @@ int greedy_upper_bound(const DSHunter::Instance &g) {
             pq.push({undominated_neighbors[u], u});
     }
 
-    auto status = g.status;
+    std::vector<DSHunter::NodeStatus> status(g.all_nodes.size());
+    for (size_t i = 0; i < g.all_nodes.size(); i++) {
+        status[i] = g[i].status;
+    }
     auto dominate = [&](int u) {
         if (status[u] == DSHunter::NodeStatus::UNDOMINATED) {
             status[u] = DSHunter::NodeStatus::DOMINATED;

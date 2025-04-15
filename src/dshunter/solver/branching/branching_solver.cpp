@@ -45,7 +45,7 @@ void BranchingSolver::solve(const Instance g, std::vector<int> &best_ds, int lev
     if (g.deg(v) != 1) take(g, v, best_ds, level + 1);
 
     // Branches 1, ..., deg(v): v doesn't belong to DS -> take any neighbour to DS.
-    for (auto [u, _] : g.adj[v]) {
+    for (auto [u, _] : g[v].adj) {
         take(g, u, best_ds, level + 1);
     }
 }

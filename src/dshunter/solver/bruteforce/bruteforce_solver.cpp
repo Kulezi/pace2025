@@ -10,7 +10,11 @@ void BruteforceSolver::solve(Instance &g) {
     std::vector<int> best_ds;
 
     for (int mask = 0; mask < (1 << n); mask++) {
-        std::vector<DSHunter::NodeStatus> status = g.status;
+        std::vector<DSHunter::NodeStatus> status(g.all_nodes.size());
+        for (size_t i = 0; i < g.all_nodes.size(); i++) {
+            status[i] = g[i].status;
+        }
+
         std::vector<int> ds;
 
         for (int i = 0; i < n; i++) {
@@ -19,7 +23,7 @@ void BruteforceSolver::solve(Instance &g) {
             if (mask >> i & 1) {
                 ds.push_back(v);
                 status[v] = TAKEN;
-                for (auto [u, _] : g.adj[v])
+                for (auto [u, _] : g[v].adj)
                     if (status[u] == UNDOMINATED) status[u] = DOMINATED;
             }
         }
@@ -31,7 +35,7 @@ void BruteforceSolver::solve(Instance &g) {
                 break;
             }
 
-            for (auto [w, s] : g.adj[v]) {
+            for (auto [w, s] : g[v].adj) {
                 if (s == FORCED && (status[v] != TAKEN && status[w] != TAKEN)) {
                     is_domset = false;
                     break;

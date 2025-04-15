@@ -12,7 +12,7 @@ namespace DSHunter {
 std::vector<int> VCSolver::solve(Instance &g) {
     DS_ASSERT(g.edgeCount() == g.forcedEdgeCount());
 
-    std::vector<int> rv(g.next_free_id);
+    std::vector<int> rv(g.all_nodes.size());
     for (size_t i = 0; i < g.nodes.size(); i++) {
         int v = g.nodes[i];
         rv[v] = i;
@@ -21,7 +21,7 @@ std::vector<int> VCSolver::solve(Instance &g) {
     std::vector<std::vector<int>> graph(g.nodeCount());
     for (size_t i = 0; i < g.nodes.size(); i++) {
         int v = g.nodes[i];
-        for (auto [w, status] : g.adj[v]) {
+        for (auto [w, status] : g[v].adj) {
             DS_ASSERT(status == FORCED);
             int j = rv[w];
             graph[i].push_back(j);

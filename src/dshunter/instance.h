@@ -17,23 +17,25 @@ struct Endpoint {
     bool operator==(const Endpoint &rhs) const { return to == rhs.to; };
 };
 
+struct Node {
+    // List of adjacent nodes sorted by increasing node id.
+    // Order is maintained to make set union/intersection possible in O(|A| + |B|).
+    std::vector<Endpoint> adj;
+    NodeStatus status;
+
+    // Extra vertices cannot be taken into the dominating set, we assume they mean if we take them
+    // we should take all their neighbours instead.
+    bool is_extra;
+};
+
 // Undirected graph representing an instance of dominating set problem.
 // Nodes are marked with a domination status.
 // Node labels are assigned incrementally starting with 1.
 struct Instance {
-    int next_free_id;
-
-    // List of nodes, sorted by increasing node id.
+    // List of active node ids sorted increasingly.
     std::vector<int> nodes;
 
-    // adj[v] = list of adjacent nodes sorted by increasing node id.
-    // Order is maintained to make set union/intersection possible in O(|A| + |B|).
-    std::vector<std::vector<Endpoint>> adj;
-    std::vector<NodeStatus> status;
-
-    // Extra vertices cannot be taken into the dominating set, we assume they mean if we take them
-    // we should take all their neighbours instead.
-    std::vector<bool> is_extra;
+    std::vector<Node> all_nodes;
 
     // Nodes already removed from the graph considered as the dominating set candidates.
     std::vector<int> ds;
@@ -110,8 +112,10 @@ struct Instance {
     // Prints the graph to stdout in a human-readable format.
     void print() const;
 
+    const Node& operator[](int v) const;
    private:
     void setEdgeStatus(int u, int v, EdgeStatus status);
+
 };
 }  // namespace DSHunter
 #endif  // INSTANCE_H
