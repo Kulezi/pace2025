@@ -1,10 +1,14 @@
 #ifndef DS_NICE_TREE_DECOMPOSITION_H
 #define DS_NICE_TREE_DECOMPOSITION_H
 
+#include <chrono>
+#include <optional>
+
 #include "../../../instance.h"
 #include "rooted_tree_decomposition.h"
-
 namespace DSHunter {
+
+enum class DecompositionError { NOT_ENOUGH_MEMORY, TOO_LARGE_TREEWIDTH };
 
 // Represents a tree decomposition rooted at node labeled 0.
 struct NiceTreeDecomposition {
@@ -21,7 +25,9 @@ struct NiceTreeDecomposition {
         int r_child;
     };
 
-    NiceTreeDecomposition(Instance& g, int treewidth_threshold);
+    static std::optional<NiceTreeDecomposition> decompose(
+        const Instance& g, std::chrono::seconds decomposition_time_budget, int tw_good_enough,
+        int tw_too_much);
 
     const Node& operator[](int v) const;
     int root;
@@ -31,10 +37,12 @@ struct NiceTreeDecomposition {
     void print() const;
 
    private:
-    Instance& g;
+    const Instance g;
     std::vector<Node> decomp;
     static const int NONE = -1;
 
+    // Assumes rooted_decomposition is already normalized!
+    NiceTreeDecomposition(Instance g, const RootedTreeDecomposition& rooted_decomposition);
     int createNode(NodeType type, std::vector<int> bag = {}, int v = NONE, int to = NONE,
                    int lChild = NONE, int rChild = NONE);
 

@@ -8,6 +8,7 @@
 #include "dshunter/dshunter.h"
 #include "dshunter/solver/treewidth/td/flow_cutter_wrapper.h"
 #include "dshunter/solver/treewidth/td/nice_tree_decomposition.h"
+#include "dshunter/solver/treewidth/treewidth_solver.h"
 namespace {
 void print_help() {
     std::cout
@@ -188,7 +189,8 @@ void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::
 
     if (mode == TREEWIDTH) {
         solver.presolve(g);
-        auto decomposition = DSHunter::FlowCutter::decompose(g, 0, std::chrono::seconds(60), 15);
+        auto decomposition = DSHunter::FlowCutter::decompose(g, 0, config.decomposition_time_budget,
+                                                             DSHunter::GOOD_ENOUGH_TREEWIDTH);
         auto treewidth = decomposition.width;
         output << treewidth << std::endl;
         return;
@@ -196,7 +198,10 @@ void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::
 
     if (mode == HISTOGRAM) {
         solver.presolve(g);
-        DSHunter::NiceTreeDecomposition td(g, 15);
+        auto td = DSHunter::NiceTreeDecomposition::decompose(g, config.decomposition_time_budget,
+                                                             DSHunter::GOOD_ENOUGH_TREEWIDTH,
+                                                             DSHunter::MAX_HANDLED_TREEWIDTH)
+                      .value();
         int width = td.width();
         std::vector<int> counts(width + 1);
         for (int i = 0; i < td.n_nodes(); i++)

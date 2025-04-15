@@ -22,7 +22,7 @@ std::vector<int> Solver::solve(Instance g) {
         case SolverType::Default:
         case SolverType::TreewidthDP: {
             TreewidthSolver ts;
-            if (!ts.solve(g))
+            if (!ts.solve(g, config.decomposition_time_budget))
                 throw std::logic_error("treewidth dp failed (treewidth might be too big?)");
             break;
         }
