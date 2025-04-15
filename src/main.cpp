@@ -196,7 +196,7 @@ void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::
 
     if (mode == HISTOGRAM) {
         solver.presolve(g);
-        DSHunter::NiceTreeDecomposition td(g, 15);
+        DSHunter::NiceTreeDecomposition td(g, config.decomposition_time_budget, 13);
         int width = td.width();
         std::vector<int> counts(width + 1);
         for (int i = 0; i < td.n_nodes(); i++)

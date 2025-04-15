@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
 
     for (auto &[suffix, instance] : instances) {
         decompositions.push_back(
-            {suffix, DSHunter::NiceTreeDecomposition(instance, DSHunter::GOOD_ENOUGH_TREEWIDTH)});
+            {suffix, DSHunter::NiceTreeDecomposition(instance, DSHunter::SolverConfig().decomposition_time_budget, DSHunter::GOOD_ENOUGH_TREEWIDTH)});
     }
 
     for (auto &[suffix, decomposition] : decompositions)

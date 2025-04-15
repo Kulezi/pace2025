@@ -6,7 +6,7 @@
 #include "../rrules.h"
 #include "../utils.h"
 namespace DSHunter {
-
+using namespace std::chrono_literals;
 enum class SolverType { Branching, TreewidthDP, Bruteforce, ReduceToVertexCover, Default, Gurobi };
 enum class PresolverType { Full, Cheap, None };
 
@@ -14,6 +14,7 @@ struct SolverConfig {
     std::vector<ReductionRule> reduction_rules;
     SolverType solver_type;
     PresolverType presolver_type;
+    std::chrono::seconds decomposition_time_budget;
 
     SolverConfig(std::vector<ReductionRule> rrules, SolverType st, PresolverType pt)
         : reduction_rules(rrules), solver_type(st), presolver_type(pt) {}
@@ -21,7 +22,8 @@ struct SolverConfig {
     SolverConfig()
         : reduction_rules(default_reduction_rules),
           solver_type(SolverType::Default),
-          presolver_type(PresolverType::Full) {}
+          presolver_type(PresolverType::Full),
+          decomposition_time_budget(300s) {}
 };
 
 struct Solver {

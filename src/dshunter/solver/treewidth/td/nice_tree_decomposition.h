@@ -1,9 +1,10 @@
 #ifndef DS_NICE_TREE_DECOMPOSITION_H
 #define DS_NICE_TREE_DECOMPOSITION_H
 
+#include <chrono>
+
 #include "../../../instance.h"
 #include "rooted_tree_decomposition.h"
-
 namespace DSHunter {
 
 // Represents a tree decomposition rooted at node labeled 0.
@@ -21,7 +22,8 @@ struct NiceTreeDecomposition {
         int r_child;
     };
 
-    NiceTreeDecomposition(Instance& g, int treewidth_threshold);
+    NiceTreeDecomposition(Instance& g, std::chrono::seconds decomposition_time_budget,
+                          int treewidth_threshold);
 
     const Node& operator[](int v) const;
     int root;

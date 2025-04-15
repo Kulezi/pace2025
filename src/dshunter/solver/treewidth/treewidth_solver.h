@@ -1,6 +1,7 @@
 #ifndef DS_TREEWIDTH_SOLVER_H
 #define DS_TREEWIDTH_SOLVER_H
 #include <cstdint>
+#include <chrono>
 
 #include "../../instance.h"
 #include "td/nice_tree_decomposition.h"
@@ -9,13 +10,14 @@
 namespace DSHunter {
 constexpr uint64_t MAX_MEMORY_IN_BYTES = (1UL << 30);
 constexpr size_t MAX_HANDLED_TREEWIDTH = 18;
-constexpr size_t GOOD_ENOUGH_TREEWIDTH = 15;
+constexpr size_t GOOD_ENOUGH_TREEWIDTH = 13;
 struct TreewidthSolver {
     std::vector<std::vector<int>> c;
+    
 
     // Returns true if instance was solved,
     // false if the width of found decompositions was too big to handle.
-    bool solve(Instance &g);
+    bool solve(Instance &g, std::chrono::seconds decomposition_time_budget);
 
    private:
     inline int cost(const Instance &g, int v);

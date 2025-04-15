@@ -12,9 +12,9 @@ using namespace std::chrono_literals;
 #include "flow_cutter_wrapper.h"
 namespace DSHunter {
 
-NiceTreeDecomposition::NiceTreeDecomposition(Instance& g, int treewidth_threshold)
+NiceTreeDecomposition::NiceTreeDecomposition(Instance& g, std::chrono::seconds decomposition_time_budget, int treewidth_threshold)
     : g(g), decomp() {
-    auto initial_decomposition = FlowCutter::decompose(g, 0, 1s, treewidth_threshold);
+    auto initial_decomposition = FlowCutter::decompose(g, 0, decomposition_time_budget, treewidth_threshold);
 
     auto rooted_decomposition = RootedTreeDecomposition(initial_decomposition);
     rooted_decomposition.sortBags();
