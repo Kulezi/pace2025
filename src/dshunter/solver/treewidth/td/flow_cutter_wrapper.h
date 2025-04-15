@@ -17,6 +17,7 @@ namespace DSHunter::FlowCutter {
 DSHunter::TreeDecomposition decompose(DSHunter::Instance input_graph, int random_seed,
                                       std::chrono::milliseconds time_limit,
                                       int treewidth_threshold);
+
 }  // namespace DSHunter::FlowCutter
 
 #endif  // DS_FLOW_CUTTER_WRAPPER_H

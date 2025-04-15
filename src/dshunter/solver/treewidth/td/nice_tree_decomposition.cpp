@@ -6,15 +6,17 @@
 #include <string>
 #include <vector>
 
-using namespace std::chrono_literals;
-
 #include "../../../utils.h"
 #include "flow_cutter_wrapper.h"
 namespace DSHunter {
 
-NiceTreeDecomposition::NiceTreeDecomposition(Instance& g, std::chrono::seconds decomposition_time_budget, int treewidth_threshold)
-    : g(g), decomp() {
-    auto initial_decomposition = FlowCutter::decompose(g, 0, decomposition_time_budget, treewidth_threshold);
+std::optional<NiceTreeDecomposition> NiceTreeDecomposition::decompose(
+    const Instance& g, std::chrono::seconds decomposition_time_budget, int tw_good_enough,
+    int tw_max) {
+    auto initial_decomposition =
+        FlowCutter::decompose(g, 0, decomposition_time_budget, tw_good_enough);
+
+    if (initial_decomposition.width > tw_max) return {};
 
     auto rooted_decomposition = RootedTreeDecomposition(initial_decomposition);
     rooted_decomposition.sortBags();
@@ -22,6 +24,12 @@ NiceTreeDecomposition::NiceTreeDecomposition(Instance& g, std::chrono::seconds d
     rooted_decomposition.binarizeJoins();
     rooted_decomposition.forceEmptyRootAndLeaves();
 
+    return NiceTreeDecomposition(g, rooted_decomposition);
+}
+
+NiceTreeDecomposition::NiceTreeDecomposition(Instance g,
+                                             const RootedTreeDecomposition &rooted_decomposition)
+    : g(g), decomp() {
     root = makeDecompositionNodeFromRootedDecomposition(rooted_decomposition,
                                                         rooted_decomposition.root);
 }

@@ -7,11 +7,16 @@ constexpr int UNSET = -1, INF = 1'000'000'000;
 // Returns true if instance was solved. Solution set is stored in given instance.
 // Returns false if it would lead to exceeding the memory limit.
 bool TreewidthSolver::solve(Instance &g, std::chrono::seconds decomposition_time_budget) {
-    NiceTreeDecomposition td(g, decomposition_time_budget, GOOD_ENOUGH_TREEWIDTH);
+    auto o = NiceTreeDecomposition::decompose(g, decomposition_time_budget, GOOD_ENOUGH_TREEWIDTH,
+                                              MAX_HANDLED_TREEWIDTH);
+    if (!o.has_value()) return false;
+    auto td = o.value();
+
     DS_TRACE(std::cerr << dbg(td.width()) << " " << dbg(getMemoryUsage(td)) << std::endl);
     DS_TRACE(td.print());
-
-    if (td.width() > MAX_HANDLED_TREEWIDTH || getMemoryUsage(td) > MAX_MEMORY_IN_BYTES)
+    
+    DS_ASSERT(td.width() <= MAX_HANDLED_TREEWIDTH);
+    if (getMemoryUsage(td) > MAX_MEMORY_IN_BYTES)
         return false;
 
     c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());

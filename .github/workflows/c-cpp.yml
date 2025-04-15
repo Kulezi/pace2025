@@ -18,7 +18,7 @@ jobs:
         ./scripts/install_dependencies.sh
     - name: build
       run: |
-        cmake -B build
+        cmake -DCMAKE_BUILD_TYPE=Testing -B build
         cd build
         make
     - name: small_graph_test
@@ -29,25 +29,3 @@ jobs:
       run: |
         cd build
         python3 ../scripts/stresstest.py
-
-  eval:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-    - name: install dependencies
-      run: |
-        ./scripts/install_dependencies.sh
-    - name: build
-      run: |
-        cmake -B build
-        cd build
-        make
-    - name: eval
-      run: |
-        set +e
-        cd scripts
-        /usr/bin/time ./run_all.sh ../build/main.out ../in/PACE2025-instances/ds/exact 600
-        python3 report.py .solutions
-        cat summary.csv
