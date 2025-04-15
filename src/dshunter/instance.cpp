@@ -271,67 +271,6 @@ std::vector<std::vector<int>> Instance::split() const {
     return result;
 }
 
-void Instance::saveVCInstance(std::ostream &out) {
-    DS_ASSERT(forcedEdgeCount() == edgeCount());
-    out << "c presolved ds_size: " << ds.size() << "\n";
-    out << "p td " << nodeCount() << " " << edgeCount() << "\n";
-    out << "c nodes: ";
-    std::vector<int> mapping(nodes.back() + 1);
-
-    for (size_t i = 0; i < nodes.size(); i++) {
-        out << " " << nodes[i];
-        mapping[nodes[i]] = i + 1;
-    }
-
-    out << "\n";
-
-    for (auto u : nodes) {
-        for (auto [v, status] : all_nodes[u].adj) {
-            DS_ASSERT(status == FORCED);
-            if (u < v) {
-                out << mapping[u] << " " << mapping[v] << "\n";
-            }
-        }
-    }
-}
-
-void Instance::saveAnnotatedDominatingSetInstance(std::ostream &out) {
-    DS_ASSERT(forcedEdgeCount() == edgeCount());
-    out << "c presolved ds_size: " << ds.size() << "\n";
-    out << "p ads " << nodeCount() << " " << edgeCount() << "\n";
-    out << "c nodes: ";
-    std::vector<int> mapping(nodes.back() + 1);
-
-    for (size_t i = 0; i < nodes.size(); i++) {
-        out << " " << nodes[i];
-        mapping[nodes[i]] = i + 1;
-    }
-
-    out << "\n";
-
-    for (auto u : nodes) {
-        for (auto [v, status] : all_nodes[u].adj) {
-            if (u < v) {
-                out << mapping[u] << " " << mapping[v] << " " << status << "\n";
-            }
-        }
-    }
-}
-
-// Prints the graph to stdout in a human-readable format.
-void Instance::print() const {
-    std::cerr << "[n = " << nodeCount() << ",\tm = " << edgeCount() << "]\n";
-    for (int i : nodes) {
-        std::cerr << "color(" << i << ") = " << getNodeStatus(i) << "\n";
-    }
-    for (int i : nodes) {
-        for (auto [j, status] : all_nodes[i].adj) {
-            if (j > i) continue;
-            std::cerr << i << " " << j << " " << dbg(status) "\n";
-        }
-    }
-}
-
 void Instance::setEdgeStatus(int u, int v, EdgeStatus status) {
     auto it_u = lower_bound(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{v, ANY});
     DS_ASSERT(it_u != adj[u].end());
