@@ -18,25 +18,28 @@ int greedy_upper_bound(const DSHunter::Instance &g) {
     std::priority_queue<std::pair<int, int>> pq;
     std::vector<int> undominated_neighbors(g.all_nodes.size(), 0);
     for (auto u : nodes) {
-        if (g.getNodeStatus(u) == DSHunter::NodeStatus::UNDOMINATED) undominated_neighbors[u]++;
+        if (!g.isDominated(u)) undominated_neighbors[u]++;
         for (auto v : g.neighbourhoodExcluding(u))
-            if (g.getNodeStatus(v) == DSHunter::NodeStatus::UNDOMINATED) undominated_neighbors[u]++;
+            if (!g.isDominated(v)) undominated_neighbors[u]++;
 
-        if (g.getNodeStatus(u) != DSHunter::NodeStatus::TAKEN && undominated_neighbors[u] > 0)
+        if (!g.isTaken(u) && undominated_neighbors[u] > 0)
             pq.push({undominated_neighbors[u], u});
     }
 
-    std::vector<DSHunter::NodeStatus> status(g.all_nodes.size());
+    std::vector<bool> dominated(g.all_nodes.size(), false);
+    std::vector<bool> taken(g.all_nodes.size(), false);
     for (size_t i = 0; i < g.all_nodes.size(); i++) {
-        status[i] = g[i].status;
+        dominated[i] = g[i].domination_status == DSHunter::DominationStatus::DOMINATED;
+        taken[i] = g[i].in_solution_status == DSHunter::InSolutionStatus::YES;
     }
+
     auto dominate = [&](int u) {
-        if (status[u] == DSHunter::NodeStatus::UNDOMINATED) {
-            status[u] = DSHunter::NodeStatus::DOMINATED;
+        if (!dominated[u]) {
+            dominated[u] = true;
             --undominated_neighbors[u];
             if (undominated_neighbors[u] > 0) pq.push({undominated_neighbors[u], u});
             for (auto v : g.neighbourhoodExcluding(u)) {
-                if (status[v] == DSHunter::NodeStatus::TAKEN) continue;
+                if (taken[v]) continue;
                 --undominated_neighbors[v];
                 if (undominated_neighbors[v] > 0) pq.push({undominated_neighbors[v], v});
             }
@@ -47,10 +50,10 @@ int greedy_upper_bound(const DSHunter::Instance &g) {
         auto [d, v] = pq.top();
         pq.pop();
         // This might not be the minimum degree node anymore.
-        if (d > undominated_neighbors[v] || status[v] == DSHunter::NodeStatus::TAKEN) continue;
+        if (d > undominated_neighbors[v] || taken[v]) continue;
 
         dominate(v);
-        status[v] = DSHunter::TAKEN;
+        taken[v] = true;
         for (auto u : g.neighbourhoodExcluding(v)) dominate(u);
         ++upper_bound;
     }

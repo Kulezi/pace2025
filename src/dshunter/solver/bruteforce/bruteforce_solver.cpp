@@ -3,6 +3,7 @@
 
 #include "../../rrules.h"
 #include "../../utils.h"
+
 namespace DSHunter {
 void BruteforceSolver::solve(Instance &g) {
     reduce(g, reduction_rules);
@@ -10,33 +11,36 @@ void BruteforceSolver::solve(Instance &g) {
     std::vector<int> best_ds;
 
     for (int mask = 0; mask < (1 << n); mask++) {
-        std::vector<DSHunter::NodeStatus> status(g.all_nodes.size());
+        std::vector<bool> dominated(g.all_nodes.size(), false);
+        std::vector<bool> taken(g.all_nodes.size(), false);
+
         for (size_t i = 0; i < g.all_nodes.size(); i++) {
-            status[i] = g[i].status;
+            dominated[i] = g[i].domination_status == DominationStatus::DOMINATED;
+            taken[i] = g[i].in_solution_status == InSolutionStatus::YES;
         }
 
         std::vector<int> ds;
 
         for (int i = 0; i < n; i++) {
             int v = g.nodes[i];
-            DS_ASSERT(status[v] != TAKEN);
+            DS_ASSERT(!taken[v]);
             if (mask >> i & 1) {
                 ds.push_back(v);
-                status[v] = TAKEN;
+                taken[v] = dominated[v] = true;
                 for (auto [u, _] : g[v].adj)
-                    if (status[u] == UNDOMINATED) status[u] = DOMINATED;
+                    dominated[u] = true;
             }
         }
 
         bool is_domset = true;
         for (auto v : g.nodes) {
-            if (!status[v]) {
+            if (!dominated[v]) {
                 is_domset = false;
                 break;
             }
 
             for (auto [w, s] : g[v].adj) {
-                if (s == FORCED && (status[v] != TAKEN && status[w] != TAKEN)) {
+                if (s == EdgeStatus::FORCED && (!taken[v] && !taken[w])) {
                     is_domset = false;
                     break;
                 }
@@ -46,6 +50,7 @@ void BruteforceSolver::solve(Instance &g) {
         if (is_domset && (best_ds.empty() || ds.size() < best_ds.size())) {
             best_ds = ds;
         }
+
     }
 
     for (auto i : best_ds) g.ds.push_back(i);

@@ -22,7 +22,7 @@ std::vector<int> VCSolver::solve(Instance &g) {
     for (size_t i = 0; i < g.nodes.size(); i++) {
         int v = g.nodes[i];
         for (auto [w, status] : g[v].adj) {
-            DS_ASSERT(status == FORCED);
+            DS_ASSERT(status == EdgeStatus::FORCED);
             int j = rv[w];
             graph[i].push_back(j);
         }

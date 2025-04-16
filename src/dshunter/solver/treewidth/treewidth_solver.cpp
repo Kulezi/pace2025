@@ -50,7 +50,7 @@ int TreewidthSolver::getC(const Instance &g, NiceTreeDecomposition &td, int t, T
             int pos = bag_pos(node.bag, node.v);
             Color f_v = at(f, pos);
             // This vertex could already be dominated by some reduction rule.
-            if (f_v == Color::WHITE && g.getNodeStatus(node.v) != DOMINATED)
+            if (f_v == Color::WHITE && !g.isDominated(node.v))
                 return c[t][f] = INF;
             else {
                 return c[t][f] = getC(g, td, node.l_child, cut(f, pos));
@@ -64,8 +64,8 @@ int TreewidthSolver::getC(const Instance &g, NiceTreeDecomposition &td, int t, T
             Color f_v = at(f, pos_v);
 
             EdgeStatus edge_status = g.getEdgeStatus(node.to, node.v);
-            DS_ASSERT(edge_status == UNCONSTRAINED || edge_status == FORCED);
-            if (edge_status == FORCED) {
+            DS_ASSERT(edge_status == EdgeStatus::UNCONSTRAINED || edge_status == EdgeStatus::FORCED);
+            if (edge_status == EdgeStatus::FORCED) {
                 // We are forced to take at least one of the endpoints of the edge to the
                 // dominating set.
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
@@ -167,7 +167,7 @@ void TreewidthSolver::recoverDS(Instance &g, NiceTreeDecomposition &td, int t, T
 
             EdgeStatus edge_status = g.getEdgeStatus(node.to, node.v);
             DS_ASSERT(edge_status == UNCONSTRAINED || edge_status == FORCED);
-            if (edge_status == FORCED) {
+            if (edge_status == EdgeStatus::FORCED) {
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
                     recoverDS(g, td, node.l_child, set(f, pos_v, Color::GRAY));
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)

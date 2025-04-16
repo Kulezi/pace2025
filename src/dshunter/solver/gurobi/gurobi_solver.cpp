@@ -30,7 +30,7 @@ bool GurobiSolver::solve(Instance &g) {
             for (auto [u, status] : g[v].adj) {
                 node_constraint += is_selected[rv[u]];
 
-                if (status == FORCED) {
+                if (status == EdgeStatus::FORCED) {
                     GRBLinExpr edge_constraint = 0;
                     edge_constraint += is_selected[rv[u]];
                     edge_constraint += is_selected[rv[v]];

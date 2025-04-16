@@ -12,7 +12,7 @@ using DSHunter::intersect, DSHunter::contains, DSHunter::unite, DSHunter::remove
 constexpr int BFS_INF = INT_MAX;
 bool hasUndominatedNode(DSHunter::Instance& g, std::vector<int> nodes) {
     for (auto v : nodes)
-        if (g.getNodeStatus(v) == DSHunter::NodeStatus::UNDOMINATED) return true;
+        if (!g.isDominated(v)) return true;
     return false;
 }
 
@@ -79,9 +79,8 @@ void populateGuardNodes(const DSHunter::Instance& g, const std::vector<int>& N_v
 std::vector<int> filterDominatedNodes(const DSHunter::Instance& g,
                                       const std::vector<int>& N_prison) {
     std::vector<int> N_prison_intersect_B = N_prison;
-    const auto new_end = std::remove_if(
-        N_prison_intersect_B.begin(), N_prison_intersect_B.end(),
-        [&](int u) { return g.getNodeStatus(u) != DSHunter::NodeStatus::UNDOMINATED; });
+    const auto new_end = std::remove_if(N_prison_intersect_B.begin(), N_prison_intersect_B.end(),
+                                        [&](int u) { return g.isDominated(u); });
     N_prison_intersect_B.erase(new_end, N_prison_intersect_B.end());
     return N_prison_intersect_B;
 }
@@ -164,7 +163,7 @@ bool applyCase2(DSHunter::Instance& g, int v, int w, const std::vector<int>& N_v
                        << dbgv(N_guard) << std::endl);
     // w might get removed when taking v, so we need to set statuses before taking v and w.
     for (auto u : N_vw_without) {
-        g.setNodeStatus(u, DSHunter::NodeStatus::DOMINATED);
+        g.markDominated(u);
     }
     g.take(v);
     g.take(w);
@@ -338,8 +337,8 @@ bool alberSimpleRule1(Instance& g) {
     std::vector<std::pair<int, int>> to_remove;
     for (auto v : g.nodes) {
         for (auto [w, status] : g[v].adj) {
-            if (v > w || status == FORCED) continue;
-            if (g.getNodeStatus(v) == DOMINATED && g.getNodeStatus(w) == DOMINATED) {
+            if (v > w || status == EdgeStatus::FORCED) continue;
+            if (g.isDominated(v) && g.isDominated(w)) {
                 to_remove.emplace_back(v, w);
             }
         }
@@ -356,15 +355,14 @@ bool alberSimpleRule2(Instance& g) {
     std::vector<int> to_remove;
     std::vector<int> to_take;
     for (auto v : g.nodes) {
-        if (g.getNodeStatus(v) == DOMINATED && g.deg(v) <= 1) {
+        if (g.isDominated(v) && g.deg(v) <= 1) {
             to_remove.push_back(v);
             if (g.deg(v) == 1) {
                 auto [w, status] = g[v].adj[0];
                 // The edge is forced so it's optimal to take the end that possibly could have
                 // larger degree. If the other end of the edge also would be a candidate for
                 // this reduction, apply it only to the vertex with smaller label.
-                if (status == FORCED &&
-                    !(g.deg(w) == 1 && g.getNodeStatus(w) == DOMINATED && v > w)) {
+                if (status == EdgeStatus::FORCED && !(g.deg(w) == 1 && g.isDominated(w) && v > w)) {
                     to_take.push_back(w);
                 }
             }
@@ -372,7 +370,7 @@ bool alberSimpleRule2(Instance& g) {
     }
 
     for (auto v : to_take) {
-        if (g.getNodeStatus(v) != TAKEN) {
+        if (!g.isTaken(v)) {
             DS_TRACE(std::cerr << "applying " << __func__ << " (take) " << dbg(v) << std::endl);
             g.take(v);
         }
@@ -388,21 +386,20 @@ bool alberSimpleRule2(Instance& g) {
 
 bool alberSimpleRule3(Instance& g) {
     for (auto v : g.nodes) {
-        if (g.getNodeStatus(v) == DOMINATED && g.deg(v) == 2) {
+        if (g.isDominated(v) && g.deg(v) == 2) {
             auto [u_1, s_1] = g[v].adj.front();
             auto [u_2, s_2] = g[v].adj[1];
             // In this case it actually might be optimal to take this vertex instead of the two.
-            if (s_1 == FORCED && s_2 == FORCED) continue;
-            bool should_remove = g.getNodeStatus(u_1) == UNDOMINATED &&
-                                 g.getNodeStatus(u_2) == UNDOMINATED &&
+            if (s_1 == EdgeStatus::FORCED && s_2 == EdgeStatus::FORCED) continue;
+            bool should_remove = !g.isDominated(u_1) && !g.isDominated(u_2) &&
                                  (g.hasEdge(u_1, u_2) || haveCommonNeighbour(g, u_1, u_2));
 
             if (should_remove) {
                 DS_TRACE(std::cerr << "applying " << __func__ << dbg(v) << std::endl);
 
-                DS_ASSERT(s_1 != FORCED || s_2 != FORCED);
-                if (s_1 == FORCED) g.take(u_1);
-                if (s_2 == FORCED) g.take(u_2);
+                DS_ASSERT(s_1 != EdgeStatus::FORCED || s_2 != EdgeStatus::FORCED);
+                if (s_1 == EdgeStatus::FORCED) g.take(u_1);
+                if (s_2 == EdgeStatus::FORCED) g.take(u_2);
 
                 g.removeNode(v);
 
@@ -416,21 +413,20 @@ bool alberSimpleRule3(Instance& g) {
 
 bool alberSimpleRule4(Instance& g) {
     for (auto v : g.nodes) {
-        if (g.getNodeStatus(v) == DOMINATED && g.deg(v) == 3) {
+        if (g.isDominated(v) && g.deg(v) == 3) {
             auto [u_1, s_1] = g[v].adj[0];
             auto [u_2, s_2] = g[v].adj[1];
             auto [u_3, s_3] = g[v].adj[2];
 
-            int n_forced_edges = s_1 + s_2 + s_3;
+            int n_forced_edges = (int)s_1 + (int)s_2 + (int)s_3;
             // There can be at most one forced edge, and it needs to lead to a vertex that can
             // dominate all three others.
-            bool possibly_valid = g.getNodeStatus(u_1) == UNDOMINATED &&
-                                  g.getNodeStatus(u_2) == UNDOMINATED &&
-                                  g.getNodeStatus(u_3) == UNDOMINATED && n_forced_edges <= 1;
+            bool possibly_valid = !g.isDominated(u_1) && !g.isDominated(u_2) &&
+                                  !g.isDominated(u_3) && n_forced_edges <= 1;
 
             if (possibly_valid) {
-                if (tryMidpoint(g, s_1, u_1, u_2, u_3) || tryMidpoint(g, s_2, u_2, u_1, u_3) ||
-                    tryMidpoint(g, s_3, u_3, u_1, u_2)) {
+                if (tryMidpoint(g, (bool)s_1, u_1, u_2, u_3) || tryMidpoint(g, (bool)s_2, u_2, u_1, u_3) ||
+                    tryMidpoint(g, (bool)s_3, u_3, u_1, u_2)) {
                     DS_TRACE(std::cerr << "applying " << __func__ << dbg(v) << std::endl);
                     g.removeNode(v);
                     return true;
@@ -445,24 +441,24 @@ bool alberSimpleRule4(Instance& g) {
 bool forcedEdgeRule(Instance& g) {
     auto nodes = g.nodes;
     for (auto v : nodes) {
-        if (g.deg(v) == 2 && g.getNodeStatus(v) == UNDOMINATED) {
+        if (g.deg(v) == 2 && !g.isDominated(v)) {
             auto e1 = g[v].adj[0];
             auto e2 = g[v].adj[1];
             if (!g.hasEdge(e1.to, e2.to)) continue;
 
-            if (e1.status == UNCONSTRAINED && e2.status == UNCONSTRAINED) {
+            if (e1.status == EdgeStatus::UNCONSTRAINED && e2.status == EdgeStatus::UNCONSTRAINED) {
                 DS_TRACE(std::cerr << __func__ << "(1)" << dbg(v) << std::endl);
                 g.removeNode(v);
-                if (g.getEdgeStatus(e1.to, e2.to) != FORCED) g.forceEdge(e1.to, e2.to);
+                if (g.getEdgeStatus(e1.to, e2.to) != EdgeStatus::FORCED) g.forceEdge(e1.to, e2.to);
                 return true;
-            } else if (e1.status == FORCED && e2.status == UNCONSTRAINED) {
+            } else if (e1.status == EdgeStatus::FORCED && e2.status == EdgeStatus::UNCONSTRAINED) {
                 DS_TRACE(std::cerr << __func__ << "(2)" << dbg(v) << dbg(e1.to) << std::endl);
                 // Taking e1.to is optimal, as it's always better than taking v, and we are
                 // forced to take one of them.
                 g.take(e1.to);
 
                 return true;
-            } else if (e1.status == UNCONSTRAINED && e2.status == FORCED) {
+            } else if (e1.status == EdgeStatus::UNCONSTRAINED && e2.status == EdgeStatus::FORCED) {
                 DS_TRACE(std::cerr << __func__ << "(3)" << dbg(v) << dbg(e2.to) << std::endl);
                 // Taking e2.to is optimal, as it's always better than taking v, and we are
                 // forced to take one of them.

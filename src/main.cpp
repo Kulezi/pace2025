@@ -157,9 +157,10 @@ std::unique_ptr<std::ostream> get_output_stream(const std::string& output_file) 
 //      (those nodes are guaranteed to not be present in the graph)
 //  second line is v_1, v_2, ..., v_d, being the list of nodes already known to be in the optimal
 //  dominating set following it are n lines describing the nodes of the remaining graph in format 'v
-//  s e', where:
+//  s_d s_m e', where:
 //      v is the node number in the original graph, note nodes may not be numbered from 1 to n.
-//      s is the nodes status, 0 means undominated, 1 means dominated
+//      s_d is the nodes domination status, 0 means undominated, 1 means dominated
+//      s_m is the nodes solution membership status, 0 means maybe, 1 means no, 2 means yes.
 //      e describes whether the node is an node non-existent in the original graph added by
 //      reductions
 //          0 means original node,
@@ -172,7 +173,7 @@ void export_presolution(const DSHunter::Instance& g, std::ostream& output) {
     output << "\n";
 
     for (auto v : g.nodes) {
-        output << v << " " << g.getNodeStatus(v) << " " << g[v].is_extra << "\n";
+        output << v << " " << (int)g[v].domination_status << " " << (int)g[v].in_solution_status << " " << g[v].is_extra << "\n";
     }
 
     for (auto u : g.nodes) {

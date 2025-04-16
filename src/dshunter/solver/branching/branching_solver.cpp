@@ -34,7 +34,7 @@ void BranchingSolver::take(Instance g, int v, std::vector<int> &best_ds, int lev
 
 void BranchingSolver::solve(const Instance g, std::vector<int> &best_ds, int level) {
     throw std::logic_error("reimplement for forced edges!");
-    int v = g.minDegNodeOfStatus(UNDOMINATED);
+    int v = -1; // WONTFIX: Was solved in another branch, will be remove.
     if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
     if (v == -1) {
         best_ds = g.ds;

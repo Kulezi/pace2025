@@ -6,8 +6,9 @@
 #include <vector>
 namespace DSHunter {
 
-enum NodeStatus { UNDOMINATED, DOMINATED, TAKEN };
-enum EdgeStatus { UNCONSTRAINED, FORCED, ANY };
+enum class DominationStatus { UNDOMINATED, DOMINATED };
+enum class InSolutionStatus { MAYBE, NO, YES };
+enum class EdgeStatus { UNCONSTRAINED, FORCED, ANY };
 struct Endpoint {
     int to;
     EdgeStatus status;
@@ -21,7 +22,9 @@ struct Node {
     // List of adjacent nodes sorted by increasing node id.
     // Order is maintained to make set union/intersection possible in O(|A| + |B|).
     std::vector<Endpoint> adj;
-    NodeStatus status;
+
+    DominationStatus domination_status;
+    InSolutionStatus in_solution_status;
 
     // Extra vertices cannot be taken into the dominating set, we assume they mean if we take them
     // we should take all their neighbours instead.
@@ -45,15 +48,15 @@ struct Instance {
 
     void parse_header(std::stringstream &tokens, int &header_edges);
 
-    // Returns an instance representing a subgraph induced by a sorted list of nodes to take.
-    Instance(Instance &i, std::vector<int> to_take);
-
     // Returns the number of nodes in the graph.
     size_t nodeCount() const;
 
-    void setNodeStatus(int v, NodeStatus c);
-    NodeStatus getNodeStatus(int v) const;
+    bool isDominated(int v) const;
+    void markDominated(int v);
     
+    bool isTaken(int v) const;
+    void markTaken(int v);
+
     void forceEdge(int u, int v);
 
     EdgeStatus getEdgeStatus(int u, int v) const;
@@ -101,11 +104,6 @@ struct Instance {
     // Returns true if and only if undirected edge (u, v) is present in the graph.
     // Complexity: O(deg(u)) !
     bool hasEdge(int u, int v) const;
-
-    // Returns the minimum degree node of given status present in the graph.
-    // Returns -1 if there is no such node.
-    // Complexity: O(n)
-    int minDegNodeOfStatus(NodeStatus s) const;
 
     // Inserts given node to the dominating set, changing the status of
     // it's neighours to DOMINATED if they are not, the node is removed from the graph afterwards.
