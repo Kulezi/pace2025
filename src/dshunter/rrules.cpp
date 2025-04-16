@@ -253,25 +253,30 @@ bool tryMidpoint(DSHunter::Instance& g, bool forced_by_edge, int u, int v, int w
 }  // namespace
 
 namespace DSHunter {
-bool ReductionRule::apply(Instance& g) {
-    DS_TRACE(std::cerr << "trying to apply " << name << " (n=" << g.nodeCount()
-                       << ", m=" << g.edgeCount() << ", f=" << g.forcedEdgeCount());
+bool ReductionRule::apply(Instance& g) const {
+    DS_TRACE(std::cerr << "trying to apply " << name << " (n=" << g.nodeCount() << ", m="
+                       << g.edgeCount() << ", f=" << g.forcedEdgeCount() << ")" << std::endl);
 
     bool applied = f(g);
 
     DS_TRACE(if (applied) std::cerr << "succesfully applied " << name << " (n=" << g.nodeCount()
                                     << ", m=" << g.edgeCount() << ", f=" << g.forcedEdgeCount()
-                                    << std::endl;
+                                    << ")" << std::endl;
              else std::cerr << "failed to apply " << name << std::endl;);
     return applied;
 }
 
-void reduce(Instance& g, const std::vector<ReductionRule>& reduction_rules, int complexity) {
+void reduce(Instance& g, std::vector<ReductionRule>& reduction_rules, int complexity) {
 _start:
-    for (auto rule : reduction_rules) {
+    for (auto& rule : reduction_rules) {
         if (rule.complexity_dense > complexity) continue;
         bool reduced = rule.apply(g);
-        if (reduced) goto _start;
+        ++rule.application_count;
+
+        if (reduced) {
+            ++rule.success_count;
+            goto _start;
+        }
     }
 }
 
@@ -425,7 +430,8 @@ bool alberSimpleRule4(Instance& g) {
                                   !g.isDominated(u_3) && n_forced_edges <= 1;
 
             if (possibly_valid) {
-                if (tryMidpoint(g, (bool)s_1, u_1, u_2, u_3) || tryMidpoint(g, (bool)s_2, u_2, u_1, u_3) ||
+                if (tryMidpoint(g, (bool)s_1, u_1, u_2, u_3) ||
+                    tryMidpoint(g, (bool)s_2, u_2, u_1, u_3) ||
                     tryMidpoint(g, (bool)s_3, u_3, u_1, u_2)) {
                     DS_TRACE(std::cerr << "applying " << __func__ << dbg(v) << std::endl);
                     g.removeNode(v);
@@ -477,15 +483,15 @@ bool forcedEdgeRule(Instance& g) {
     return false;
 }
 
-ReductionRule AlberMainRule1{"AlberMainRule1", alberMainRule1, 3, 1};
-ReductionRule AlberMainRule2{"AlberMainRule2", alberMainRule2, 4, 2};
-ReductionRule AlberSimpleRule1{"AlberSimpleRule1 (dominated edge removal)", alberSimpleRule1, 2, 1};
-ReductionRule AlberSimpleRule2{"AlberSimpleRule2 (dominated leaf removal)", alberSimpleRule2, 2, 1};
-ReductionRule AlberSimpleRule3{"AlberSimpleRule3 (dominated degree 2 vertex removal)",
-                               alberSimpleRule3, 2, 1};
-ReductionRule AlberSimpleRule4{"AlberSimpleRule4 (dominated degree 3 vertex removal)",
-                               alberSimpleRule4, 2, 1};
-ReductionRule ForcedEdgeRule{"ForcedEdgeRule", forcedEdgeRule, 1, 1};
+ReductionRule AlberMainRule1("AlberMainRule1", alberMainRule1, 3, 1);
+ReductionRule AlberMainRule2("AlberMainRule2", alberMainRule2, 4, 2);
+ReductionRule AlberSimpleRule1("AlberSimpleRule1 (dominated edge removal)", alberSimpleRule1, 2, 1);
+ReductionRule AlberSimpleRule2("AlberSimpleRule2 (dominated leaf removal)", alberSimpleRule2, 2, 1);
+ReductionRule AlberSimpleRule3("AlberSimpleRule3 (dominated degree 2 vertex removal)",
+                               alberSimpleRule3, 2, 1);
+ReductionRule AlberSimpleRule4("AlberSimpleRule4 (dominated degree 3 vertex removal)",
+                               alberSimpleRule4, 2, 1);
+ReductionRule ForcedEdgeRule("ForcedEdgeRule", forcedEdgeRule, 1, 1);
 
 const std::vector<ReductionRule> default_reduction_rules = {
 

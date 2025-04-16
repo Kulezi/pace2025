@@ -12,11 +12,20 @@ struct ReductionRule {
 
     // complexity = c if the worst case complexity of applying the rule is O(|G|^c).
     int complexity_dense, complexity_sparse;
+    int application_count, success_count;
+    ReductionRule(std::string name, std::function<bool(Instance&)> f, int complexity_dense,
+                  int complexity_sparse)
+        : name(name),
+          f(f),
+          complexity_dense(complexity_dense),
+          complexity_sparse(complexity_sparse),
+          application_count(0),
+          success_count(0) {}
 
-    bool apply(Instance& g);
+    bool apply(Instance& g) const;
 };
 
-void reduce(Instance& g, const std::vector<ReductionRule>& reduction_rules, int complexity = 999);
+void reduce(Instance& g, std::vector<ReductionRule>& reduction_rules, int complexity = 999);
 
 // Source: DOI 10.1007/s10479-006-0045-4, p. 4 (extended to handle forced edges)
 // ~ O(|V|^3) for dense graphs, O(|V|) for sparse graphs.
