@@ -44,7 +44,7 @@ void Instance::parse_header(std::stringstream &tokens, int &header_edges) {
     //     throw std::logic_error("expected problem type to be 'ds', found '" + problem + "'");
 
     all_nodes.resize(n_nodes + 1,
-                     {{}, DominationStatus::UNDOMINATED, InSolutionStatus::MAYBE, false});
+                     {{}, DominationStatus::UNDOMINATED, MembershipStatus::UNDECIDED, false});
     for (int i = 1; i <= n_nodes; ++i) {
         nodes.push_back(i);
     }
@@ -58,23 +58,27 @@ bool Instance::isDominated(int v) const {
 }
 
 void Instance::markDominated(int v) {
-    DS_TRACE(std::cerr << __func__ << dbg(v) << dbg(c) << std::endl);
+    DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
     all_nodes[v].domination_status = DominationStatus::DOMINATED;
 }
 
 bool Instance::isTaken(int v) const {
-    return all_nodes[v].in_solution_status == InSolutionStatus::YES;
+    return all_nodes[v].membership_status == MembershipStatus::TAKEN;
 }
 
 void Instance::markTaken(int v) {
     all_nodes[v].domination_status = DominationStatus::DOMINATED;
-    all_nodes[v].in_solution_status = InSolutionStatus::YES;
+    all_nodes[v].membership_status = MembershipStatus::TAKEN;
+}
+
+void Instance::markDisregarded(int v) {
+    all_nodes[v].membership_status = MembershipStatus::DISREGARDED;
 }
 
 void Instance::forceEdge(int u, int v) {
     DS_TRACE(std::cerr << __func__ << dbg(u) << dbg(v) << std::endl);
     DS_ASSERT(hasEdge(u, v));
-    DS_ASSERT(getEdgeStatus(u, v) != FORCED);
+    DS_ASSERT(getEdgeStatus(u, v) != EdgeStatus::FORCED);
     setEdgeStatus(u, v, EdgeStatus::FORCED);
     markDominated(u);
     markDominated(v);
@@ -109,7 +113,7 @@ int Instance::addNode() {
     DS_TRACE(std::cerr << __func__ << std::endl);
     int v = all_nodes.size();
     nodes.push_back(all_nodes.size());
-    all_nodes.push_back({{}, DominationStatus::UNDOMINATED, InSolutionStatus::MAYBE, true});
+    all_nodes.push_back({{}, DominationStatus::UNDOMINATED, MembershipStatus::UNDECIDED, true});
     return v;
 }
 
@@ -120,7 +124,7 @@ void Instance::removeNode(int v) {
     if (find(nodes.begin(), nodes.end(), v) == nodes.end()) return;
     for (auto [u, status] : all_nodes[v].adj) {
         // Edges like this can only be removed by calling take().
-        DS_ASSERT(status != FORCED || isTaken(v));
+        DS_ASSERT(status != EdgeStatus::FORCED || isTaken(v));
         remove(all_nodes[u].adj, Endpoint{v, status});
         DS_ASSERT(is_sorted(all_nodes[u].adj.begin(), all_nodes[u].adj.end()));
     }
@@ -208,7 +212,7 @@ void Instance::take(int v) {
 
         return;
     }
-    all_nodes[v].in_solution_status = InSolutionStatus::YES;
+    all_nodes[v].membership_status = MembershipStatus::TAKEN;
 
     ds.push_back(v);
     for (auto u : neighbourhoodExcluding(v)) {
@@ -259,9 +263,9 @@ std::vector<std::vector<int>> Instance::split() const {
 
 void Instance::setEdgeStatus(int u, int v, EdgeStatus status) {
     auto it_u = lower_bound(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{v, EdgeStatus::ANY});
-    DS_ASSERT(it_u != adj[u].end());
+    DS_ASSERT(it_u != all_nodes[u].adj.end());
     auto it_v = lower_bound(all_nodes[v].adj.begin(), all_nodes[v].adj.end(), Endpoint{u, EdgeStatus::ANY});
-    DS_ASSERT(it_v != adj[v].end());
+    DS_ASSERT(it_v != all_nodes[v].adj.end());
 
     it_u->status = it_v->status = status;
 }

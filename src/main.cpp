@@ -173,7 +173,7 @@ void export_presolution(const DSHunter::Instance& g, std::ostream& output) {
     output << "\n";
 
     for (auto v : g.nodes) {
-        output << v << " " << (int)g[v].domination_status << " " << (int)g[v].in_solution_status << " " << g[v].is_extra << "\n";
+        output << v << " " << (int)g[v].domination_status << " " << (int)g[v].membership_status << " " << g[v].is_extra << "\n";
     }
 
     for (auto u : g.nodes) {

@@ -30,7 +30,7 @@ int greedy_upper_bound(const DSHunter::Instance &g) {
     std::vector<bool> taken(g.all_nodes.size(), false);
     for (size_t i = 0; i < g.all_nodes.size(); i++) {
         dominated[i] = g[i].domination_status == DSHunter::DominationStatus::DOMINATED;
-        taken[i] = g[i].in_solution_status == DSHunter::InSolutionStatus::YES;
+        taken[i] = g[i].membership_status == DSHunter::MembershipStatus::TAKEN;
     }
 
     auto dominate = [&](int u) {

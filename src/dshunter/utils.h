@@ -6,13 +6,13 @@
 #include <cassert>
 #include <vector>
 #include <string>
-#ifdef DEBUG_MODE
+#ifdef DS_TESTING_MODE
 #define DS_ASSERT(cond) assert(cond)
 #else
 #define DS_ASSERT(cond)
 #endif
 
-#ifdef TRACING_MODE
+#ifdef DS_TRACING_MODE
 #define DS_TRACE(x) x
 #else
 #define DS_TRACE(x)
@@ -99,7 +99,7 @@ std::vector<T> remove(std::vector<T> a, const std::vector<T> &b) {
         } else if (a[i] == b[j]) {
             ++i;
             ++j;
-        } else if (a[i] > b[j]) {
+        } else if (b[j] < a[i]) {
             ++j;
         }
     }

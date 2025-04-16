@@ -7,7 +7,7 @@
 namespace DSHunter {
 
 enum class DominationStatus { UNDOMINATED, DOMINATED };
-enum class InSolutionStatus { MAYBE, NO, YES };
+enum class MembershipStatus { UNDECIDED, DISREGARDED, TAKEN };
 enum class EdgeStatus { UNCONSTRAINED, FORCED, ANY };
 struct Endpoint {
     int to;
@@ -24,7 +24,7 @@ struct Node {
     std::vector<Endpoint> adj;
 
     DominationStatus domination_status;
-    InSolutionStatus in_solution_status;
+    MembershipStatus membership_status;
 
     // Extra vertices cannot be taken into the dominating set, we assume they mean if we take them
     // we should take all their neighbours instead.
@@ -56,7 +56,7 @@ struct Instance {
     
     bool isTaken(int v) const;
     void markTaken(int v);
-
+    void markDisregarded(int v);
     void forceEdge(int u, int v);
 
     EdgeStatus getEdgeStatus(int u, int v) const;

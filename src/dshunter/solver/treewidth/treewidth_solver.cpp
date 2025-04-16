@@ -14,10 +14,9 @@ bool TreewidthSolver::solve(Instance &g, std::chrono::seconds decomposition_time
 
     DS_TRACE(std::cerr << dbg(td.width()) << " " << dbg(getMemoryUsage(td)) << std::endl);
     DS_TRACE(td.print());
-    
+
     DS_ASSERT(td.width() <= MAX_HANDLED_TREEWIDTH);
-    if (getMemoryUsage(td) > MAX_MEMORY_IN_BYTES)
-        return false;
+    if (getMemoryUsage(td) > MAX_MEMORY_IN_BYTES) return false;
 
     c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
 
@@ -64,7 +63,8 @@ int TreewidthSolver::getC(const Instance &g, NiceTreeDecomposition &td, int t, T
             Color f_v = at(f, pos_v);
 
             EdgeStatus edge_status = g.getEdgeStatus(node.to, node.v);
-            DS_ASSERT(edge_status == EdgeStatus::UNCONSTRAINED || edge_status == EdgeStatus::FORCED);
+            DS_ASSERT(edge_status == EdgeStatus::UNCONSTRAINED ||
+                      edge_status == EdgeStatus::FORCED);
             if (edge_status == EdgeStatus::FORCED) {
                 // We are forced to take at least one of the endpoints of the edge to the
                 // dominating set.
@@ -166,7 +166,8 @@ void TreewidthSolver::recoverDS(Instance &g, NiceTreeDecomposition &td, int t, T
             Color f_v = at(f, pos_v);
 
             EdgeStatus edge_status = g.getEdgeStatus(node.to, node.v);
-            DS_ASSERT(edge_status == UNCONSTRAINED || edge_status == FORCED);
+            DS_ASSERT(edge_status == EdgeStatus::UNCONSTRAINED ||
+                      edge_status == EdgeStatus::FORCED);
             if (edge_status == EdgeStatus::FORCED) {
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
                     recoverDS(g, td, node.l_child, set(f, pos_v, Color::GRAY));

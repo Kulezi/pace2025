@@ -58,6 +58,9 @@ bool alberSimpleRule4(Instance& g);
 // ~ O(|G|) for any graph.
 bool forcedEdgeRule(Instance& g);
 
+bool pinkNodeRule(Instance &g);
+
+
 extern ReductionRule AlberMainRule1;
 extern ReductionRule AlberMainRule2;
 extern ReductionRule AlberSimpleRule1;
@@ -65,6 +68,7 @@ extern ReductionRule AlberSimpleRule2;
 extern ReductionRule AlberSimpleRule3;
 extern ReductionRule AlberSimpleRule4;
 extern ReductionRule ForcedEdgeRule;
+extern ReductionRule PinkNodeRule;
 
 extern const std::vector<ReductionRule> default_reduction_rules;
 }  // namespace DSHunter

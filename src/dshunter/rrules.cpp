@@ -483,6 +483,25 @@ bool forcedEdgeRule(Instance& g) {
     return false;
 }
 
+bool pinkNodeRule(Instance& g) {
+    for (auto u : g.nodes) {
+        for (auto [v, s] : g[u].adj) {
+            if (s == EdgeStatus::FORCED) {
+                throw std::logic_error("mixed pink and red reductions are not supported!");
+            }
+
+            if (g[v].membership_status != MembershipStatus::DISREGARDED &&
+                g[u].membership_status == MembershipStatus::UNDECIDED &&
+                contains(g[v].adj, g[u].adj)) {
+                g.markDisregarded(u);
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 ReductionRule AlberMainRule1("AlberMainRule1", alberMainRule1, 3, 1);
 ReductionRule AlberMainRule2("AlberMainRule2", alberMainRule2, 4, 2);
 ReductionRule AlberSimpleRule1("AlberSimpleRule1 (dominated edge removal)", alberSimpleRule1, 2, 1);
@@ -493,14 +512,17 @@ ReductionRule AlberSimpleRule4("AlberSimpleRule4 (dominated degree 3 vertex remo
                                alberSimpleRule4, 2, 1);
 ReductionRule ForcedEdgeRule("ForcedEdgeRule", forcedEdgeRule, 1, 1);
 
+ReductionRule PinkNodeRule("PinkNodeRule", pinkNodeRule, 2, 1);
+
 const std::vector<ReductionRule> default_reduction_rules = {
+    PinkNodeRule,
+    // // Then rules that don't affect the graph structure.
+    // ForcedEdgeRule,
 
-    // Then rules that don't affect the graph structure.
-    ForcedEdgeRule,
+    // // First the cheap rules that only remove vertices.
+    // AlberSimpleRule1, AlberSimpleRule2, AlberSimpleRule3, AlberSimpleRule4,
 
-    // First the cheap rules that only remove vertices.
-    AlberSimpleRule1, AlberSimpleRule2, AlberSimpleRule3, AlberSimpleRule4,
-
-    // Then more expensive rules.
-    AlberMainRule1, AlberMainRule2};
+    // // Then more expensive rules.
+    // AlberMainRule1, AlberMainRule2
+};
 }  // namespace DSHunter

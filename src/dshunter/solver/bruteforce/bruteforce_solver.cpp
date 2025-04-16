@@ -16,7 +16,7 @@ void BruteforceSolver::solve(Instance &g) {
 
         for (size_t i = 0; i < g.all_nodes.size(); i++) {
             dominated[i] = g[i].domination_status == DominationStatus::DOMINATED;
-            taken[i] = g[i].in_solution_status == InSolutionStatus::YES;
+            taken[i] = g[i].membership_status == MembershipStatus::TAKEN;
         }
 
         std::vector<int> ds;
