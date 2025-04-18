@@ -8,9 +8,7 @@ namespace {
 using DSHunter::intersect, DSHunter::contains, DSHunter::unite, DSHunter::remove;
 constexpr int BFS_INF = INT_MAX;
 
-bool applyCase1_1(DSHunter::Instance& g, int v, int w, const std::vector<int>& N_prison,
-                  const std::vector<int>& N_guard, const std::vector<int>& N_v_without,
-                  const std::vector<int>& N_w_without) {
+bool applyCase1_1(DSHunter::Instance& g, int v, int w, const std::vector<int>& N_prison, const std::vector<int>& N_guard, const std::vector<int>& N_v_without, const std::vector<int>& N_w_without) {
     if (!g.hasEdge(v, w)) {
         // Don't apply the reduction if it doesn't reduce the size of the graph.
         if (N_prison.size() + intersect(intersect(N_guard, N_v_without), N_w_without).size() <= 3)
@@ -47,8 +45,7 @@ bool applyCase1_1(DSHunter::Instance& g, int v, int w, const std::vector<int>& N
     return true;
 }
 
-bool applyCase1_2(DSHunter::Instance& g, int v, const std::vector<int>& N_prison,
-                  const std::vector<int>& N_v_without, const std::vector<int>& N_guard) {
+bool applyCase1_2(DSHunter::Instance& g, int v, const std::vector<int>& N_prison, const std::vector<int>& N_v_without, const std::vector<int>& N_guard) {
     DS_TRACE(std::cerr << "applying " << __func__ << dbg(v) << dbgv(N_prison) << dbgv(N_guard)
                        << dbgv(N_v_without) << std::endl);
     g.take(v);
@@ -57,8 +54,7 @@ bool applyCase1_2(DSHunter::Instance& g, int v, const std::vector<int>& N_prison
     return true;
 }
 
-bool applyCase1_3(DSHunter::Instance& g, int w, const std::vector<int>& N_prison,
-                  const std::vector<int>& N_w_without, const std::vector<int>& N_guard) {
+bool applyCase1_3(DSHunter::Instance& g, int w, const std::vector<int>& N_prison, const std::vector<int>& N_w_without, const std::vector<int>& N_guard) {
     DS_TRACE(std::cerr << "applying " << __func__ << dbg(w) << dbgv(N_prison) << dbgv(N_guard)
                        << dbgv(N_w_without) << std::endl);
     g.take(w);
@@ -68,8 +64,7 @@ bool applyCase1_3(DSHunter::Instance& g, int w, const std::vector<int>& N_prison
     return true;
 }
 
-bool applyCase2(DSHunter::Instance& g, int v, int w, const std::vector<int>& N_vw_without,
-                const std::vector<int>& N_prison, const std::vector<int>& N_guard) {
+bool applyCase2(DSHunter::Instance& g, int v, int w, const std::vector<int>& N_vw_without, const std::vector<int>& N_prison, const std::vector<int>& N_guard) {
     DS_TRACE(std::cerr << "applying " << __func__ << dbg(v) << dbg(w) << dbgv(N_prison)
                        << dbgv(N_guard) << std::endl);
     // w might get removed when taking v, so we need to set statuses before taking v and w.
@@ -103,8 +98,7 @@ bool isExit(const DSHunter::Instance& g, int u, int v, int w) {
     return false;
 }
 
-void populateExitNodes(const DSHunter::Instance& g, const std::vector<int>& N_vw_without, int v,
-                       int w, std::vector<int>& N_exit) {
+void populateExitNodes(const DSHunter::Instance& g, const std::vector<int>& N_vw_without, int v, int w, std::vector<int>& N_exit) {
     for (auto u : N_vw_without) {
         if (isExit(g, u, v, w)) {
             N_exit.push_back(u);
@@ -112,8 +106,7 @@ void populateExitNodes(const DSHunter::Instance& g, const std::vector<int>& N_vw
     }
 }
 
-void populateGuardNodes(const DSHunter::Instance& g, const std::vector<int>& N_vw_without,
-                        const std::vector<int>& N_exit, std::vector<int>& N_guard) {
+void populateGuardNodes(const DSHunter::Instance& g, const std::vector<int>& N_vw_without, const std::vector<int>& N_exit, std::vector<int>& N_guard) {
     for (auto u : remove(N_vw_without, N_exit)) {
         auto N_u = g.neighbourhoodExcluding(u);
         if (!intersect(N_u, N_exit).empty()) {
@@ -125,25 +118,27 @@ void populateGuardNodes(const DSHunter::Instance& g, const std::vector<int>& N_v
 std::vector<int> redNeighbours(DSHunter::Instance& g, int v) {
     std::vector<int> res;
     for (auto [u, status] : g[v].adj)
-        if (status == DSHunter::EdgeStatus::FORCED) res.push_back(u);
+        if (status == DSHunter::EdgeStatus::FORCED)
+            res.push_back(u);
     return res;
 }
 
 std::vector<int> filterDominatedNodes(const DSHunter::Instance& g,
                                       const std::vector<int>& N_prison) {
     std::vector<int> N_prison_intersect_B = N_prison;
-    const auto new_end = std::remove_if(N_prison_intersect_B.begin(), N_prison_intersect_B.end(),
-                                        [&](int u) { return g.isDominated(u); });
+    const auto new_end = std::remove_if(N_prison_intersect_B.begin(), N_prison_intersect_B.end(), [&](int u) { return g.isDominated(u); });
     N_prison_intersect_B.erase(new_end, N_prison_intersect_B.end());
     return N_prison_intersect_B;
 }
 
 bool canBeDominatedBySingleNode(const DSHunter::Instance& g,
                                 const std::vector<int>& N_prison_intersect_B,
-                                const std::vector<int>& N_guard, const std::vector<int>& N_prison) {
+                                const std::vector<int>& N_guard,
+                                const std::vector<int>& N_prison) {
     auto intersection_can_be_dominated_by_single_from = [&](const std::vector<int>& nodes) {
         for (auto x : nodes)
-            if (contains(g.neighbourhoodIncluding(x), N_prison_intersect_B)) return true;
+            if (contains(g.neighbourhoodIncluding(x), N_prison_intersect_B))
+                return true;
         return false;
     };
     return N_prison_intersect_B.empty() || intersection_can_be_dominated_by_single_from(N_guard) ||
@@ -164,7 +159,8 @@ bool applyAlberMainRule2(DSHunter::Instance& g, int v, int w) {
     // The only forced edges must have an end in {v, w}.
     for (auto from : N_exit) {
         for (auto [to, status] : g[from].adj) {
-            if (status == DSHunter::EdgeStatus::FORCED && to != v && to != w) return false;
+            if (status == DSHunter::EdgeStatus::FORCED && to != v && to != w)
+                return false;
         }
     }
 
@@ -172,7 +168,8 @@ bool applyAlberMainRule2(DSHunter::Instance& g, int v, int w) {
     N_prison = remove(remove(N_vw_without, N_exit), N_guard);
 
     auto N_prison_intersect_B = filterDominatedNodes(g, N_prison);
-    if (N_prison_intersect_B.empty()) return false;
+    if (N_prison_intersect_B.empty())
+        return false;
 
     auto red_v = redNeighbours(g, v);
     auto red_w = redNeighbours(g, w);
@@ -215,7 +212,8 @@ bool alberMainRule2(Instance& g) {
         while (!q.empty()) {
             int w = q.front();
             q.pop();
-            if (dis[w] > zero_dist && applyAlberMainRule2(g, v, w)) return true;
+            if (dis[w] > zero_dist && applyAlberMainRule2(g, v, w))
+                return true;
             if (dis[w] < zero_dist + 4) {
                 for (auto [x, _] : g[w].adj) {
                     if (dis[x] > dis[w] + 1) {

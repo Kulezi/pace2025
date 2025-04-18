@@ -8,12 +8,14 @@ bool forceEdgeRule(Instance& g) {
         if (g.deg(v) == 2 && !g.isDominated(v)) {
             auto e1 = g[v].adj[0];
             auto e2 = g[v].adj[1];
-            if (!g.hasEdge(e1.to, e2.to)) continue;
+            if (!g.hasEdge(e1.to, e2.to))
+                continue;
 
             if (e1.status == EdgeStatus::UNCONSTRAINED && e2.status == EdgeStatus::UNCONSTRAINED) {
                 DS_TRACE(std::cerr << __func__ << "(1)" << dbg(v) << std::endl);
                 g.removeNode(v);
-                if (g.getEdgeStatus(e1.to, e2.to) != EdgeStatus::FORCED) g.forceEdge(e1.to, e2.to);
+                if (g.getEdgeStatus(e1.to, e2.to) != EdgeStatus::FORCED)
+                    g.forceEdge(e1.to, e2.to);
                 return true;
             } else if (e1.status == EdgeStatus::FORCED && e2.status == EdgeStatus::UNCONSTRAINED) {
                 DS_TRACE(std::cerr << __func__ << "(2)" << dbg(v) << dbg(e1.to) << std::endl);

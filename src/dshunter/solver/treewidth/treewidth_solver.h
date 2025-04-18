@@ -1,7 +1,7 @@
 #ifndef DS_TREEWIDTH_SOLVER_H
 #define DS_TREEWIDTH_SOLVER_H
-#include <cstdint>
 #include <chrono>
+#include <cstdint>
 
 #include "../../instance.h"
 #include "td/nice_tree_decomposition.h"
@@ -13,7 +13,6 @@ constexpr size_t MAX_HANDLED_TREEWIDTH = 18;
 constexpr size_t GOOD_ENOUGH_TREEWIDTH = 13;
 struct TreewidthSolver {
     std::vector<std::vector<int>> c;
-    
 
     // Returns true if instance was solved,
     // false if the width of found decompositions was too big to handle.

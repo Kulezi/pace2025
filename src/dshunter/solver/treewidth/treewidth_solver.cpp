@@ -7,16 +7,17 @@ constexpr int UNSET = -1, INF = 1'000'000'000;
 // Returns true if instance was solved. Solution set is stored in given instance.
 // Returns false if it would lead to exceeding the memory limit.
 bool TreewidthSolver::solve(Instance &g, std::chrono::seconds decomposition_time_budget) {
-    auto o = NiceTreeDecomposition::decompose(g, decomposition_time_budget, GOOD_ENOUGH_TREEWIDTH,
-                                              MAX_HANDLED_TREEWIDTH);
-    if (!o.has_value()) return false;
+    auto o = NiceTreeDecomposition::decompose(g, decomposition_time_budget, GOOD_ENOUGH_TREEWIDTH, MAX_HANDLED_TREEWIDTH);
+    if (!o.has_value())
+        return false;
     auto td = o.value();
 
     DS_TRACE(std::cerr << dbg(td.width()) << " " << dbg(getMemoryUsage(td)) << std::endl);
     DS_TRACE(td.print());
 
     DS_ASSERT(td.width() <= MAX_HANDLED_TREEWIDTH);
-    if (getMemoryUsage(td) > MAX_MEMORY_IN_BYTES) return false;
+    if (getMemoryUsage(td) > MAX_MEMORY_IN_BYTES)
+        return false;
 
     c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
 
@@ -33,8 +34,10 @@ int TreewidthSolver::getC(const Instance &g, NiceTreeDecomposition &td, int t, T
     const auto &node = td[t];
     DS_ASSERT(f < pow3[node.bag.size()]);
 
-    if (!c[t].empty() && c[t][f] != UNSET) return c[t][f];
-    if (c[t].empty()) c[t].resize(pow3[node.bag.size()], UNSET);
+    if (!c[t].empty() && c[t][f] != UNSET)
+        return c[t][f];
+    if (c[t].empty())
+        c[t].resize(pow3[node.bag.size()], UNSET);
     c[t][f] = INF;
     auto bag_pos = [&](const std::vector<int> &bag, int v) -> int {
         int pos = 0;
@@ -98,7 +101,8 @@ int TreewidthSolver::getC(const Instance &g, NiceTreeDecomposition &td, int t, T
             int zeros = 0;
             size_t N = node.bag.size();
             for (size_t i = 0; i < N; ++i) {
-                if (at(f, i) == Color::WHITE) zeros++;
+                if (at(f, i) == Color::WHITE)
+                    zeros++;
             }
 #if DS_BENCHMARK
             benchmark_info.treewidth_joins_time +=
@@ -203,7 +207,8 @@ void TreewidthSolver::recoverDS(Instance &g, NiceTreeDecomposition &td, int t, T
             int zeros = 0;
             size_t N = node.bag.size();
             for (size_t i = 0; i < N; ++i) {
-                if (at(f, i) == Color::WHITE) zeros++;
+                if (at(f, i) == Color::WHITE)
+                    zeros++;
             }
 
             // Iterate over all combinations of choosing f_1(v), f_2(v) for positions where

@@ -4,8 +4,9 @@
 
 #include <algorithm>
 #include <cassert>
-#include <vector>
 #include <string>
+#include <vector>
+
 #ifdef DS_TESTING_MODE
 #define DS_ASSERT(cond) assert(cond)
 #else
@@ -76,7 +77,8 @@ void remove(std::vector<T> &a, T v) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
 
     auto it = std::lower_bound(a.begin(), a.end(), v);
-    if (it != a.end() && *it == v) a.erase(it);
+    if (it != a.end() && *it == v)
+        a.erase(it);
 
     DS_ASSERT(is_sorted(a.begin(), a.end()));
 }

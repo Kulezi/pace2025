@@ -17,7 +17,8 @@ bool ReductionRule::apply(Instance& g) const {
 void reduce(Instance& g, std::vector<ReductionRule>& reduction_rules, int complexity) {
 _start:
     for (auto& rule : reduction_rules) {
-        if (rule.complexity_dense > complexity) continue;
+        if (rule.complexity_dense > complexity)
+            continue;
         bool reduced = rule.apply(g);
         ++rule.application_count;
 
@@ -27,6 +28,5 @@ _start:
         }
     }
 }
-
 
 }  // namespace DSHunter

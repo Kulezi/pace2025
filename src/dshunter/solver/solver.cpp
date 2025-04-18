@@ -70,9 +70,12 @@ std::vector<int> Solver::solve(Instance g) {
 }
 
 int presolve_complexity(PresolverType pt) {
-    if (pt == PresolverType::Full) return 999;
-    if (pt == PresolverType::Cheap) return 2;
-    if (pt == PresolverType::None) return 0;
+    if (pt == PresolverType::Full)
+        return 999;
+    if (pt == PresolverType::Cheap)
+        return 2;
+    if (pt == PresolverType::None)
+        return 0;
     throw std::logic_error("encountered incorrect PresolverType (" + std::to_string((int)pt) + ")");
 }
 

@@ -1,10 +1,10 @@
-
 #include "../rrules.h"
 namespace {
 
 bool hasRedEdge(DSHunter::Instance& g, int u, int excluded) {
     for (auto [w, s] : g[u].adj) {
-        if (w != excluded && s == DSHunter::EdgeStatus::FORCED) return true;
+        if (w != excluded && s == DSHunter::EdgeStatus::FORCED)
+            return true;
     }
     return false;
 }

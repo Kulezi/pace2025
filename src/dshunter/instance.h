@@ -6,9 +6,23 @@
 #include <vector>
 namespace DSHunter {
 
-enum class DominationStatus { UNDOMINATED, DOMINATED };
-enum class MembershipStatus { UNDECIDED, DISREGARDED, TAKEN };
-enum class EdgeStatus { UNCONSTRAINED, FORCED, ANY };
+enum class DominationStatus {
+    UNDOMINATED,
+    DOMINATED
+};
+
+enum class MembershipStatus {
+    UNDECIDED,
+    DISREGARDED,
+    TAKEN
+};
+
+enum class EdgeStatus {
+    UNCONSTRAINED,
+    FORCED,
+    ANY
+};
+
 struct Endpoint {
     int to;
     EdgeStatus status;

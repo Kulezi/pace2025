@@ -1,4 +1,3 @@
-
 #include "../rrules.h"
 
 namespace DSHunter {

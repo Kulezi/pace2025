@@ -18,12 +18,14 @@ int greedy_upper_bound(const DSHunter::Instance &g) {
     std::priority_queue<std::pair<int, int>> pq;
     std::vector<int> undominated_neighbors(g.all_nodes.size(), 0);
     for (auto u : nodes) {
-        if (!g.isDominated(u)) undominated_neighbors[u]++;
+        if (!g.isDominated(u))
+            undominated_neighbors[u]++;
         for (auto v : g.neighbourhoodExcluding(u))
-            if (!g.isDominated(v)) undominated_neighbors[u]++;
+            if (!g.isDominated(v))
+                undominated_neighbors[u]++;
 
         if (!g.isTaken(u) && undominated_neighbors[u] > 0)
-            pq.push({undominated_neighbors[u], u});
+            pq.push({ undominated_neighbors[u], u });
     }
 
     std::vector<bool> dominated(g.all_nodes.size(), false);
@@ -37,11 +39,14 @@ int greedy_upper_bound(const DSHunter::Instance &g) {
         if (!dominated[u]) {
             dominated[u] = true;
             --undominated_neighbors[u];
-            if (undominated_neighbors[u] > 0) pq.push({undominated_neighbors[u], u});
+            if (undominated_neighbors[u] > 0)
+                pq.push({ undominated_neighbors[u], u });
             for (auto v : g.neighbourhoodExcluding(u)) {
-                if (taken[v]) continue;
+                if (taken[v])
+                    continue;
                 --undominated_neighbors[v];
-                if (undominated_neighbors[v] > 0) pq.push({undominated_neighbors[v], v});
+                if (undominated_neighbors[v] > 0)
+                    pq.push({ undominated_neighbors[v], v });
             }
         }
     };
@@ -50,7 +55,8 @@ int greedy_upper_bound(const DSHunter::Instance &g) {
         auto [d, v] = pq.top();
         pq.pop();
         // This might not be the minimum degree node anymore.
-        if (d > undominated_neighbors[v] || taken[v]) continue;
+        if (d > undominated_neighbors[v] || taken[v])
+            continue;
 
         dominate(v);
         taken[v] = true;

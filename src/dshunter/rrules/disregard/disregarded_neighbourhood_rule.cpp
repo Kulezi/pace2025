@@ -1,13 +1,13 @@
-
 #include "../rrules.h"
 namespace {
-    bool allNeighboursArePink(DSHunter::Instance &g, int u) {
-        for (auto [v, _] : g[u].adj) {
-            if (!g.isDisregarded(v)) return false;
-        }
-        return true;
+bool allNeighboursArePink(DSHunter::Instance& g, int u) {
+    for (auto [v, _] : g[u].adj) {
+        if (!g.isDisregarded(v))
+            return false;
     }
+    return true;
 }
+}  // namespace
 namespace DSHunter {
 
 bool disregardedNeighbourhoodRule(Instance& g) {

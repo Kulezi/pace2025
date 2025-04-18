@@ -4,7 +4,8 @@ using DSHunter::intersect, DSHunter::contains, DSHunter::unite, DSHunter::remove
 
 bool hasUndominatedNode(DSHunter::Instance& g, std::vector<int> nodes) {
     for (auto v : nodes)
-        if (!g.isDominated(v)) return true;
+        if (!g.isDominated(v))
+            return true;
     return false;
 }
 
@@ -14,7 +15,8 @@ bool isExit(const DSHunter::Instance& g, int u, int v) {
     for (auto [w, status] : g[u].adj) {
         // This will execute at most O(deg(v)) times, since g.hasEdge(v, w) can be true only
         // for deg(v) different vertices w.
-        if (w != v && (!g.hasEdge(v, w) || status == DSHunter::EdgeStatus::FORCED)) return true;
+        if (w != v && (!g.hasEdge(v, w) || status == DSHunter::EdgeStatus::FORCED))
+            return true;
     }
 
     return false;
@@ -25,7 +27,8 @@ bool isExit(const DSHunter::Instance& g, int u, int v) {
 std::vector<int> exitNeighbourhood(DSHunter::Instance& g, int u) {
     std::vector<int> N_exit;
     for (auto [v, _] : g[u].adj) {
-        if (isExit(g, v, u)) N_exit.push_back(v);
+        if (isExit(g, v, u))
+            N_exit.push_back(v);
     }
 
     return N_exit;
@@ -40,7 +43,8 @@ bool alberMainRule1(Instance& g) {
 
         for (auto v : remove(N_v_without, N_exit)) {
             auto N_u = g.neighbourhoodExcluding(v);
-            if (!intersect(N_u, N_exit).empty()) N_guard.push_back(v);
+            if (!intersect(N_u, N_exit).empty())
+                N_guard.push_back(v);
         }
 
         N_prison = remove(remove(N_v_without, N_exit), N_guard);

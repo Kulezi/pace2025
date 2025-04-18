@@ -38,8 +38,10 @@ Color at(TernaryFun f, size_t x) {
 }
 
 char val(Color c) {
-    if ((int)c == 0) return '0';
-    if ((int)c == 1) return '^';
+    if ((int)c == 0)
+        return '0';
+    if ((int)c == 1)
+        return '^';
     return '1';
 }
 
@@ -52,7 +54,8 @@ TernaryFun toInt(std::string s) {
 }
 
 std::string toString(TernaryFun f) {
-    if (f == 0) return "0";
+    if (f == 0)
+        return "0";
     std::string res;
     while (f > 0) {
         res += (char)((f % 3) + '0');

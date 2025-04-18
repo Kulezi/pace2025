@@ -15,7 +15,8 @@ Instance::Instance(std::istream &in) : ds{} {
         std::stringstream tokens(line);
         std::string s;
         tokens >> s;
-        if (s[0] == 'c') continue;
+        if (s[0] == 'c')
+            continue;
         if (s[0] == 'p') {
             parse_header(tokens, header_edges);
         } else {
@@ -44,7 +45,7 @@ void Instance::parse_header(std::stringstream &tokens, int &header_edges) {
     //     throw std::logic_error("expected problem type to be 'ds', found '" + problem + "'");
 
     all_nodes.resize(n_nodes + 1,
-                     {{}, DominationStatus::UNDOMINATED, MembershipStatus::UNDECIDED, false});
+                     { {}, DominationStatus::UNDOMINATED, MembershipStatus::UNDECIDED, false });
     for (int i = 1; i <= n_nodes; ++i) {
         nodes.push_back(i);
     }
@@ -96,7 +97,7 @@ void Instance::forceEdge(int u, int v) {
 }
 
 EdgeStatus Instance::getEdgeStatus(int u, int v) const {
-    auto it = lower_bound(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{v, EdgeStatus::ANY});
+    auto it = lower_bound(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{ v, EdgeStatus::ANY });
     DS_ASSERT(it != all_nodes[u].adj.end());
     return it->status;
 }
@@ -107,7 +108,8 @@ int Instance::deg(int v) const { return (int)all_nodes[v].adj.size(); }
 int Instance::forcedDeg(int v) const {
     int res = 0;
     for (auto e : all_nodes[v].adj)
-        if (e.status == EdgeStatus::FORCED) res++;
+        if (e.status == EdgeStatus::FORCED)
+            res++;
     return res;
 }
 
@@ -117,7 +119,7 @@ int Instance::addNode() {
     DS_TRACE(std::cerr << __func__ << std::endl);
     int v = all_nodes.size();
     nodes.push_back(all_nodes.size());
-    all_nodes.push_back({{}, DominationStatus::UNDOMINATED, MembershipStatus::UNDECIDED, true});
+    all_nodes.push_back({ {}, DominationStatus::UNDOMINATED, MembershipStatus::UNDECIDED, true });
     return v;
 }
 
@@ -125,11 +127,12 @@ int Instance::addNode() {
 // Complexity: O(deg(v) + sum over deg(v) of neighbours)
 void Instance::removeNode(int v) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
-    if (find(nodes.begin(), nodes.end(), v) == nodes.end()) return;
+    if (find(nodes.begin(), nodes.end(), v) == nodes.end())
+        return;
     for (auto [u, status] : all_nodes[v].adj) {
         // Edges like this can only be removed by calling take().
         DS_ASSERT(status != EdgeStatus::FORCED || isTaken(v));
-        remove(all_nodes[u].adj, Endpoint{v, status});
+        remove(all_nodes[u].adj, Endpoint{ v, status });
         DS_ASSERT(is_sorted(all_nodes[u].adj.begin(), all_nodes[u].adj.end()));
     }
     all_nodes[v].adj.clear();
@@ -148,16 +151,16 @@ void Instance::removeNodes(const std::vector<int> &l) {
 // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
 void Instance::addEdge(int u, int v) {
     DS_TRACE(std::cerr << __func__ << dbg(u) << dbg(v) << std::endl);
-    insert(all_nodes[u].adj, Endpoint{v, EdgeStatus::UNCONSTRAINED});
-    insert(all_nodes[v].adj, Endpoint{u, EdgeStatus::UNCONSTRAINED});
+    insert(all_nodes[u].adj, Endpoint{ v, EdgeStatus::UNCONSTRAINED });
+    insert(all_nodes[v].adj, Endpoint{ u, EdgeStatus::UNCONSTRAINED });
 }
 
 // Removes edge (v, w) from the graph.
 // Complexity: O(deg(v) + deg(w))
 void Instance::removeEdge(int v, int w) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << dbg(w) << std::endl);
-    remove(all_nodes[v].adj, {w, EdgeStatus::ANY});
-    remove(all_nodes[w].adj, {v, EdgeStatus::ANY});
+    remove(all_nodes[v].adj, { w, EdgeStatus::ANY });
+    remove(all_nodes[w].adj, { v, EdgeStatus::ANY });
 }
 
 // Same meaning as N[v] notation.
@@ -198,7 +201,7 @@ std::vector<int> Instance::neighbourhoodExcluding(int v) const {
 // Returns true if and only if undirected edge (u, v) is present in the graph.
 // Complexity: O(deg(u)) !
 bool Instance::hasEdge(int u, int v) const {
-    return std::find(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{v, EdgeStatus::ANY}) !=
+    return std::find(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{ v, EdgeStatus::ANY }) !=
            all_nodes[u].adj.end();
 }
 
@@ -257,7 +260,8 @@ std::vector<std::vector<int>> Instance::split() const {
         }
     }
 
-    if (components <= 1) return {};
+    if (components <= 1)
+        return {};
     std::vector<std::vector<int>> result(components, std::vector<int>());
     for (auto v : nodes) {
         result[component[v]].push_back(v);
@@ -266,9 +270,9 @@ std::vector<std::vector<int>> Instance::split() const {
 }
 
 void Instance::setEdgeStatus(int u, int v, EdgeStatus status) {
-    auto it_u = lower_bound(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{v, EdgeStatus::ANY});
+    auto it_u = lower_bound(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{ v, EdgeStatus::ANY });
     DS_ASSERT(it_u != all_nodes[u].adj.end());
-    auto it_v = lower_bound(all_nodes[v].adj.begin(), all_nodes[v].adj.end(), Endpoint{u, EdgeStatus::ANY});
+    auto it_v = lower_bound(all_nodes[v].adj.begin(), all_nodes[v].adj.end(), Endpoint{ u, EdgeStatus::ANY });
     DS_ASSERT(it_v != all_nodes[v].adj.end());
 
     it_u->status = it_v->status = status;
