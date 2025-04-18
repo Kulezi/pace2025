@@ -37,6 +37,7 @@ std::vector<int> exitNeighbourhood(DSHunter::Instance& g, int u) {
 namespace DSHunter {
 bool alberMainRule1(Instance& g) {
     for (auto u : g.nodes) {
+        if (g.isDisregarded(u)) continue;
         auto N_v_without = g.neighbourhoodExcluding(u);
 
         std::vector<int> N_exit = exitNeighbourhood(g, u), N_guard, N_prison;

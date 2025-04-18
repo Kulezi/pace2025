@@ -16,9 +16,9 @@ const std::vector<ReductionRule> get_default_reduction_rules() {
         AlberSimpleRule3,
         // AlberSimpleRule4,
 
-        // // Then more expensive rules.
-        // AlberMainRule1,
-        // AlberMainRule2
+        // Then more expensive rules.
+        AlberMainRule1,
+        AlberMainRule2
     };
     return rules;
 }

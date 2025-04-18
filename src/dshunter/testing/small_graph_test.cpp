@@ -30,7 +30,6 @@ int main() {
                     }
                 }
             };
-            // print_graph(std::cerr);
 
             std::stringstream g_str;
             print_graph(g_str);

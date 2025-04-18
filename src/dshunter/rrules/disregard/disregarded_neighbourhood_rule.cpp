@@ -12,7 +12,7 @@ namespace DSHunter {
 
 bool disregardedNeighbourhoodRule(Instance& g) {
     for (auto u : g.nodes) {
-        if (!g.isDisregarded(u) && allNeighboursArePink(g, u)) {
+        if (!g.isDominated(u) && !g.isDisregarded(u) && allNeighboursArePink(g, u)) {
             g.take(u);
             return true;
         }

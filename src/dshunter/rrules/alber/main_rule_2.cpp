@@ -206,13 +206,14 @@ bool alberMainRule2(Instance& g) {
     // since we only look at distances upto 3.
     int zero_dist = BFS_INF - 4;
     for (auto v : g.nodes) {
+        if (g.isDisregarded(v)) continue;
         std::queue<int> q;
         dis[v] = zero_dist;
         q.push(v);
         while (!q.empty()) {
             int w = q.front();
             q.pop();
-            if (dis[w] > zero_dist && applyAlberMainRule2(g, v, w))
+            if (dis[w] > zero_dist && !g.isDisregarded(w) && applyAlberMainRule2(g, v, w))
                 return true;
             if (dis[w] < zero_dist + 4) {
                 for (auto [x, _] : g[w].adj) {
