@@ -71,6 +71,10 @@ void Instance::markTaken(int v) {
     all_nodes[v].membership_status = MembershipStatus::TAKEN;
 }
 
+bool Instance::isDisregarded(int v) const {
+    return all_nodes[v].membership_status == MembershipStatus::DISREGARDED;
+}
+
 void Instance::markDisregarded(int v) {
     all_nodes[v].membership_status = MembershipStatus::DISREGARDED;
 }

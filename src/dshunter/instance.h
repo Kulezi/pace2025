@@ -56,6 +56,8 @@ struct Instance {
 
     bool isTaken(int v) const;
     void markTaken(int v);
+
+    bool isDisregarded(int v) const;
     void markDisregarded(int v);
     void forceEdge(int u, int v);
 

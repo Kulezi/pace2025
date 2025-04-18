@@ -2,7 +2,7 @@
 namespace DSHunter {
 const std::vector<ReductionRule> get_default_reduction_rules() {
     static const std::vector<ReductionRule> rules = {
-        DisregardRule,
+        DisregardRule, RemoveDisregardedRule,
         // Then rules that don't affect the graph structure.
         ForceEdgeRule,
 
