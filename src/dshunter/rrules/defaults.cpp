@@ -13,7 +13,7 @@ const std::vector<ReductionRule> get_default_reduction_rules() {
         // First the cheap rules that only remove vertices.
         AlberSimpleRule1,
         AlberSimpleRule2,
-        // AlberSimpleRule3,
+        AlberSimpleRule3,
         // AlberSimpleRule4,
 
         // // Then more expensive rules.

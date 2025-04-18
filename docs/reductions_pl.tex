@@ -93,12 +93,15 @@ Oznaczając krawędź $(u, v)$ jako czerwoną oznaczamy również $N[u] \cap N[v
 \begin{itemize}
     \item \textbf{Test:} Zakładając aplikowanie redukcji $(1.1.3)$ przed tą, nie istnieje sytuacja, w której zarówno wierzchołek v jak i w jest różowy. 
     \item jeśli obie krawędzie wierzchołka u są czarne, oznacz krawędź (v, w) jako czerwoną i usuń wierchołek u.
+    \item \textbf{Test:} Zakładając aplikowanie redukcji $(1.2)$ przed tą, nie istnieje sytuacja, w której jakiś koniec czerwonej krawędzi jest różowy.
     \item jeśli tylko krawędź (u, w) jest czerwona, weź w do rozwiązania i usuń wierzchołek u.
     \item jeśli tylko krawędź (u, v) jest czerwona, weź v do rozwiązania i usuń wierzchołek u.
     \item jeśli obie krawędzie są czerwone - \textbf{nie rób nic} (pomysł: ściągnąć do jednego niezdominowanego wierzchołka $g$, wtedy $g \in S' \implies \{v, w\} \subseteq S$,
     a $g \not\in S' \implies u \in S$).
 \end{itemize}
 }
+
+Czyli pod założeniem wyczerpania poprzednich redukcji bez zmian.
 
 \subsection{Wpływ na AlberMainRule1}
 Ta redukcja polega na zachłannym wzięciu wierzchołka $v$ jeśli jego sąsiedztwo spełnia odpowiednie kryteria.
