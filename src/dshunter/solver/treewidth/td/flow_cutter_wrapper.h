@@ -14,9 +14,7 @@ namespace DSHunter::FlowCutter {
 // Returns the first decomposition that will have treewidth under treewidth_threshold.
 // Note that time_limit only tells the FlowCutter to stop looking for new solutions, so it might
 // terminate a lot later.
-DSHunter::TreeDecomposition decompose(DSHunter::Instance input_graph, int random_seed,
-                                      std::chrono::milliseconds time_limit,
-                                      int treewidth_threshold);
+DSHunter::TreeDecomposition decompose(DSHunter::Instance input_graph, int random_seed, std::chrono::milliseconds time_limit, int treewidth_threshold);
 
 }  // namespace DSHunter::FlowCutter
 

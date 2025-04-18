@@ -23,7 +23,8 @@ int32_t main() {
     shuffle(v.begin(), v.end(), rng);
     v.resize(m);
     for (auto [a, b] : v) {
-        if (R(0, 1)) swap(a, b);
+        if (R(0, 1))
+            swap(a, b);
         cout << a << " " << b << "\n";
     }
 }

@@ -1,0 +1,13 @@
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 0
+AllowShortFunctionsOnASingleLine: true
+AllowShortBlocksOnASingleLine: true
+AllowShortEnumsOnASingleLine: false 
+AllowShortIfStatementsOnASingleLine: false
+BreakBeforeBraces: Attach
+BinPackArguments: false
+BinPackParameters: false
+Cpp11BracedListStyle: false
+AlignAfterOpenBracket: Align
+AlignOperands: true

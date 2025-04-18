@@ -18,14 +18,16 @@ RootedTreeDecomposition::RootedTreeDecomposition(const DSHunter::TreeDecompositi
         DS_ASSERT([&]() {
             // Check if depth first search filled all nodes.
             for (auto &node : decomp) {
-                if (node.id == UNASSIGNED) return false;
-                if (node.parent_id == UNASSIGNED) return false;
+                if (node.id == UNASSIGNED)
+                    return false;
+                if (node.parent_id == UNASSIGNED)
+                    return false;
             }
 
             return true;
         }());
     } else {
-        decomp = {DecompositionNode(0, NONE, {}, {})};
+        decomp = { DecompositionNode(0, NONE, {}, {}) };
     }
 }
 
@@ -48,7 +50,7 @@ void RootedTreeDecomposition::binarizeJoins() { binarizeJoins_(root); }
 void RootedTreeDecomposition::forceEmptyRootAndLeaves() {
     insertEmptyBagsUnderLeaves(root);
 
-    int new_root = makeDecompositionNode(NONE, {}, {root});
+    int new_root = makeDecompositionNode(NONE, {}, { root });
     decomp[root].parent_id = new_root;
     root = new_root;
 }
@@ -80,10 +82,9 @@ void RootedTreeDecomposition::makeNodes(int u, const TreeDecomposition &td, int 
 }
 
 // Returns the index of the newly created node in decomp.
-int RootedTreeDecomposition::makeDecompositionNode(int parent_id, std::vector<int> bag,
-                                                   std::vector<int> children) {
+int RootedTreeDecomposition::makeDecompositionNode(int parent_id, std::vector<int> bag, std::vector<int> children) {
     int id = decomp.size();
-    decomp.push_back(DecompositionNode{id, parent_id, bag, children});
+    decomp.push_back(DecompositionNode{ id, parent_id, bag, children });
     return id;
 }
 
@@ -92,7 +93,7 @@ void RootedTreeDecomposition::equalizeJoinChildren_(int node_id) {
         equalizeJoinChildren_(child);
 
         // Insert a node with bag equal to to the join node between itself and the child.
-        auto intermediate_node = makeDecompositionNode(node_id, decomp[node_id].bag, {child});
+        auto intermediate_node = makeDecompositionNode(node_id, decomp[node_id].bag, { child });
         decomp[child].parent_id = intermediate_node;
         child = intermediate_node;
     }
@@ -109,7 +110,7 @@ void RootedTreeDecomposition::binarizeJoins_(int node_id) {
         auto r = decomp[node_id].children.back();
         decomp[node_id].children.pop_back();
 
-        auto intermediate_node = makeDecompositionNode(node_id, decomp[node_id].bag, {l, r});
+        auto intermediate_node = makeDecompositionNode(node_id, decomp[node_id].bag, { l, r });
         decomp[l].parent_id = intermediate_node;
         decomp[r].parent_id = intermediate_node;
         decomp[node_id].children.push_back(intermediate_node);

@@ -7,14 +7,14 @@ constexpr int UNSET = -1, INF = 1'000'000'000;
 // Returns true if instance was solved. Solution set is stored in given instance.
 // Returns false if it would lead to exceeding the memory limit.
 bool TreewidthSolver::solve(Instance &g, std::chrono::seconds decomposition_time_budget) {
-    auto o = NiceTreeDecomposition::decompose(g, decomposition_time_budget, GOOD_ENOUGH_TREEWIDTH,
-                                              MAX_HANDLED_TREEWIDTH);
-    if (!o.has_value()) return false;
+    auto o = NiceTreeDecomposition::decompose(g, decomposition_time_budget, GOOD_ENOUGH_TREEWIDTH, MAX_HANDLED_TREEWIDTH);
+    if (!o.has_value())
+        return false;
     auto td = o.value();
 
     DS_TRACE(std::cerr << dbg(td.width()) << " " << dbg(getMemoryUsage(td)) << std::endl);
     DS_TRACE(td.print());
-    
+
     DS_ASSERT(td.width() <= MAX_HANDLED_TREEWIDTH);
     if (getMemoryUsage(td) > MAX_MEMORY_IN_BYTES)
         return false;
@@ -26,7 +26,7 @@ bool TreewidthSolver::solve(Instance &g, std::chrono::seconds decomposition_time
     return true;
 }
 
-inline int TreewidthSolver::cost(const Instance &g, int v) { return g.is_extra[v] ? INF : 1; }
+inline int TreewidthSolver::cost(const Instance &g, int v) { return g[v].is_extra ? INF : 1; }
 
 // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3] extended to handle forced
 // edges.
@@ -34,8 +34,10 @@ int TreewidthSolver::getC(const Instance &g, NiceTreeDecomposition &td, int t, T
     const auto &node = td[t];
     DS_ASSERT(f < pow3[node.bag.size()]);
 
-    if (!c[t].empty() && c[t][f] != UNSET) return c[t][f];
-    if (c[t].empty()) c[t].resize(pow3[node.bag.size()], UNSET);
+    if (!c[t].empty() && c[t][f] != UNSET)
+        return c[t][f];
+    if (c[t].empty())
+        c[t].resize(pow3[node.bag.size()], UNSET);
     c[t][f] = INF;
     auto bag_pos = [&](const std::vector<int> &bag, int v) -> int {
         int pos = 0;
@@ -50,7 +52,7 @@ int TreewidthSolver::getC(const Instance &g, NiceTreeDecomposition &td, int t, T
             int pos = bag_pos(node.bag, node.v);
             Color f_v = at(f, pos);
             // This vertex could already be dominated by some reduction rule.
-            if (f_v == Color::WHITE && g.getNodeStatus(node.v) != DOMINATED)
+            if (f_v == Color::WHITE && !g.isDominated(node.v))
                 return c[t][f] = INF;
             else {
                 return c[t][f] = getC(g, td, node.l_child, cut(f, pos));
@@ -64,8 +66,9 @@ int TreewidthSolver::getC(const Instance &g, NiceTreeDecomposition &td, int t, T
             Color f_v = at(f, pos_v);
 
             EdgeStatus edge_status = g.getEdgeStatus(node.to, node.v);
-            DS_ASSERT(edge_status == UNCONSTRAINED || edge_status == FORCED);
-            if (edge_status == FORCED) {
+            DS_ASSERT(edge_status == EdgeStatus::UNCONSTRAINED ||
+                      edge_status == EdgeStatus::FORCED);
+            if (edge_status == EdgeStatus::FORCED) {
                 // We are forced to take at least one of the endpoints of the edge to the
                 // dominating set.
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
@@ -98,7 +101,8 @@ int TreewidthSolver::getC(const Instance &g, NiceTreeDecomposition &td, int t, T
             int zeros = 0;
             size_t N = node.bag.size();
             for (size_t i = 0; i < N; ++i) {
-                if (at(f, i) == Color::WHITE) zeros++;
+                if (at(f, i) == Color::WHITE)
+                    zeros++;
             }
 #if DS_BENCHMARK
             benchmark_info.treewidth_joins_time +=
@@ -166,8 +170,9 @@ void TreewidthSolver::recoverDS(Instance &g, NiceTreeDecomposition &td, int t, T
             Color f_v = at(f, pos_v);
 
             EdgeStatus edge_status = g.getEdgeStatus(node.to, node.v);
-            DS_ASSERT(edge_status == UNCONSTRAINED || edge_status == FORCED);
-            if (edge_status == FORCED) {
+            DS_ASSERT(edge_status == EdgeStatus::UNCONSTRAINED ||
+                      edge_status == EdgeStatus::FORCED);
+            if (edge_status == EdgeStatus::FORCED) {
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
                     recoverDS(g, td, node.l_child, set(f, pos_v, Color::GRAY));
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)
@@ -202,7 +207,8 @@ void TreewidthSolver::recoverDS(Instance &g, NiceTreeDecomposition &td, int t, T
             int zeros = 0;
             size_t N = node.bag.size();
             for (size_t i = 0; i < N; ++i) {
-                if (at(f, i) == Color::WHITE) zeros++;
+                if (at(f, i) == Color::WHITE)
+                    zeros++;
             }
 
             // Iterate over all combinations of choosing f_1(v), f_2(v) for positions where

@@ -6,8 +6,23 @@
 #include <vector>
 namespace DSHunter {
 
-enum NodeStatus { UNDOMINATED, DOMINATED, TAKEN };
-enum EdgeStatus { UNCONSTRAINED, FORCED, ANY };
+enum class DominationStatus {
+    UNDOMINATED,
+    DOMINATED
+};
+
+enum class MembershipStatus {
+    UNDECIDED,
+    DISREGARDED,
+    TAKEN
+};
+
+enum class EdgeStatus {
+    UNCONSTRAINED,
+    FORCED,
+    ANY
+};
+
 struct Endpoint {
     int to;
     EdgeStatus status;
@@ -17,23 +32,27 @@ struct Endpoint {
     bool operator==(const Endpoint &rhs) const { return to == rhs.to; };
 };
 
+struct Node {
+    // List of adjacent nodes sorted by increasing node id.
+    // Order is maintained to make set union/intersection possible in O(|A| + |B|).
+    std::vector<Endpoint> adj;
+
+    DominationStatus domination_status;
+    MembershipStatus membership_status;
+
+    // Extra vertices cannot be taken into the dominating set, we assume they mean if we take them
+    // we should take all their neighbours instead.
+    bool is_extra;
+};
+
 // Undirected graph representing an instance of dominating set problem.
 // Nodes are marked with a domination status.
 // Node labels are assigned incrementally starting with 1.
 struct Instance {
-    int next_free_id;
-
-    // List of nodes, sorted by increasing node id.
+    // List of active node ids sorted increasingly.
     std::vector<int> nodes;
 
-    // adj[v] = list of adjacent nodes sorted by increasing node id.
-    // Order is maintained to make set union/intersection possible in O(|A| + |B|).
-    std::vector<std::vector<Endpoint>> adj;
-    std::vector<NodeStatus> status;
-
-    // Extra vertices cannot be taken into the dominating set, we assume they mean if we take them
-    // we should take all their neighbours instead.
-    std::vector<bool> is_extra;
+    std::vector<Node> all_nodes;
 
     // Nodes already removed from the graph considered as the dominating set candidates.
     std::vector<int> ds;
@@ -42,26 +61,36 @@ struct Instance {
     Instance(std::istream &in);
 
     void parse_header(std::stringstream &tokens, int &header_edges);
-    // Returns an instance representing a subgraph induced by a sorted list of nodes to take.
-    Instance(Instance &i, std::vector<int> to_take);
+
     // Returns the number of nodes in the graph.
     size_t nodeCount() const;
-    void setNodeStatus(int v, NodeStatus c);
-    NodeStatus getNodeStatus(int v) const;
+
+    bool isDominated(int v) const;
+    void markDominated(int v);
+
+    bool isTaken(int v) const;
+    void markTaken(int v);
+
+    bool isDisregarded(int v) const;
+    void markDisregarded(int v);
     void forceEdge(int u, int v);
 
     EdgeStatus getEdgeStatus(int u, int v) const;
 
     // Returns the degree of given node.
     int deg(int v) const;
+
+    // Returns the count of forced edges adjacent to given node.
     int forcedDeg(int v) const;
 
     // Creates and returns the id of the created node.
     // Complexity: O(1)
     int addNode();
+
     // Removes the node with given id.
     // Complexity: O(deg(v) + sum over deg(v) of neighbours)
     void removeNode(int v);
+
     // Removes nodes in the given list from the graph.
     // Complexity: O(sum of deg(v) over l ∪ N(l))
     void removeNodes(const std::vector<int> &l);
@@ -69,6 +98,7 @@ struct Instance {
     // Adds an unconstrained edge between nodes with id's u and v.
     // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
     void addEdge(int u, int v);
+
     // Removes edge (v, w) from the graph.
     // Complexity: O(deg(v) + deg(w))
     void removeEdge(int v, int w);
@@ -86,29 +116,22 @@ struct Instance {
     // Same meaning as N(v) notation.
     // Complexity: O(1)
     std::vector<int> neighbourhoodExcluding(int v) const;
+
     // Returns true if and only if undirected edge (u, v) is present in the graph.
     // Complexity: O(deg(u)) !
     bool hasEdge(int u, int v) const;
-    // Returns the minimum degree node of given status present in the graph.
-    // Returns -1 if there is no such node.
-    // Complexity: O(n)
-    int minDegNodeOfStatus(NodeStatus s) const;
 
     // Inserts given node to the dominating set, changing the status of
     // it's neighours to DOMINATED if they are not, the node is removed from the graph afterwards.
     // Complexity: O(deg(v)) or O(sum of degrees of neighbours) in case of extra vertices.
     void take(int v);
+
     // Splits the list of graph nodes into individual connected components.
     // Note in case of a connected graph it returns an empty list.
     // Complexity: O(n + m)
     std::vector<std::vector<int>> split() const;
 
-    void saveVCInstance(std::ostream &out);
-
-    void saveAnnotatedDominatingSetInstance(std::ostream &out);
-
-    // Prints the graph to stdout in a human-readable format.
-    void print() const;
+    const Node &operator[](int v) const;
 
    private:
     void setEdgeStatus(int u, int v, EdgeStatus status);

@@ -8,12 +8,22 @@
 #include "rooted_tree_decomposition.h"
 namespace DSHunter {
 
-enum class DecompositionError { NOT_ENOUGH_MEMORY, TOO_LARGE_TREEWIDTH };
+enum class DecompositionError {
+    NOT_ENOUGH_MEMORY,
+    TOO_LARGE_TREEWIDTH
+};
 
 // Represents a tree decomposition rooted at node labeled 0.
 struct NiceTreeDecomposition {
    public:
-    enum class NodeType { IntroduceVertex, IntroduceEdge, Leaf, Forget, Join };
+    enum class NodeType {
+        IntroduceVertex,
+        IntroduceEdge,
+        Leaf,
+        Forget,
+        Join
+    };
+    
     struct Node {
         int id;
         NodeType type;
@@ -26,8 +36,7 @@ struct NiceTreeDecomposition {
     };
 
     static std::optional<NiceTreeDecomposition> decompose(
-        const Instance& g, std::chrono::seconds decomposition_time_budget, int tw_good_enough,
-        int tw_too_much);
+        const Instance& g, std::chrono::seconds decomposition_time_budget, int tw_good_enough, int tw_too_much);
 
     const Node& operator[](int v) const;
     int root;
@@ -43,16 +52,14 @@ struct NiceTreeDecomposition {
 
     // Assumes rooted_decomposition is already normalized!
     NiceTreeDecomposition(Instance g, const RootedTreeDecomposition& rooted_decomposition);
-    int createNode(NodeType type, std::vector<int> bag = {}, int v = NONE, int to = NONE,
-                   int lChild = NONE, int rChild = NONE);
+    int createNode(NodeType type, std::vector<int> bag = {}, int v = NONE, int to = NONE, int lChild = NONE, int rChild = NONE);
 
     void printDecomp(int v, int level) const;
 
     int makeDecompositionNodeFromRootedDecomposition(const RootedTreeDecomposition& rtd,
                                                      int rtd_node_id);
 
-    int makeIntroduceForgetSequenceFrom(std::vector<int> head_bag, std::vector<int> tail_bag,
-                                        int tail_id);
+    int makeIntroduceForgetSequenceFrom(std::vector<int> head_bag, std::vector<int> tail_bag, int tail_id);
 };
 
 }  // namespace DSHunter

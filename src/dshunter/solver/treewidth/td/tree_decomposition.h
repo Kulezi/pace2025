@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include "../../../instance.h"
-#include "../../../rrules.h"
 
 namespace DSHunter {
 

@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "../../instance.h"
-#include "../../rrules.h"
 namespace DSHunter {
 
 void BranchingSolver::take(Instance g, int v, std::vector<int> &best_ds, int level) {
@@ -26,7 +25,8 @@ void BranchingSolver::take(Instance g, int v, std::vector<int> &best_ds, int lev
         g.ds.insert(g.ds.end(),
                     ds.begin() + static_cast<std::vector<int>::difference_type>(g.ds.size()),
                     ds.end());
-        if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
+        if (!best_ds.empty() && g.ds.size() >= best_ds.size())
+            return;
     }
 
     best_ds = g.ds;
@@ -34,18 +34,20 @@ void BranchingSolver::take(Instance g, int v, std::vector<int> &best_ds, int lev
 
 void BranchingSolver::solve(const Instance g, std::vector<int> &best_ds, int level) {
     throw std::logic_error("reimplement for forced edges!");
-    int v = g.minDegNodeOfStatus(UNDOMINATED);
-    if (!best_ds.empty() && g.ds.size() >= best_ds.size()) return;
+    int v = -1;  // WONTFIX: Was solved in another branch, will be remove.
+    if (!best_ds.empty() && g.ds.size() >= best_ds.size())
+        return;
     if (v == -1) {
         best_ds = g.ds;
         return;
     }
 
     // Branch 0: v belongs to DS -> dominate N(v)
-    if (g.deg(v) != 1) take(g, v, best_ds, level + 1);
+    if (g.deg(v) != 1)
+        take(g, v, best_ds, level + 1);
 
     // Branches 1, ..., deg(v): v doesn't belong to DS -> take any neighbour to DS.
-    for (auto [u, _] : g.adj[v]) {
+    for (auto [u, _] : g[v].adj) {
         take(g, u, best_ds, level + 1);
     }
 }

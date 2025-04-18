@@ -4,15 +4,16 @@
 
 #include <algorithm>
 #include <cassert>
-#include <vector>
 #include <string>
-#ifdef DEBUG_MODE
+#include <vector>
+
+#ifdef DS_TESTING_MODE
 #define DS_ASSERT(cond) assert(cond)
 #else
 #define DS_ASSERT(cond)
 #endif
 
-#ifdef TRACING_MODE
+#ifdef DS_TRACING_MODE
 #define DS_TRACE(x) x
 #else
 #define DS_TRACE(x)
@@ -76,7 +77,8 @@ void remove(std::vector<T> &a, T v) {
     DS_ASSERT(is_sorted(a.begin(), a.end()));
 
     auto it = std::lower_bound(a.begin(), a.end(), v);
-    if (it != a.end() && *it == v) a.erase(it);
+    if (it != a.end() && *it == v)
+        a.erase(it);
 
     DS_ASSERT(is_sorted(a.begin(), a.end()));
 }
@@ -99,7 +101,7 @@ std::vector<T> remove(std::vector<T> a, const std::vector<T> &b) {
         } else if (a[i] == b[j]) {
             ++i;
             ++j;
-        } else if (a[i] > b[j]) {
+        } else if (b[j] < a[i]) {
             ++j;
         }
     }

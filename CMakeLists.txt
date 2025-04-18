@@ -49,7 +49,19 @@ set(HEADER_IMPLEMENTATIONS
     src/dshunter/instance.cpp
     src/dshunter/solver/treewidth/td/nice_tree_decomposition.cpp
     src/dshunter/solver/treewidth/td/rooted_tree_decomposition.cpp
-    src/dshunter/rrules.cpp
+    src/dshunter/rrules/alber/main_rule_1.cpp
+    src/dshunter/rrules/alber/main_rule_2.cpp
+    src/dshunter/rrules/alber/simple_rule_1.cpp
+    src/dshunter/rrules/alber/simple_rule_2.cpp
+    src/dshunter/rrules/alber/simple_rule_3.cpp
+    src/dshunter/rrules/alber/simple_rule_4.cpp
+    src/dshunter/rrules/force/force_edge_rule.cpp
+    src/dshunter/rrules/disregard/disregard_rule.cpp
+    src/dshunter/rrules/disregard/remove_disregarded_rule.cpp
+    src/dshunter/rrules/disregard/disregarded_neighbourhood_rule.cpp
+    src/dshunter/rrules/reduce.cpp
+    src/dshunter/rrules/apply.cpp
+    src/dshunter/rrules/defaults.cpp
     src/dshunter/solver/treewidth/ternary.cpp
     src/dshunter/solver/treewidth/td/tree_decomposition.cpp
     src/dshunter/solver/treewidth/treewidth_solver.cpp
@@ -92,10 +104,10 @@ set(SOURCE_FILES
 foreach(SRC ${SOURCE_FILES})
     # Get the executable name (based on the source file name without extension)
     get_filename_component(EXEC_NAME ${SRC} NAME_WE)
-    
+
     add_executable(${EXEC_NAME} ${SRC})
     target_link_libraries(${EXEC_NAME} PRIVATE core)
-    
+
     # Apply common executable definitions
     target_compile_definitions(${EXEC_NAME} PRIVATE DEBUG_MODE)
 endforeach()

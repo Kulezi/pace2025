@@ -15,7 +15,8 @@ Instance::Instance(std::istream &in) : ds{} {
         std::stringstream tokens(line);
         std::string s;
         tokens >> s;
-        if (s[0] == 'c') continue;
+        if (s[0] == 'c')
+            continue;
         if (s[0] == 'p') {
             parse_header(tokens, header_edges);
         } else {
@@ -23,12 +24,12 @@ Instance::Instance(std::istream &in) : ds{} {
             int b = 0;
             tokens >> b;
             ++read_edges;
-            adj[a].emplace_back(b, UNCONSTRAINED);
-            adj[b].emplace_back(a, UNCONSTRAINED);
+            all_nodes[a].adj.emplace_back(b, EdgeStatus::UNCONSTRAINED);
+            all_nodes[b].adj.emplace_back(a, EdgeStatus::UNCONSTRAINED);
         }
     }
 
-    for (auto v : nodes) sort(adj[v].begin(), adj[v].end());
+    for (auto v : nodes) sort(all_nodes[v].adj.begin(), all_nodes[v].adj.end());
 
     if (header_edges != read_edges)
         throw std::logic_error("expected " + std::to_string(header_edges) + " edges, found " +
@@ -43,71 +44,72 @@ void Instance::parse_header(std::stringstream &tokens, int &header_edges) {
     // if (problem != "ds")
     //     throw std::logic_error("expected problem type to be 'ds', found '" + problem + "'");
 
-    adj.resize(n_nodes + 1);
-    status.resize(n_nodes + 1, UNDOMINATED);
-    is_extra.resize(n_nodes + 1, false);
+    all_nodes.resize(n_nodes + 1,
+                     { {}, DominationStatus::UNDOMINATED, MembershipStatus::UNDECIDED, false });
     for (int i = 1; i <= n_nodes; ++i) {
         nodes.push_back(i);
-    }
-    next_free_id = n_nodes + 1;
-}
-
-// Returns an instance representing a subgraph induced by a sorted list of nodes to take.
-Instance::Instance(Instance &i, std::vector<int> to_take) : nodes(to_take), ds({}) {
-    DS_ASSERT(is_sorted(to_take.begin(), to_take.end()));
-    DS_ASSERT(std::set<int>(to_take.begin(), to_take.end()).size() == to_take.size());
-
-    next_free_id = to_take.back() + 1;
-    adj.resize(next_free_id + 1, {});
-    status.resize(next_free_id + 1, UNDOMINATED);
-    is_extra.resize(next_free_id + 1, false);
-
-    for (auto v : nodes) {
-        adj[v] = i.adj[v];
-        status[v] = i.status[v];
-        is_extra[v] = i.is_extra[v];
     }
 }
 
 // Returns the number of nodes in the graph.
 size_t Instance::nodeCount() const { return nodes.size(); }
 
-void Instance::setNodeStatus(int v, NodeStatus c) {
-    DS_TRACE(std::cerr << __func__ << dbg(v) << dbg(c) << std::endl);
-    status[v] = c;
+bool Instance::isDominated(int v) const {
+    return all_nodes[v].domination_status == DominationStatus::DOMINATED;
 }
 
-NodeStatus Instance::getNodeStatus(int v) const { return status[v]; }
+void Instance::markDominated(int v) {
+    DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
+    all_nodes[v].domination_status = DominationStatus::DOMINATED;
+}
+
+bool Instance::isTaken(int v) const {
+    return all_nodes[v].membership_status == MembershipStatus::TAKEN;
+}
+
+void Instance::markTaken(int v) {
+    all_nodes[v].domination_status = DominationStatus::DOMINATED;
+    all_nodes[v].membership_status = MembershipStatus::TAKEN;
+}
+
+bool Instance::isDisregarded(int v) const {
+    return all_nodes[v].membership_status == MembershipStatus::DISREGARDED;
+}
+
+void Instance::markDisregarded(int v) {
+    all_nodes[v].membership_status = MembershipStatus::DISREGARDED;
+}
 
 void Instance::forceEdge(int u, int v) {
     DS_TRACE(std::cerr << __func__ << dbg(u) << dbg(v) << std::endl);
     DS_ASSERT(hasEdge(u, v));
-    DS_ASSERT(getEdgeStatus(u, v) != FORCED);
-    setEdgeStatus(u, v, FORCED);
-    setNodeStatus(u, DOMINATED);
-    setNodeStatus(v, DOMINATED);
+    DS_ASSERT(getEdgeStatus(u, v) != EdgeStatus::FORCED);
+    setEdgeStatus(u, v, EdgeStatus::FORCED);
+    markDominated(u);
+    markDominated(v);
 
     // All vertices that see both endpoints of this edge must be dominated by one of them,
     // so we can mark them as dominated.
     auto edgeNeighbourhood = intersect(neighbourhoodExcluding(u), neighbourhoodExcluding(v));
     for (auto w : edgeNeighbourhood) {
-        setNodeStatus(w, DOMINATED);
+        markDominated(w);
     }
 }
 
 EdgeStatus Instance::getEdgeStatus(int u, int v) const {
-    auto it = lower_bound(adj[u].begin(), adj[u].end(), Endpoint{v, ANY});
-    DS_ASSERT(it != adj[u].end());
+    auto it = lower_bound(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{ v, EdgeStatus::ANY });
+    DS_ASSERT(it != all_nodes[u].adj.end());
     return it->status;
 }
 
 // Returns the degree of given node.
-int Instance::deg(int v) const { return (int)adj[v].size(); }
+int Instance::deg(int v) const { return (int)all_nodes[v].adj.size(); }
 
 int Instance::forcedDeg(int v) const {
     int res = 0;
-    for (auto e : adj[v])
-        if (e.status == FORCED) res++;
+    for (auto e : all_nodes[v].adj)
+        if (e.status == EdgeStatus::FORCED)
+            res++;
     return res;
 }
 
@@ -115,28 +117,28 @@ int Instance::forcedDeg(int v) const {
 // Complexity: O(1)
 int Instance::addNode() {
     DS_TRACE(std::cerr << __func__ << std::endl);
-    adj.push_back({});
-    nodes.push_back(next_free_id);
-    status.push_back(UNDOMINATED);
-    is_extra.push_back(true);
-    return next_free_id++;
+    int v = all_nodes.size();
+    nodes.push_back(all_nodes.size());
+    all_nodes.push_back({ {}, DominationStatus::UNDOMINATED, MembershipStatus::UNDECIDED, true });
+    return v;
 }
 
 // Removes the node with given id.
 // Complexity: O(deg(v) + sum over deg(v) of neighbours)
 void Instance::removeNode(int v) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
-    if (find(nodes.begin(), nodes.end(), v) == nodes.end()) return;
-    for (auto [u, status] : adj[v]) {
+    if (find(nodes.begin(), nodes.end(), v) == nodes.end())
+        return;
+    for (auto [u, status] : all_nodes[v].adj) {
         // Edges like this can only be removed by calling take().
-        DS_ASSERT(status != FORCED || getNodeStatus(v) == TAKEN);
-        remove(adj[u], Endpoint{v, status});
-        DS_ASSERT(is_sorted(adj[u].begin(), adj[u].end()));
+        DS_ASSERT(status != EdgeStatus::FORCED || isTaken(v));
+        remove(all_nodes[u].adj, Endpoint{ v, status });
+        DS_ASSERT(is_sorted(all_nodes[u].adj.begin(), all_nodes[u].adj.end()));
     }
-    adj[v].clear();
+    all_nodes[v].adj.clear();
 
     remove(nodes, v);
-    DS_ASSERT(std::is_sorted(adj[v].begin(), adj[v].end()));
+    DS_ASSERT(std::is_sorted(all_nodes[v].adj.begin(), all_nodes[v].adj.end()));
 }
 
 // Removes nodes in the given list from the graph.
@@ -149,24 +151,24 @@ void Instance::removeNodes(const std::vector<int> &l) {
 // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
 void Instance::addEdge(int u, int v) {
     DS_TRACE(std::cerr << __func__ << dbg(u) << dbg(v) << std::endl);
-    insert(adj[u], Endpoint{v, UNCONSTRAINED});
-    insert(adj[v], Endpoint{u, UNCONSTRAINED});
+    insert(all_nodes[u].adj, Endpoint{ v, EdgeStatus::UNCONSTRAINED });
+    insert(all_nodes[v].adj, Endpoint{ u, EdgeStatus::UNCONSTRAINED });
 }
 
 // Removes edge (v, w) from the graph.
 // Complexity: O(deg(v) + deg(w))
 void Instance::removeEdge(int v, int w) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << dbg(w) << std::endl);
-    remove(adj[v], {w, ANY});
-    remove(adj[w], {v, ANY});
+    remove(all_nodes[v].adj, { w, EdgeStatus::ANY });
+    remove(all_nodes[w].adj, { v, EdgeStatus::ANY });
 }
 
 // Same meaning as N[v] notation.
 // Complexity: O(deg(v)).
 const std::vector<int> Instance::neighbourhoodIncluding(int v) const {
-    std::vector<int> res(adj[v].size());
-    for (size_t i = 0; i < adj[v].size(); ++i) {
-        res[i] = adj[v][i].to;
+    std::vector<int> res(all_nodes[v].adj.size());
+    for (size_t i = 0; i < all_nodes[v].adj.size(); ++i) {
+        res[i] = all_nodes[v].adj[i].to;
     }
     insert(res, v);
     return res;
@@ -189,9 +191,9 @@ int Instance::forcedEdgeCount() const {
 // Same meaning as N(v) notation.
 // Complexity: O(1)
 std::vector<int> Instance::neighbourhoodExcluding(int v) const {
-    std::vector<int> res(adj[v].size());
-    for (size_t i = 0; i < adj[v].size(); ++i) {
-        res[i] = adj[v][i].to;
+    std::vector<int> res(all_nodes[v].adj.size());
+    for (size_t i = 0; i < all_nodes[v].adj.size(); ++i) {
+        res[i] = all_nodes[v].adj[i].to;
     }
     return res;
 }
@@ -199,18 +201,8 @@ std::vector<int> Instance::neighbourhoodExcluding(int v) const {
 // Returns true if and only if undirected edge (u, v) is present in the graph.
 // Complexity: O(deg(u)) !
 bool Instance::hasEdge(int u, int v) const {
-    return std::find(adj[u].begin(), adj[u].end(), Endpoint{v, ANY}) != adj[u].end();
-}
-
-// Returns the minimum degree node of given status present in the graph.
-// Returns -1 if there is no such node.
-// Complexity: O(n)
-int Instance::minDegNodeOfStatus(NodeStatus s) const {
-    int best_v = -1;
-    for (auto v : nodes)
-        if (getNodeStatus(v) == s && (best_v == -1 || deg(v) < deg(best_v))) best_v = v;
-
-    return best_v;
+    return std::find(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{ v, EdgeStatus::ANY }) !=
+           all_nodes[u].adj.end();
 }
 
 // Inserts given node to the dominating set, changing the status of
@@ -218,21 +210,21 @@ int Instance::minDegNodeOfStatus(NodeStatus s) const {
 // Complexity: O(deg(v)) or O(sum of degrees of neighbours) in case of extra vertices.
 void Instance::take(int v) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
-    DS_ASSERT(status[v] != TAKEN);
-    if (is_extra[v]) {
+    DS_ASSERT(!isTaken(v));
+    if (all_nodes[v].is_extra) {
         for (auto u : neighbourhoodExcluding(v)) {
-            DS_ASSERT(getNodeStatus(u) != TAKEN);
+            DS_ASSERT(!isTaken(u));
             take(u);
         }
 
         return;
     }
-    status[v] = TAKEN;
+    all_nodes[v].membership_status = MembershipStatus::TAKEN;
 
     ds.push_back(v);
     for (auto u : neighbourhoodExcluding(v)) {
-        DS_ASSERT(getNodeStatus(u) != TAKEN);
-        setNodeStatus(u, DOMINATED);
+        DS_ASSERT(!isTaken(u));
+        markDominated(u);
     }
 
     removeNode(v);
@@ -242,7 +234,7 @@ void Instance::take(int v) {
 // Note in case of a connected graph it returns an empty list.
 // Complexity: O(n + m)
 std::vector<std::vector<int>> Instance::split() const {
-    std::vector<int> component(next_free_id + 1, -1);
+    std::vector<int> component(all_nodes.size(), -1);
     int components = 0;
 
     // Assign nodes to connected components using breadth-first search.
@@ -256,7 +248,7 @@ std::vector<std::vector<int>> Instance::split() const {
                 int w = q.front();
                 q.pop();
 
-                for (auto [u, _] : adj[w]) {
+                for (auto [u, _] : all_nodes[w].adj) {
                     if (component[u] < 0) {
                         component[u] = components;
                         q.push(u);
@@ -268,7 +260,8 @@ std::vector<std::vector<int>> Instance::split() const {
         }
     }
 
-    if (components <= 1) return {};
+    if (components <= 1)
+        return {};
     std::vector<std::vector<int>> result(components, std::vector<int>());
     for (auto v : nodes) {
         result[component[v]].push_back(v);
@@ -276,73 +269,15 @@ std::vector<std::vector<int>> Instance::split() const {
     return result;
 }
 
-void Instance::saveVCInstance(std::ostream &out) {
-    DS_ASSERT(forcedEdgeCount() == edgeCount());
-    out << "c presolved ds_size: " << ds.size() << "\n";
-    out << "p td " << nodeCount() << " " << edgeCount() << "\n";
-    out << "c nodes: ";
-    std::vector<int> mapping(nodes.back() + 1);
-
-    for (size_t i = 0; i < nodes.size(); i++) {
-        out << " " << nodes[i];
-        mapping[nodes[i]] = i + 1;
-    }
-
-    out << "\n";
-
-    for (auto u : nodes) {
-        for (auto [v, status] : adj[u]) {
-            DS_ASSERT(status == FORCED);
-            if (u < v) {
-                out << mapping[u] << " " << mapping[v] << "\n";
-            }
-        }
-    }
-}
-
-void Instance::saveAnnotatedDominatingSetInstance(std::ostream &out) {
-    DS_ASSERT(forcedEdgeCount() == edgeCount());
-    out << "c presolved ds_size: " << ds.size() << "\n";
-    out << "p ads " << nodeCount() << " " << edgeCount() << "\n";
-    out << "c nodes: ";
-    std::vector<int> mapping(nodes.back() + 1);
-
-    for (size_t i = 0; i < nodes.size(); i++) {
-        out << " " << nodes[i];
-        mapping[nodes[i]] = i + 1;
-    }
-
-    out << "\n";
-
-    for (auto u : nodes) {
-        for (auto [v, status] : adj[u]) {
-            if (u < v) {
-                out << mapping[u] << " " << mapping[v] << " " << status << "\n";
-            }
-        }
-    }
-}
-
-// Prints the graph to stdout in a human-readable format.
-void Instance::print() const {
-    std::cerr << "[n = " << nodeCount() << ",\tm = " << edgeCount() << "]\n";
-    for (int i : nodes) {
-        std::cerr << "color(" << i << ") = " << getNodeStatus(i) << "\n";
-    }
-    for (int i : nodes) {
-        for (auto [j, status] : adj[i]) {
-            if (j > i) continue;
-            std::cerr << i << " " << j << " " << dbg(status) "\n";
-        }
-    }
-}
-
 void Instance::setEdgeStatus(int u, int v, EdgeStatus status) {
-    auto it_u = lower_bound(adj[u].begin(), adj[u].end(), Endpoint{v, ANY});
-    DS_ASSERT(it_u != adj[u].end());
-    auto it_v = lower_bound(adj[v].begin(), adj[v].end(), Endpoint{u, ANY});
-    DS_ASSERT(it_v != adj[v].end());
+    auto it_u = lower_bound(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{ v, EdgeStatus::ANY });
+    DS_ASSERT(it_u != all_nodes[u].adj.end());
+    auto it_v = lower_bound(all_nodes[v].adj.begin(), all_nodes[v].adj.end(), Endpoint{ u, EdgeStatus::ANY });
+    DS_ASSERT(it_v != all_nodes[v].adj.end());
 
     it_u->status = it_v->status = status;
 }
+
+const Node &Instance::operator[](int v) const { return all_nodes[v]; }
+
 }  // namespace DSHunter

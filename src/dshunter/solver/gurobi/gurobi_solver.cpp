@@ -13,7 +13,7 @@ bool GurobiSolver::solve(Instance &g) {
         env.start();
         GRBModel m = GRBModel(env);
 
-        std::vector<int> rv(g.next_free_id);
+        std::vector<int> rv(g.all_nodes.size());
         for (size_t i = 0; i < g.nodes.size(); i++) {
             int v = g.nodes[i];
             rv[v] = i;
@@ -27,10 +27,10 @@ bool GurobiSolver::solve(Instance &g) {
 
         for (int v : g.nodes) {
             GRBLinExpr node_constraint = 0;
-            for (auto [u, status] : g.adj[v]) {
+            for (auto [u, status] : g[v].adj) {
                 node_constraint += is_selected[rv[u]];
 
-                if (status == FORCED) {
+                if (status == EdgeStatus::FORCED) {
                     GRBLinExpr edge_constraint = 0;
                     edge_constraint += is_selected[rv[u]];
                     edge_constraint += is_selected[rv[v]];
@@ -50,9 +50,11 @@ bool GurobiSolver::solve(Instance &g) {
 
         m.optimize();
 
-        if (m.get(GRB_IntAttr_Status) != GRB_OPTIMAL) return false;
+        if (m.get(GRB_IntAttr_Status) != GRB_OPTIMAL)
+            return false;
         for (size_t i = 0; i < g.nodes.size(); ++i) {
-            if (is_selected[i].get(GRB_DoubleAttr_X) > 0) g.ds.push_back(g.nodes[i]);
+            if (is_selected[i].get(GRB_DoubleAttr_X) > 0)
+                g.ds.push_back(g.nodes[i]);
         }
 
         return true;

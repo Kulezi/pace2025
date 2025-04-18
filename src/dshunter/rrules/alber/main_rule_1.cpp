@@ -1,0 +1,69 @@
+#include "../rrules.h"
+namespace {
+using DSHunter::intersect, DSHunter::contains, DSHunter::unite, DSHunter::remove;
+
+bool hasUndominatedNode(DSHunter::Instance& g, std::vector<int> nodes) {
+    for (auto v : nodes)
+        if (!g.isDominated(v))
+            return true;
+    return false;
+}
+
+// Checks whether node u is an exit vertex with respect to node v.
+// Complexity: O(min(deg(u), deg(v)))
+bool isExit(const DSHunter::Instance& g, int u, int v) {
+    for (auto [w, status] : g[u].adj) {
+        // This will execute at most O(deg(v)) times, since g.hasEdge(v, w) can be true only
+        // for deg(v) different vertices w.
+        if (w != v && (!g.hasEdge(v, w) || status == DSHunter::EdgeStatus::FORCED))
+            return true;
+    }
+
+    return false;
+}
+
+// Returns a sorted list of neighbours of u that have a neighour outside of the neighbourhood of u.
+// Complexity: O(deg(u)^2)
+std::vector<int> exitNeighbourhood(DSHunter::Instance& g, int u) {
+    std::vector<int> N_exit;
+    for (auto [v, _] : g[u].adj) {
+        if (isExit(g, v, u))
+            N_exit.push_back(v);
+    }
+
+    return N_exit;
+}
+}  // namespace
+namespace DSHunter {
+bool alberMainRule1(Instance& g) {
+    for (auto u : g.nodes) {
+        if (g.isDisregarded(u)) continue;
+        auto N_v_without = g.neighbourhoodExcluding(u);
+
+        std::vector<int> N_exit = exitNeighbourhood(g, u), N_guard, N_prison;
+
+        for (auto v : remove(N_v_without, N_exit)) {
+            auto N_u = g.neighbourhoodExcluding(v);
+            if (!intersect(N_u, N_exit).empty())
+                N_guard.push_back(v);
+        }
+
+        N_prison = remove(remove(N_v_without, N_exit), N_guard);
+
+        if (!N_prison.empty() && hasUndominatedNode(g, N_prison)) {
+            DS_TRACE(std::cerr << "applying " << __func__ << dbg(u) << dbgv(N_prison)
+                               << dbgv(N_guard) << dbgv(N_exit) << std::endl);
+            g.take(u);
+
+            for (auto v : N_prison) g.removeNode(v);
+            for (auto v : N_guard) g.removeNode(v);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+ReductionRule AlberMainRule1("AlberMainRule1", alberMainRule1, 3, 1);
+
+}  // namespace DSHunter
