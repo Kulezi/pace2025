@@ -483,16 +483,19 @@ bool forcedEdgeRule(Instance& g) {
     return false;
 }
 
+bool hasRedEdge(Instance& g, int u, int excluded) {
+    for (auto [w, s] : g[u].adj) {
+        if (w != excluded && s == EdgeStatus::FORCED) return true;
+    }
+    return false;
+}
+
 bool pinkNodeRule(Instance& g) {
     for (auto u : g.nodes) {
         for (auto [v, s] : g[u].adj) {
-            if (s == EdgeStatus::FORCED) {
-                throw std::logic_error("mixed pink and red reductions are not supported!");
-            }
-
             if (g[v].membership_status != MembershipStatus::DISREGARDED &&
                 g[u].membership_status == MembershipStatus::UNDECIDED &&
-                contains(g[v].adj, g[u].adj)) {
+                contains(g.neighbourhoodIncluding(v), g.neighbourhoodIncluding(u)) && !hasRedEdge(g, u, v)) {
                 g.markDisregarded(u);
                 return true;
             }
