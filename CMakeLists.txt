@@ -58,6 +58,7 @@ set(HEADER_IMPLEMENTATIONS
     src/dshunter/rrules/force/force_edge_rule.cpp
     src/dshunter/rrules/disregard/disregard_rule.cpp
     src/dshunter/rrules/disregard/remove_disregarded_rule.cpp
+    src/dshunter/rrules/disregard/disregarded_neighbourhood_rule.cpp
     src/dshunter/rrules/reduce.cpp
     src/dshunter/rrules/apply.cpp
     src/dshunter/rrules/defaults.cpp

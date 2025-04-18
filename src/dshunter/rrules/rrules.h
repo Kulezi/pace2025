@@ -63,6 +63,8 @@ bool disregardRule(Instance& g);
 
 bool removeDisregardedRule(Instance& g);
 
+bool disregardedNeighbourhoodRule(Instance& g);
+
 
 extern ReductionRule AlberMainRule1;
 extern ReductionRule AlberMainRule2;
@@ -75,6 +77,7 @@ extern ReductionRule ForceEdgeRule;
 
 extern ReductionRule DisregardRule;
 extern ReductionRule RemoveDisregardedRule;
+extern ReductionRule DisregardedNeighbourhoodRule;
 
 const std::vector<ReductionRule> get_default_reduction_rules();
 }  // namespace DSHunter
