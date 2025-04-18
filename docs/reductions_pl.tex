@@ -1,0 +1,86 @@
+\documentclass[12pt]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+% Title
+\title{Różowe wierzchołki}
+\author{Paweł Putra}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Wstęp}
+\emph{Różowy wierzchołek to taki, że zawsze istnieje rozwiązanie optymalne, które go nie zawiera.}
+
+\subsection{Nowe redukcje}
+
+\subsubsection{Redukcja pierwotna}
+\emph{Jeśli dla krawędzi $(u, v) \in E$ zachodzi:
+\begin{itemize}
+\item $N[u] \subseteq N[v]$ 
+\item $v$ nie jest różowy
+\item nie istnieje \textbf{czerwona} krawędź $(u, w)$ gdzie $w \neq v$ (bo mówi o istnieniu usuniętego sąsiada $u$, który nie jest w $N[v]$)
+\end{itemize}}
+to pokoloruj $u$ na różowo.
+
+\subsubsection{Redukcja dla pojedyńczego wierzchołka}
+\emph{Jeśli istnieje różowy wierzchołek, który jest zdominowany - usuń go z grafu.}
+
+\subsubsection{Redukcja sąsiedztwa}
+\emph{Jeśli istnieje nieróżowy wierzchołek $v$, że całe $N(v)$ jest różowe, weź go do rozwiązania i usuń $N[v]$ z grafu.}
+
+\subsection{Wpływ na AlberSimpleRule1}
+Było: \emph{Jeśli istnieje \textbf{czarna} krawędź, której oba końce są zdominowane - usuń ją.}\\
+
+Teraz z różowymi wierzchołkami mamy dodatkowo:
+\begin{itemize}
+\item \emph{Jeśli istnieje \textbf{czarna} krawędź, której oba końce są różowe - usuń ją.}\\
+\item \emph{Jeśli istnieje \textbf{czerwona} krawędź $(u, v)$, taka, że $u$ jest różowy, dodaj $v$ do rozwiązania i usuń wierzchołki $u$ i $v$.}
+\item \textbf{Test:} \emph{Jeśli istnieje \textbf{czerwona} krawędź, której oba końce są różowe, mamy sprzeczność - instancja jest niepoprawna.} 
+
+\end{itemize}
+
+
+\subsection{Wpływ na AlberSimpleRule\{2, 3, 4\}}
+
+Bez zmian.
+
+\subsection{Wpływ na ForcedEdgeRule}
+Czerwona krawędź $(u, v)$ oznacza, że w optymalnym rozwiązaniu $S$ musi być conajmniej jeden element zbioru $\{u, v\}$.
+
+Oznaczając krawędź $(u, v)$ jako czerwoną oznaczamy również $N[u] \cap N[v]$ jako zdominowane, bo będą zdominowane przez $u$ lub $v$.
+
+\subsubsection{Wierzchołki o stopniu 2}
+\emph{Jeśli istnieje \textbf{czarny} wierzchołek u o stopniu 2, taki, że jego sąsiedzi v, w są połączeni krawędzią, to:
+\begin{itemize}
+    \item \textbf{Test:} Zakładając aplikowanie redukcji $(1.1.3)$ przed tą, nie istnieje sytuacja, w której zarówno wierzchołek v jak i w jest różowy. 
+    \item jeśli obie krawędzie wierzchołka u są czarne, oznacz krawędź (v, w) jako czerwoną i usuń wierchołek u.
+    \item jeśli tylko krawędź (u, w) jest czerwona, weź w do rozwiązania i usuń wierzchołek u.
+    \item jeśli tylko krawędź (u, v) jest czerwona, weź v do rozwiązania i usuń wierzchołek u.
+    \item jeśli obie krawędzie są czerwone - \textbf{nie rób nic} (pomysł: ściągnąć do jednego niezdominowanego wierzchołka $g$, wtedy $g \in S' \implies \{v, w\} \subseteq S$,
+    a $g \not\in S' \implies u \in S$).
+\end{itemize}
+}
+
+\subsection{Wpływ na AlberMainRule1}
+Ta redukcja polega na zachłannym wzięciu wierzchołka $v$ jeśli jego sąsiedztwo spełnia odpowiednie kryteria.
+
+\textbf{Dodatek:} \emph{Rozważany wierzchołek nie może być różowy.}
+
+\subsection{Wpływ na AlberMainRule2}
+Ta redukcja polega na zachłannym wzięciu wierzchołka $v$ i/lub $w$ jeśli ich sąsiedztwo spełnia odpowiednie kryteria.
+
+\textbf{Dodatek:} \emph{Rozważane wierzchołki nie mogą być różowe.}
+
+
+\end{document}

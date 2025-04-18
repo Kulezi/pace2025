@@ -47,6 +47,13 @@ CMakeUserPresets.json
 build/
 *.cmake
 
+# LaTeX
+*.log
+*.gz
+*.fls
+*.fdb_latexmk
+*.aux
+
 .vscode/
 .solutions/
 rg.gr
