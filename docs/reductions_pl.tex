@@ -82,6 +82,16 @@ Zatem nowa reguła brzmi:
 \emph{Jeśli istnieje zdominowany wierzchołek $u$ o stopniu 2, z niezdominowanymi sąsiadami $v_1$ oraz $v_2$ ze wspólnym \textbf{nieróżowym} sąsiadem $w$ $(w \neq u)$, usuń $u$ z grafu. }
 
 
+\subsubsection{AlberSimpleRule4}
+Było: \emph{Jeśli istnieje zdominowany wierzchołek $u$ o stopniu 3, z niezdominowanymi sąsiadami $v_1$, $v_2$ oraz $v_3$, takimi, że istnieją krawędzie $(v_1, v_2)$ i $(v_2, v_3)$ usuń $u$ z grafu. }
+
+Można było tak zrobić, bo mieliśmy gwarancję, że jeśli istnieje optymalny zbiór dominujący zawierający wierzchołek $u$ to można go podmienić na $v_2$ bez utraty optymalności. 
+
+Jeśli wierzchołek $v_2$ jest różowy, to nie mamy takiej gwarancji.
+
+Zatem nowa reguła brzmi:
+
+\emph{Jeśli istnieje zdominowany wierzchołek $u$ o stopniu 3, z niezdominowanymi sąsiadami $v_1$, $v_2$ oraz $v_3$, takimi, że istnieją krawędzie $(v_1, v_2)$ i $(v_2, v_3)$, \textbf{oraz $v_2$ nie jest różowy}, usuń $u$ z grafu. }
 
 \subsection{Wpływ na ForcedEdgeRule}
 Czerwona krawędź $(u, v)$ oznacza, że w optymalnym rozwiązaniu $S$ musi być conajmniej jeden element zbioru $\{u, v\}$.

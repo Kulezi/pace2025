@@ -2,7 +2,7 @@
 namespace {
 
 bool tryMidpoint(DSHunter::Instance& g, bool forced_by_edge, int u, int v, int w) {
-    if (g.hasEdge(u, v) && g.hasEdge(u, w)) {
+    if (!g.isDisregarded(u) && g.hasEdge(u, v) && g.hasEdge(u, w)) {
         if (forced_by_edge) {
             DS_TRACE(std::cerr << "applying " << __func__ << "(take)" << dbg(u) << std::endl);
             g.take(u);
