@@ -49,7 +49,6 @@ void BruteforceSolver::solve(Instance &g) {
         if (is_domset && (best_ds.empty() || ds.size() < best_ds.size())) {
             best_ds = ds;
         }
-
     }
 
     for (auto i : best_ds) g.ds.push_back(i);

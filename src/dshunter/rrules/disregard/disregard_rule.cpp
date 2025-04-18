@@ -21,6 +21,7 @@ bool disregardRule(Instance& g) {
                 contains(g.neighbourhoodIncluding(v), g.neighbourhoodIncluding(u)) &&
                 !hasRedEdge(g, u, v)) {
                 g.markDisregarded(u);
+                DS_TRACE(std::cerr << "applied DisregardRule to node " << u << std::endl);
                 return true;
             }
         }

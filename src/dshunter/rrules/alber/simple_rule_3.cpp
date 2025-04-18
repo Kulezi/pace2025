@@ -1,11 +1,11 @@
 #include "../rrules.h"
 namespace {
 
-bool haveCommonNeighbour(const DSHunter::Instance& g, int u, int v) {
-    for (auto [w, _] : g[u].adj) {
-        if (v == w)
+bool haveCommonNonDisregardedNeighbour(const DSHunter::Instance& g, int u, int v_1, int v_2) {
+    for (auto [w, _] : g[v_1].adj) {
+        if (w == u || g.isDisregarded(w))
             continue;
-        if (g.hasEdge(v, v))
+        if (g.hasEdge(w, v_2))
             return true;
     }
     return false;
@@ -24,7 +24,7 @@ bool alberSimpleRule3(Instance& g) {
             if (s_1 == EdgeStatus::FORCED && s_2 == EdgeStatus::FORCED)
                 continue;
             bool should_remove = !g.isDominated(u_1) && !g.isDominated(u_2) &&
-                                 (g.hasEdge(u_1, u_2) || haveCommonNeighbour(g, u_1, u_2));
+                                 (g.hasEdge(u_1, u_2) || haveCommonNonDisregardedNeighbour(g, v, u_1, u_2));
 
             if (should_remove) {
                 DS_TRACE(std::cerr << "applying " << __func__ << dbg(v) << std::endl);

@@ -52,8 +52,36 @@ Teraz z różowymi wierzchołkami mamy dodatkowo:
 
 
 \subsection{Wpływ na AlberSimpleRule\{2, 3, 4\}}
+Zauważmy, że usuwany w redukcji wierzchołek $u$ nie może być różowy, bo musi być zdominowany, a więc nie może go być w grafie po redukcji z $(1.1.2)$.
+Zostaje więc spojrzeć co się dzieje jak w sąsiedztwie są różowe wierzchołki.
 
-Bez zmian.
+\subsubsection{AlberSimpleRule2 (usuwanie zdominowanego liścia)}
+Bez zmian, różowy sąsiad nie przeszkadza usunąć wierzchołka $u$.
+
+\subsubsection{AlberSimpleRule3.1}
+Było: \emph{Jeśli istnieje zdominowany wierzchołek $u$ o stopniu 2, z niezdominowanymi sąsiadami $v$ oraz $w$ połączonymi krawędzią, usuń $u$ z grafu. }
+
+Można było tak zrobić, bo mieliśmy gwarancję, że jeśli istnieje optymalny zbiór dominujący zawierający wierzchołek $u$ to można go podmienić na któregoś z sąsiadów bez utraty optymalności. 
+
+Jeśli wierzchołki $v$ i $w$ są różowe, to nie mamy takiej gwarancji, w szczególności gdy $V = \{u, v, w\}$ to jedyny zbiór dominujący to $\{u\}$.
+
+Zatem nowa reguła brzmi:
+
+\emph{Jeśli istnieje zdominowany wierzchołek $u$ o stopniu 2, z niezdominowanymi sąsiadami $v$ oraz $w$ połączonymi krawędzią, 
+\textbf{z których conajwyżej jeden jest różowy}, usuń $u$ z grafu. }
+
+\subsubsection{AlberSimpleRule3.2}
+Było: \emph{Jeśli istnieje zdominowany wierzchołek $u$ o stopniu 2, z niezdominowanymi sąsiadami $v_1$ oraz $v_2$ ze wspólnym sąsiadem $w$ $(w \neq u)$, usuń $u$ z grafu. }
+
+Można było tak zrobić, bo mieliśmy gwarancję, że jeśli istnieje optymalny zbiór dominujący zawierający wierzchołek $u$ to można go podmienić na $w$ bez utraty optymalności. 
+
+Jeśli wierzchołek $w$ jest różowy, to nie mamy takiej gwarancji.
+
+Zatem nowa reguła brzmi:
+
+\emph{Jeśli istnieje zdominowany wierzchołek $u$ o stopniu 2, z niezdominowanymi sąsiadami $v_1$ oraz $v_2$ ze wspólnym \textbf{nieróżowym} sąsiadem $w$ $(w \neq u)$, usuń $u$ z grafu. }
+
+
 
 \subsection{Wpływ na ForcedEdgeRule}
 Czerwona krawędź $(u, v)$ oznacza, że w optymalnym rozwiązaniu $S$ musi być conajmniej jeden element zbioru $\{u, v\}$.

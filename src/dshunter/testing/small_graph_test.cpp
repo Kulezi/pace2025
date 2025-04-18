@@ -22,14 +22,15 @@ int main() {
             std::cerr << "\rn=" << n << ", graph " << mask + 1 << " out of " << (1 << max_edges)
                       << std::flush;
             auto print_graph = [&](std::ostream &out) {
-                out << "p ds " << n << " " << __builtin_popcount(mask) << "\n";
+                out << "p ds " << n << " " << __builtin_popcount(mask) << std::endl;
                 for (int i = 1, e = 0; i <= n; i++) {
                     for (int j = i + 1; j <= n; j++, e++) {
                         if (mask >> e & 1)
-                            out << i << " " << j << "\n";
+                            out << i << " " << j << std::endl;
                     }
                 }
             };
+            print_graph(std::cerr);
 
             std::stringstream g_str;
             print_graph(g_str);
@@ -37,7 +38,6 @@ int main() {
             DSHunter::Instance g(g_str);
 
             try {
-                DS_TRACE(print_graph(std::cerr));
                 auto sol_brute_reductionless = brute_reductionless.solve(g);
                 auto sol_brute_reduce = brute_reduce.solve(g);
                 auto sol = default_solver.solve(g);
