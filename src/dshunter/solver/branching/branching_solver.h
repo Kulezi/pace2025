@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "../../instance.h"
-#include "../../rrules.h"
+#include "../../rrules/rrules.h"
 namespace DSHunter {
 struct BranchingSolver {
     std::vector<ReductionRule> reduction_rules;

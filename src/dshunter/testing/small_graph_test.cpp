@@ -8,10 +8,10 @@
 // This test checks whether a brute-force solution gives the same result as the model solution
 // on all graphs with at most 7 vertices.
 int main() {
-    DSHunter::Solver brute_reductionless(DSHunter::SolverConfig(DSHunter::default_reduction_rules,
+    DSHunter::Solver brute_reductionless(DSHunter::SolverConfig(DSHunter::get_default_reduction_rules(),
                                                                 DSHunter::SolverType::Bruteforce,
                                                                 DSHunter::PresolverType::None));
-    DSHunter::Solver brute_reduce(DSHunter::SolverConfig(DSHunter::default_reduction_rules,
+    DSHunter::Solver brute_reduce(DSHunter::SolverConfig(DSHunter::get_default_reduction_rules(),
                                                          DSHunter::SolverType::Bruteforce,
                                                          DSHunter::PresolverType::Full));
     DSHunter::Solver default_solver;

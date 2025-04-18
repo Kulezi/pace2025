@@ -53,7 +53,7 @@ struct Instance {
 
     bool isDominated(int v) const;
     void markDominated(int v);
-    
+
     bool isTaken(int v) const;
     void markTaken(int v);
     void markDisregarded(int v);
@@ -82,7 +82,7 @@ struct Instance {
     // Adds an unconstrained edge between nodes with id's u and v.
     // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
     void addEdge(int u, int v);
-    
+
     // Removes edge (v, w) from the graph.
     // Complexity: O(deg(v) + deg(w))
     void removeEdge(int v, int w);
@@ -115,10 +115,10 @@ struct Instance {
     // Complexity: O(n + m)
     std::vector<std::vector<int>> split() const;
 
-    const Node& operator[](int v) const;
+    const Node &operator[](int v) const;
+
    private:
     void setEdgeStatus(int u, int v, EdgeStatus status);
-
 };
 }  // namespace DSHunter
 #endif  // INSTANCE_H

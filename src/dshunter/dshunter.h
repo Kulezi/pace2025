@@ -3,7 +3,7 @@
 
 #include "bounds.h"
 #include "instance.h"
-#include "rrules.h"
+#include "rrules/rrules.h"
 #include "solver/solver.h"
 
 #endif

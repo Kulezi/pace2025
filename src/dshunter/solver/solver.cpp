@@ -1,6 +1,6 @@
 #include "solver.h"
 
-#include "../rrules.h"
+#include "../rrules/rrules.h"
 #include "branching/branching_solver.h"
 #include "bruteforce/bruteforce_solver.h"
 #include "gurobi/gurobi_solver.h"

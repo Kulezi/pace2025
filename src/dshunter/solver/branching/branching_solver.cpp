@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "../../instance.h"
-#include "../../rrules.h"
 namespace DSHunter {
 
 void BranchingSolver::take(Instance g, int v, std::vector<int> &best_ds, int level) {

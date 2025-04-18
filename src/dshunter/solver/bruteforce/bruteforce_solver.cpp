@@ -1,7 +1,6 @@
 
 #include "bruteforce_solver.h"
 
-#include "../../rrules.h"
 #include "../../utils.h"
 
 namespace DSHunter {

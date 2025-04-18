@@ -2,7 +2,8 @@
 #define RRULES_H
 #include <functional>
 
-#include "instance.h"
+#include "../instance.h"
+#include "../utils.h"
 
 namespace DSHunter {
 
@@ -56,10 +57,9 @@ bool alberSimpleRule4(Instance& g);
 // and they are connected by an edge, make the edge forced and remove this vertex, as there
 // exists an optimal solution not-taking this vertex and taking one of its neighbours.
 // ~ O(|G|) for any graph.
-bool forcedEdgeRule(Instance& g);
+bool forceEdgeRule(Instance& g);
 
-bool pinkNodeRule(Instance &g);
-
+bool disregardRule(Instance& g);
 
 extern ReductionRule AlberMainRule1;
 extern ReductionRule AlberMainRule2;
@@ -67,9 +67,11 @@ extern ReductionRule AlberSimpleRule1;
 extern ReductionRule AlberSimpleRule2;
 extern ReductionRule AlberSimpleRule3;
 extern ReductionRule AlberSimpleRule4;
-extern ReductionRule ForcedEdgeRule;
-extern ReductionRule PinkNodeRule;
 
-extern const std::vector<ReductionRule> default_reduction_rules;
+extern ReductionRule ForceEdgeRule;
+
+extern ReductionRule DisregardRule;
+
+const std::vector<ReductionRule> get_default_reduction_rules();
 }  // namespace DSHunter
 #endif  // RRULES_H

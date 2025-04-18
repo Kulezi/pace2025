@@ -3,7 +3,7 @@
 #include <chrono>
 
 #include "../instance.h"
-#include "../rrules.h"
+#include "../rrules/rrules.h"
 #include "../utils.h"
 namespace DSHunter {
 using namespace std::chrono_literals;
@@ -20,7 +20,7 @@ struct SolverConfig {
         : reduction_rules(rrules), solver_type(st), presolver_type(pt) {}
 
     SolverConfig()
-        : reduction_rules(default_reduction_rules),
+        : reduction_rules(DSHunter::get_default_reduction_rules()),
           solver_type(SolverType::Default),
           presolver_type(PresolverType::Full),
           decomposition_time_budget(300s) {}
