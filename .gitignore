@@ -56,6 +56,10 @@ build/
 
 .vscode/
 .solutions/
+debug/
+release/
+testing/
+
 rg.gr
 *.log
 *.sol
