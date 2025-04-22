@@ -14,6 +14,7 @@ bool hasRedEdge(DSHunter::Instance& g, int u, int excluded) {
 namespace DSHunter {
 
 bool disregardRule(Instance& g) {
+    bool marked = false;
     for (auto u : g.nodes) {
         for (auto [v, s] : g[u].adj) {
             if (g[v].membership_status != MembershipStatus::DISREGARDED &&
@@ -22,12 +23,12 @@ bool disregardRule(Instance& g) {
                 !hasRedEdge(g, u, v)) {
                 g.markDisregarded(u);
                 DS_TRACE(std::cerr << "applied DisregardRule to node " << u << std::endl);
-                return true;
+                marked = true;
             }
         }
     }
 
-    return false;
+    return marked;
 }
 
 ReductionRule DisregardRule("DisregardRule", disregardRule, 2, 1);

@@ -3,8 +3,7 @@
 namespace DSHunter {
 
 bool forceEdgeRule(Instance& g) {
-    auto nodes = g.nodes;
-    for (auto v : nodes) {
+    for (auto v : g.nodes) {
         if (g.deg(v) == 2 && !g.isDominated(v)) {
             auto e1 = g[v].adj[0];
             auto e2 = g[v].adj[1];

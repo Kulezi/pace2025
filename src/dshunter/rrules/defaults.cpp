@@ -2,15 +2,14 @@
 namespace DSHunter {
 const std::vector<ReductionRule> get_default_reduction_rules() {
     static const std::vector<ReductionRule> rules = {
-        // First rules regarding disregarding.
+        ForceEdgeRule,
+
+        // Rules regarding disregarding.
         DisregardRule,
         RemoveDisregardedRule,
         DisregardedNeighbourhoodRule,
 
-        // Then rules that don't affect the graph structure.
-        ForceEdgeRule,
-
-        // First the cheap rules that only remove vertices.
+        // Cheap rules that only remove vertices.
         AlberSimpleRule1,
         AlberSimpleRule2,
         AlberSimpleRule3,
