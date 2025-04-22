@@ -7,16 +7,23 @@
 #include <vector>
 
 #include "../../../utils.h"
+#include "exec_decompose.h"
 #include "flow_cutter_wrapper.h"
 namespace DSHunter {
 
 std::optional<NiceTreeDecomposition> NiceTreeDecomposition::decompose(
-    const Instance& g, std::chrono::seconds decomposition_time_budget, int tw_good_enough,
-    int tw_max) {
-    auto initial_decomposition =
-        FlowCutter::decompose(g, 0, decomposition_time_budget, tw_good_enough);
+    const Instance& g, std::chrono::seconds decomposition_time_budget, int tw_good_enough, int tw_max, std::string decomposer_path) {
+    TreeDecomposition initial_decomposition;
+    if (decomposer_path.empty()) {
+        initial_decomposition = FlowCutter::decompose(g, 0, decomposition_time_budget, tw_good_enough);
+    } else {
+        auto t = execDecompose("/home/dvdpawcio/repos/magisterka/PACE2017-TrackA/tw-heuristic", g, decomposition_time_budget);
+        if (!t.has_value()) return std::nullopt;
+        initial_decomposition = t.value();
+    }
 
-    if (initial_decomposition.width > tw_max) return {};
+    if (initial_decomposition.width > tw_max)
+        return std::nullopt;
 
     auto rooted_decomposition = RootedTreeDecomposition(initial_decomposition);
     rooted_decomposition.sortBags();
@@ -28,7 +35,7 @@ std::optional<NiceTreeDecomposition> NiceTreeDecomposition::decompose(
 }
 
 NiceTreeDecomposition::NiceTreeDecomposition(Instance g,
-                                             const RootedTreeDecomposition &rooted_decomposition)
+                                             const RootedTreeDecomposition& rooted_decomposition)
     : g(g), decomp() {
     root = makeDecompositionNodeFromRootedDecomposition(rooted_decomposition,
                                                         rooted_decomposition.root);
@@ -43,7 +50,8 @@ int NiceTreeDecomposition::n_nodes() const { return decomp.size(); }
 size_t NiceTreeDecomposition::width() const {
     size_t max_width = 0;
     for (auto& v : decomp)
-        if (max_width < v.bag.size()) max_width = v.bag.size();
+        if (max_width < v.bag.size())
+            max_width = v.bag.size();
     return max_width;
 }
 
@@ -52,8 +60,7 @@ void NiceTreeDecomposition::print() const {
     printDecomp(root, 0);
 }
 
-int NiceTreeDecomposition::createNode(NodeType type, std::vector<int> bag, int v, int to,
-                                      int lChild, int rChild) {
+int NiceTreeDecomposition::createNode(NodeType type, std::vector<int> bag, int v, int to, int lChild, int rChild) {
     decomp.push_back(Node{
         .id = (int)decomp.size(),
         .type = type,
@@ -95,8 +102,10 @@ void NiceTreeDecomposition::printDecomp(int v, int level) const {
     for (auto i : node.bag) std::cerr << " " << i;
     std::cerr << " ]\n";
 
-    if (node.type != NodeType::Leaf) printDecomp(node.l_child, level + 1);
-    if (node.type == NodeType::Join) printDecomp(node.r_child, level + 1);
+    if (node.type != NodeType::Leaf)
+        printDecomp(node.l_child, level + 1);
+    if (node.type == NodeType::Join)
+        printDecomp(node.r_child, level + 1);
 }
 
 int NiceTreeDecomposition::makeDecompositionNodeFromRootedDecomposition(
@@ -119,14 +128,16 @@ int NiceTreeDecomposition::makeDecompositionNodeFromRootedDecomposition(
         DS_ASSERT(children_count == 1);
 
         int child = makeDecompositionNodeFromRootedDecomposition(rtd, rtd[rtd_node_id].children[0]);
-        if (decomp[child].bag == rtd_node.bag) return child;
+        if (decomp[child].bag == rtd_node.bag)
+            return child;
 
         return makeIntroduceForgetSequenceFrom(rtd_node.bag, decomp[child].bag, child);
     }
 }
 
 int NiceTreeDecomposition::makeIntroduceForgetSequenceFrom(std::vector<int> head_bag,
-                                                           std::vector<int> tail_bag, int tail_id) {
+                                                           std::vector<int> tail_bag,
+                                                           int tail_id) {
     auto intersection = intersect(head_bag, tail_bag);
 
     // Construct the sequence bottom-up.
@@ -150,13 +161,11 @@ int NiceTreeDecomposition::makeIntroduceForgetSequenceFrom(std::vector<int> head
         auto neighbours_in_bag = intersect(g.neighbourhoodExcluding(introduced), tail_bag);
 
         insert(tail_bag, introduced);
-        tail_id = createNode(NiceTreeDecomposition::NodeType::IntroduceVertex, tail_bag, introduced,
-                             NONE, tail_id);
+        tail_id = createNode(NiceTreeDecomposition::NodeType::IntroduceVertex, tail_bag, introduced, NONE, tail_id);
 
         // Then introduce each edge within the bag.
         for (auto to : neighbours_in_bag) {
-            tail_id = createNode(NiceTreeDecomposition::NodeType::IntroduceEdge, tail_bag,
-                                 introduced, to, tail_id);
+            tail_id = createNode(NiceTreeDecomposition::NodeType::IntroduceEdge, tail_bag, introduced, to, tail_id);
         }
     }
 

@@ -36,7 +36,7 @@ struct NiceTreeDecomposition {
     };
 
     static std::optional<NiceTreeDecomposition> decompose(
-        const Instance& g, std::chrono::seconds decomposition_time_budget, int tw_good_enough, int tw_too_much);
+        const Instance& g, std::chrono::seconds decomposition_time_budget, int tw_good_enough, int tw_too_much, std::string decomposer_path);
 
     const Node& operator[](int v) const;
     int root;

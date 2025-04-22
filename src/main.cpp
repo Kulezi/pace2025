@@ -16,7 +16,7 @@ void print_help() {
         << "  dshunter [--input_file <graph.gr/graph.ads>]\n"
         << "           [--output_file <file.ds>]\n"
         << "           [--solver <bruteforce/branching/treewidth_dp/mip/vc/gurobi>]\n"
-        << "           [--export] <graph.ads>\n"
+        << "           [--decomposer] <decomposer executable>\n"
         << "           [--mode] <presolve/ds_size/treewidth>\n"
         << "           [--presolve <full/cheap/none>]\n"
         << "           [--short]\n"
@@ -27,7 +27,7 @@ void print_help() {
         << "  --output_file   Write solution to specified file (default: stdout)\n"
         << "  --solver        Choose solving method: bruteforce, branching, treewidth_dp, "
            "mip, vc, gurobi\n"
-        << "  --export        Export the presolved instance to file\n"
+        << "  --decomposer    Use external executable to get tree decompositions\n"
         << "  --mode          Picks one of the non-default output modes for the solver\n"
         << "  --presolve      Choose presolver: full, cheap, none\n"
         << "  --help          Show this help message and exit\n\n"
@@ -66,6 +66,7 @@ void parse_arguments(int argc, char* argv[], std::string& input_file, std::strin
     struct option long_options[] = {{"input_file", required_argument, nullptr, 'i'},
                                     {"output_file", required_argument, nullptr, 'o'},
                                     {"solver", required_argument, nullptr, 's'},
+                                    {"decomposer", required_argument, nullptr, 'd'},
                                     {"mode", required_argument, nullptr, 'm'},
                                     {"presolve", required_argument, nullptr, 'p'},
                                     {"help", no_argument, nullptr, 'h'},
@@ -94,7 +95,9 @@ void parse_arguments(int argc, char* argv[], std::string& input_file, std::strin
                 else
                     throw std::logic_error(std::string(optarg) + " is not a valid --solver value");
                 break;
-
+            case 'd':
+                config.decomposer_path = optarg;
+                break;
             case 'p':
                 if (std::string(optarg) == "full")
                     config.presolver_type = DSHunter::PresolverType::Full;
@@ -203,7 +206,7 @@ void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::
         solver.presolve(g);
         auto td = DSHunter::NiceTreeDecomposition::decompose(g, config.decomposition_time_budget,
                                                              DSHunter::GOOD_ENOUGH_TREEWIDTH,
-                                                             DSHunter::MAX_HANDLED_TREEWIDTH)
+                                                             DSHunter::MAX_HANDLED_TREEWIDTH, config.decomposer_path)
                       .value();
         int width = td.width();
         std::vector<int> counts(width + 1);
