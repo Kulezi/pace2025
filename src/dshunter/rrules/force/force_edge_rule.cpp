@@ -3,14 +3,12 @@
 namespace DSHunter {
 
 bool forceEdgeRule(Instance& g) {
-    auto nodes = g.nodes;
-    for (auto v : nodes) {
+    for (auto v : g.nodes) {
         if (g.deg(v) == 2 && !g.isDominated(v)) {
             auto e1 = g[v].adj[0];
             auto e2 = g[v].adj[1];
 
-            DS_ASSERT(!g.isDisregarded(e1.to) || !g.isDisregarded(e2.to));
-            if (!g.hasEdge(e1.to, e2.to))
+            if (!g.hasEdge(e1.to, e2.to) || (g.isDisregarded(e1.to) && g.isDisregarded(e2.to)))
                 continue;
 
             if (e1.status == EdgeStatus::UNCONSTRAINED && e2.status == EdgeStatus::UNCONSTRAINED) {
@@ -19,17 +17,15 @@ bool forceEdgeRule(Instance& g) {
                 if (g.getEdgeStatus(e1.to, e2.to) != EdgeStatus::FORCED)
                     g.forceEdge(e1.to, e2.to);
                 return true;
-            } else if (e1.status == EdgeStatus::FORCED && e2.status == EdgeStatus::UNCONSTRAINED) {
+            } else if (e1.status == EdgeStatus::FORCED && e2.status == EdgeStatus::UNCONSTRAINED && !g.isDisregarded(e1.to)) {
                 DS_TRACE(std::cerr << __func__ << "(2)" << dbg(v) << dbg(e1.to) << std::endl);
-                DS_ASSERT(!g.isDisregarded(e1.to));
                 // Taking e1.to is optimal, as it's always better than taking v, and we are
                 // forced to take one of them.
                 g.take(e1.to);
 
                 return true;
-            } else if (e1.status == EdgeStatus::UNCONSTRAINED && e2.status == EdgeStatus::FORCED) {
+            } else if (e1.status == EdgeStatus::UNCONSTRAINED && e2.status == EdgeStatus::FORCED && !g.isDisregarded(e2.to)) {
                 DS_TRACE(std::cerr << __func__ << "(3)" << dbg(v) << dbg(e2.to) << std::endl);
-                DS_ASSERT(!g.isDisregarded(e2.to));
                 // Taking e2.to is optimal, as it's always better than taking v, and we are
                 // forced to take one of them.
                 g.take(e2.to);

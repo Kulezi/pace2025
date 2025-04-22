@@ -3,17 +3,24 @@
 namespace DSHunter {
 
 bool removeDisregardedRule(Instance& g) {
+    std::vector<int> to_take;
     for (auto u : g.nodes) {
         if (g.isDisregarded(u) && g.isDominated(u)) {
-            for (auto [v, s] : g[u].adj)
-                if (s == EdgeStatus::FORCED)
-                    g.take(v);
-            g.removeNode(u);
-            return true;
+            to_take.push_back(u);
         }
     }
 
-    return false;
+    for (auto u : to_take) {
+        for (auto [v, s] : g[u].adj) {
+            if (s == EdgeStatus::FORCED) {
+                DS_ASSERT(!g.isDisregarded(v));
+                g.take(v);
+            }
+        }
+        g.removeNode(u);
+    }
+
+    return !to_take.empty();
 }
 
 ReductionRule RemoveDisregardedRule("RemoveDisregardedRule", removeDisregardedRule, 2, 1);
