@@ -19,7 +19,29 @@ std::vector<int> Solver::solve(Instance g) {
     }
 
     switch (config.solver_type) {
-        case SolverType::Default:
+        case SolverType::Default: {
+            if (g.forcedEdgeCount() == g.edgeCount()) {
+                DS_TRACE(std::cerr << "running VC solver" << std::endl);
+                VCSolver vs;
+                g.ds = vs.solve(g);
+                break;
+            }
+
+            TreewidthSolver ts;
+            DS_TRACE(std::cerr << "running treewidth solver" << std::endl);
+            if (ts.solve(g, config.decomposition_time_budget)) {
+                DS_TRACE(std::cerr << "treewidth solver success" << std::endl);
+                break;
+            }
+
+            DS_TRACE(std::cerr << "falling back to branching solver" << std::endl);
+            BranchingSolver bs;
+            std::vector<int> ds;
+            bs.solve(g, ds);
+            g.ds = ds;
+            break;
+        }
+
         case SolverType::TreewidthDP: {
             DS_TRACE(std::cerr << "running treewidth solver" << std::endl);
             TreewidthSolver ts;
@@ -27,15 +49,15 @@ std::vector<int> Solver::solve(Instance g) {
                 throw std::logic_error("treewidth dp failed (treewidth might be too big?)");
             break;
         }
-        
+
         case SolverType::Bruteforce: {
             DS_TRACE(std::cerr << "running bruteforce solver" << std::endl);
-            
+
             BruteforceSolver bs;
             bs.solve(g);
             break;
         }
-        
+
         case SolverType::Branching: {
             DS_TRACE(std::cerr << "running branching solver" << std::endl);
             BranchingSolver bs;
