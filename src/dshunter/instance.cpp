@@ -231,7 +231,6 @@ void Instance::take(int v) {
 }
 
 // Splits the list of graph nodes into individual connected components.
-// Note in case of a connected graph it returns an empty list.
 // Complexity: O(n + m)
 std::vector<std::vector<int>> Instance::split() const {
     std::vector<int> component(all_nodes.size(), -1);
@@ -260,8 +259,6 @@ std::vector<std::vector<int>> Instance::split() const {
         }
     }
 
-    if (components <= 1)
-        return {};
     std::vector<std::vector<int>> result(components, std::vector<int>());
     for (auto v : nodes) {
         result[component[v]].push_back(v);

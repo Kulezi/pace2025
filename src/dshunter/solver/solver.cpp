@@ -21,25 +21,34 @@ std::vector<int> Solver::solve(Instance g) {
     switch (config.solver_type) {
         case SolverType::Default:
         case SolverType::TreewidthDP: {
+            DS_TRACE(std::cerr << "running treewidth solver" << std::endl);
             TreewidthSolver ts;
             if (!ts.solve(g, config.decomposition_time_budget))
                 throw std::logic_error("treewidth dp failed (treewidth might be too big?)");
             break;
         }
-
+        
         case SolverType::Bruteforce: {
+            DS_TRACE(std::cerr << "running bruteforce solver" << std::endl);
+            
             BruteforceSolver bs;
             bs.solve(g);
             break;
         }
-
+        
         case SolverType::Branching: {
+            DS_TRACE(std::cerr << "running branching solver" << std::endl);
             BranchingSolver bs;
-            bs.solve(g, g.ds);
+
+            std::vector<int> ds;
+            bs.solve(g, ds);
+            g.ds = ds;
             break;
         }
 
         case SolverType::ReduceToVertexCover: {
+            DS_TRACE(std::cerr << "running vertex cover solver" << std::endl);
+
             if (g.forcedEdgeCount() != g.edgeCount()) {
                 throw std::logic_error(
                     "given instance contains unconstrained edges, making VC reduction "
@@ -52,6 +61,8 @@ std::vector<int> Solver::solve(Instance g) {
         }
 
         case SolverType::Gurobi: {
+            DS_TRACE(std::cerr << "running gurobi solver" << std::endl);
+
             GurobiSolver gs;
             if (!gs.solve(g)) {
                 throw std::logic_error("gurobi didn't find a solution in time");
@@ -65,6 +76,7 @@ std::vector<int> Solver::solve(Instance g) {
     }
 
     sort(g.ds.begin(), g.ds.end());
+
     verify_solution(initial_instance, g.ds);
     return g.ds;
 }

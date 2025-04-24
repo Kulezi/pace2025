@@ -47,6 +47,7 @@ set(HEADER_IMPLEMENTATIONS
     src/dshunter/solver/solver.cpp
     src/dshunter/solver/treewidth/td/flow_cutter_wrapper.cpp
     src/dshunter/instance.cpp
+    src/dshunter/bounds.cpp
     src/dshunter/solver/treewidth/td/nice_tree_decomposition.cpp
     src/dshunter/solver/treewidth/td/rooted_tree_decomposition.cpp
     src/dshunter/rrules/alber/main_rule_1.cpp
