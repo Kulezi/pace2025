@@ -1,6 +1,7 @@
 #ifndef DS_VERIFIER_H
 #define DS_VERIFIER_H
 #include "../instance.h"
+#include "../utils.h"
 namespace DSHunter {
 
 // Checks whether the given solution is a valid dominating set of the given instance.

@@ -8,10 +8,14 @@ namespace DSHunter {
 struct BranchingSolver {
     std::vector<ReductionRule> reduction_rules;
 
-    void solve(const Instance g, std::vector<int> &best_ds, int level = 0);
+    BranchingSolver();
+    BranchingSolver(std::vector<ReductionRule> rrules);
+    void solve(Instance g, std::vector<int> &best_ds);
 
    private:
-    void take(Instance g, int v, std::vector<int> &best_ds, int level);
+    int selectNode(const Instance &g);
+
+    void branch(const Instance &g, int v, std::vector<int> &best_ds);
 };
 }  // namespace DSHunter
 #endif  // DS_BRANCHING_SOLVER_H

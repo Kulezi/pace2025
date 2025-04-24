@@ -54,7 +54,6 @@ def main():
             sys.exit(1)
     
     print("[OK] Stress test done")
-    subprocess.run(["make", "clean"], check=True)
 
 if __name__ == "__main__":
     main()
