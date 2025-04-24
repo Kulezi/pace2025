@@ -4,14 +4,20 @@ bool alberSimpleRule2(Instance& g) {
     std::vector<int> to_remove;
     std::vector<int> to_take;
     for (auto v : g.nodes) {
-        if (g.isDominated(v) && g.deg(v) <= 1) {
-            to_remove.push_back(v);
-            if (g.deg(v) == 1) {
+        if (g.isDominated(v)) {
+            if (g.deg(v) == 0) {
+                to_remove.push_back(v);
+            } else if (g.deg(v) == 1) {
                 auto [w, status] = g[v].adj[0];
+
+                // We might need to use v to dominate w in this case.
+                if (g.isDisregarded(w) && !g.isDominated(w))
+                    continue;
+
                 // The edge is forced so it's optimal to take the end that possibly could have
                 // larger degree. If the other end of the edge also would be a candidate for
                 // this reduction, apply it only to the vertex with smaller label.
-                if (status == EdgeStatus::FORCED && !(g.deg(w) == 1 && g.isDominated(w) && v > w)) {
+                if (status == EdgeStatus::FORCED && (g.isDisregarded(v) || !(g.deg(w) == 1 && v > w))) {
                     to_take.push_back(w);
                 }
             }
