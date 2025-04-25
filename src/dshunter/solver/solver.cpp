@@ -29,7 +29,7 @@ std::vector<int> Solver::solve(Instance g) {
 
             TreewidthSolver ts;
             DS_TRACE(std::cerr << "running treewidth solver" << std::endl);
-            if (ts.solve(g, config.decomposition_time_budget)) {
+            if (ts.solve(g, config.decomposition_time_budget, config.decomposer_path)) {
                 DS_TRACE(std::cerr << "treewidth solver success" << std::endl);
                 break;
             }
@@ -45,14 +45,13 @@ std::vector<int> Solver::solve(Instance g) {
         case SolverType::TreewidthDP: {
             DS_TRACE(std::cerr << "running treewidth solver" << std::endl);
             TreewidthSolver ts;
-            if (!ts.solve(g, config.decomposition_time_budget))
+            if (!ts.solve(g, config.decomposition_time_budget, config.decomposer_path))
                 throw std::logic_error("treewidth dp failed (treewidth might be too big?)");
             break;
         }
 
         case SolverType::Bruteforce: {
             DS_TRACE(std::cerr << "running bruteforce solver" << std::endl);
-
             BruteforceSolver bs;
             bs.solve(g);
             break;

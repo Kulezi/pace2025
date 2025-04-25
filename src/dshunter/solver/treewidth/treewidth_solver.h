@@ -16,7 +16,7 @@ struct TreewidthSolver {
 
     // Returns true if instance was solved,
     // false if the width of found decompositions was too big to handle.
-    bool solve(Instance &g, std::chrono::seconds decomposition_time_budget);
+    bool solve(Instance &g, std::chrono::seconds decomposition_time_budget, std::string decomposerPath);
 
    private:
     inline int cost(const Instance &g, int v);

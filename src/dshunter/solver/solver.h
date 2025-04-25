@@ -27,6 +27,7 @@ struct SolverConfig {
     SolverType solver_type;
     PresolverType presolver_type;
     std::chrono::seconds decomposition_time_budget;
+    std::string decomposer_path;
 
     SolverConfig(std::vector<ReductionRule> rrules, SolverType st, PresolverType pt)
         : reduction_rules(rrules), solver_type(st), presolver_type(pt) {
@@ -36,7 +37,8 @@ struct SolverConfig {
         : reduction_rules(DSHunter::get_default_reduction_rules()),
           solver_type(SolverType::Default),
           presolver_type(PresolverType::Full),
-          decomposition_time_budget(300s) {
+          decomposition_time_budget(10s),
+          decomposer_path() {
     }
 };
 

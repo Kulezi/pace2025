@@ -65,6 +65,7 @@ set(HEADER_IMPLEMENTATIONS
     src/dshunter/rrules/defaults.cpp
     src/dshunter/solver/treewidth/ternary.cpp
     src/dshunter/solver/treewidth/td/tree_decomposition.cpp
+    src/dshunter/solver/treewidth/td/exec_decompose.cpp
     src/dshunter/solver/treewidth/treewidth_solver.cpp
     src/dshunter/solver/branching/branching_solver.cpp
     src/dshunter/solver/bruteforce/bruteforce_solver.cpp
