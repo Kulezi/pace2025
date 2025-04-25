@@ -1,4 +1,4 @@
-#include "exec_decompose.h"
+#include "exec_decomposer.h"
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -19,9 +19,7 @@ namespace DSHunter {
 
 // Attempts to run an external decomposer on input_graph within time_limit.
 // On success returns a filled TreeDecomposition, otherwise logs via DS_TRACE and returns nullopt.
-std::optional<TreeDecomposition> execDecompose(const std::string& path_to_decomposer,
-                                                const Instance& input_graph,
-                                                std::chrono::milliseconds time_limit) {
+std::optional<TreeDecomposition> ExecDecomposer::decompose(const Instance& input_graph) {
     int stdin_pipe[2];
     int stdout_pipe[2];
     if (pipe(stdin_pipe) == -1 || pipe(stdout_pipe) == -1) {
@@ -47,7 +45,7 @@ std::optional<TreeDecomposition> execDecompose(const std::string& path_to_decomp
         }
         close(stdin_pipe[1]);
         close(stdout_pipe[0]);
-        execl(path_to_decomposer.c_str(), path_to_decomposer.c_str(), static_cast<char*>(nullptr));
+        execl(cfg->decomposer_path.c_str(), cfg->decomposer_path.c_str(), static_cast<char*>(nullptr));
         _exit(1);
     }
 
@@ -94,7 +92,7 @@ std::optional<TreeDecomposition> execDecompose(const std::string& path_to_decomp
         if (ret == pid || ret == -1) {
             break;
         }
-        if (std::chrono::steady_clock::now() - start > time_limit) {
+        if (std::chrono::steady_clock::now() - start > cfg->decomposition_time_budget) {
             kill(pid, SIGTERM);
             break;
         }

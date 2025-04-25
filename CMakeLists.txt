@@ -44,12 +44,13 @@ add_library(flow_cutter STATIC
 
 # List of implementation files for header files
 set(HEADER_IMPLEMENTATIONS
-    src/dshunter/solver/solver.cpp
-    src/dshunter/solver/treewidth/td/flow_cutter_wrapper.cpp
-    src/dshunter/instance.cpp
     src/dshunter/bounds.cpp
-    src/dshunter/solver/treewidth/td/nice_tree_decomposition.cpp
-    src/dshunter/solver/treewidth/td/rooted_tree_decomposition.cpp
+    src/dshunter/instance.cpp
+    src/dshunter/utils.cpp
+
+    src/dshunter/solver/solver.cpp
+    src/dshunter/solver/verifier.cpp
+
     src/dshunter/rrules/alber/main_rule_1.cpp
     src/dshunter/rrules/alber/main_rule_2.cpp
     src/dshunter/rrules/alber/simple_rule_1.cpp
@@ -64,16 +65,24 @@ set(HEADER_IMPLEMENTATIONS
     src/dshunter/rrules/reduce.cpp
     src/dshunter/rrules/apply.cpp
     src/dshunter/rrules/defaults.cpp
+
     src/dshunter/solver/treewidth/ternary.cpp
-    src/dshunter/solver/treewidth/td/tree_decomposition.cpp
-    src/dshunter/solver/treewidth/td/exec_decompose.cpp
     src/dshunter/solver/treewidth/treewidth_solver.cpp
+    src/dshunter/solver/treewidth/td/flow_cutter_decomposer.cpp
+    src/dshunter/solver/treewidth/td/exec_decomposer.cpp
+    src/dshunter/solver/treewidth/td/decomposer.cpp
+    src/dshunter/solver/treewidth/td/tree_decomposition.cpp
+    src/dshunter/solver/treewidth/td/rooted_tree_decomposition.cpp
+    src/dshunter/solver/treewidth/td/nice_tree_decomposition.cpp
+
+
     src/dshunter/solver/branching/branching_solver.cpp
+
     src/dshunter/solver/bruteforce/bruteforce_solver.cpp
+
     src/dshunter/solver/vc/vc_solver.cpp
+
     src/dshunter/solver/gurobi/gurobi_solver.cpp
-    src/dshunter/solver/verifier.cpp
-    src/dshunter/utils.cpp
 )
 
 # Create a library for shared components

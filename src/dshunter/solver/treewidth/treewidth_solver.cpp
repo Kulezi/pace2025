@@ -1,21 +1,30 @@
 #include "treewidth_solver.h"
+#include "td/exec_decomposer.h"
+#include "td/flow_cutter_decomposer.h"
 
 #include "../../utils.h"
+
+namespace {
+DSHunter::Decomposer getDecomposer(const DSHunter::SolverConfig *cfg) {
+    if (cfg->decomposer_path.empty()) return DSHunter::FlowCutterDecomposer(cfg);
+    return DSHunter::ExecDecomposer(cfg);
+}
+}  // namespace
+
 namespace DSHunter {
+TreewidthSolver::TreewidthSolver(const SolverConfig *cfg) : cfg(cfg), decomposer(getDecomposer(cfg)) {}
+
 constexpr int UNSET = -1, INF = 1'000'000'000;
 
 // Returns true if instance was solved. Solution set is stored in given instance.
 // Returns false if it would lead to exceeding the memory limit.
-bool TreewidthSolver::solve(Instance &g, std::chrono::seconds decomposition_time_budget, std::string decomposer_path) {
-    auto o = NiceTreeDecomposition::decompose(g, decomposition_time_budget, GOOD_ENOUGH_TREEWIDTH, MAX_HANDLED_TREEWIDTH, decomposer_path);
+bool TreewidthSolver::solve(Instance &g) {
+    auto o = decomposer.decompose(g);
     if (!o.has_value())
         return false;
-    auto td = o.value();
 
-    DS_TRACE(std::cerr << dbg(td.width()) << " " << dbg(getMemoryUsage(td)) << std::endl);
-
-    DS_ASSERT(td.width() <= MAX_HANDLED_TREEWIDTH);
-    if (getMemoryUsage(td) > MAX_MEMORY_IN_BYTES)
+    auto td = NiceTreeDecomposition::nicify(g, o.value());
+    if (getMemoryUsage(td) > cfg->max_memory_in_bytes)
         return false;
 
     c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
@@ -245,7 +254,6 @@ void TreewidthSolver::recoverDS(Instance &g, NiceTreeDecomposition &td, int t, T
 }
 
 uint64_t TreewidthSolver::getMemoryUsage(const NiceTreeDecomposition &td) {
-    DS_ASSERT(td.width() <= MAX_HANDLED_TREEWIDTH);
     uint64_t res = 0;
     for (int i = 0; i < td.n_nodes(); i++) {
         res += pow3[td[i].bag.size()] * sizeof(int) + sizeof(std::vector<int>);

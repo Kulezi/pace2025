@@ -35,14 +35,14 @@ struct NiceTreeDecomposition {
         int r_child;
     };
 
-    static std::optional<NiceTreeDecomposition> decompose(
-        const Instance& g, std::chrono::seconds decomposition_time_budget, int tw_good_enough, int tw_too_much, std::string decomposer_path);
+    static NiceTreeDecomposition nicify(
+        const Instance& g, TreeDecomposition td);
 
     const Node& operator[](int v) const;
     int root;
 
     int n_nodes() const;
-    size_t width() const;
+    int width() const;
     void print() const;
 
    private:
