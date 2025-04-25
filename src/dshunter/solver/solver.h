@@ -28,6 +28,10 @@ struct SolverConfig {
     PresolverType presolver_type;
     std::chrono::seconds decomposition_time_budget;
     std::string decomposer_path;
+    int random_seed;
+    int good_enough_treewidth;
+    int max_treewidth;
+    size_t max_memory_in_bytes;
 
     SolverConfig(std::vector<ReductionRule> rrules, SolverType st, PresolverType pt)
         : reduction_rules(rrules), solver_type(st), presolver_type(pt) {
@@ -38,15 +42,19 @@ struct SolverConfig {
           solver_type(SolverType::Default),
           presolver_type(PresolverType::Full),
           decomposition_time_budget(10s),
-          decomposer_path() {
+          decomposer_path(),
+          random_seed(0),
+          good_enough_treewidth(14),
+          max_treewidth(18),
+          max_memory_in_bytes(8UL << 30UL) {
     }
 };
 
 struct Solver {
-    SolverConfig config;
-    Solver() : config(SolverConfig()) {
+    SolverConfig cfg;
+    Solver() : cfg(SolverConfig()) {
     }
-    Solver(SolverConfig sc) : config(sc) {
+    Solver(SolverConfig sc) : cfg(sc) {
     }
 
     std::vector<int> solve(Instance g);

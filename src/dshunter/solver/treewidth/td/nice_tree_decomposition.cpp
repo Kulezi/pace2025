@@ -7,25 +7,10 @@
 #include <vector>
 
 #include "../../../utils.h"
-#include "exec_decompose.h"
-#include "flow_cutter_wrapper.h"
 namespace DSHunter {
 
-std::optional<NiceTreeDecomposition> NiceTreeDecomposition::decompose(
-    const Instance& g, std::chrono::seconds decomposition_time_budget, int tw_good_enough, int tw_max, std::string decomposer_path) {
-    TreeDecomposition initial_decomposition;
-    if (decomposer_path.empty()) {
-        initial_decomposition = FlowCutter::decompose(g, 0, decomposition_time_budget, tw_good_enough);
-    } else {
-        auto t = execDecompose("/home/dvdpawcio/repos/magisterka/PACE2017-TrackA/tw-heuristic", g, decomposition_time_budget);
-        if (!t.has_value()) return std::nullopt;
-        initial_decomposition = t.value();
-    }
-
-    if (initial_decomposition.width > tw_max)
-        return std::nullopt;
-
-    auto rooted_decomposition = RootedTreeDecomposition(initial_decomposition);
+NiceTreeDecomposition NiceTreeDecomposition::nicify(const Instance &g, TreeDecomposition td) {
+    auto rooted_decomposition = RootedTreeDecomposition(td);
     rooted_decomposition.sortBags();
     rooted_decomposition.equalizeJoinChildren();
     rooted_decomposition.binarizeJoins();
@@ -47,11 +32,11 @@ const NiceTreeDecomposition::Node& NiceTreeDecomposition::operator[](int v) cons
 
 int NiceTreeDecomposition::n_nodes() const { return decomp.size(); }
 
-size_t NiceTreeDecomposition::width() const {
-    size_t max_width = 0;
+int NiceTreeDecomposition::width() const {
+    int max_width = 0;
     for (auto& v : decomp)
-        if (max_width < v.bag.size())
-            max_width = v.bag.size();
+        if (max_width < (int)v.bag.size())
+            max_width = (int)v.bag.size();
     return max_width;
 }
 

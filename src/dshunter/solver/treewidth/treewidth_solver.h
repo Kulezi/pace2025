@@ -4,21 +4,23 @@
 #include <cstdint>
 
 #include "../../instance.h"
+#include "../solver.h"
+#include "td/decomposer.h"
 #include "td/nice_tree_decomposition.h"
 #include "ternary.h"
 
 namespace DSHunter {
-constexpr uint64_t MAX_MEMORY_IN_BYTES = (1UL << 30);
-constexpr size_t MAX_HANDLED_TREEWIDTH = 18;
-constexpr size_t GOOD_ENOUGH_TREEWIDTH = 13;
 struct TreewidthSolver {
-    std::vector<std::vector<int>> c;
-
+    TreewidthSolver(const SolverConfig *cfg);
     // Returns true if instance was solved,
     // false if the width of found decompositions was too big to handle.
-    bool solve(Instance &g, std::chrono::seconds decomposition_time_budget, std::string decomposerPath);
+    bool solve(Instance &g);
+
+    const SolverConfig *cfg;
+    Decomposer decomposer;
 
    private:
+    std::vector<std::vector<int>> c;
     inline int cost(const Instance &g, int v);
 
     // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3] extended to handle forced

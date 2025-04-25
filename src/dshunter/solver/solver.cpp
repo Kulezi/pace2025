@@ -18,7 +18,7 @@ std::vector<int> Solver::solve(Instance g) {
         return g.ds;
     }
 
-    switch (config.solver_type) {
+    switch (cfg.solver_type) {
         case SolverType::Default: {
             if (g.forcedEdgeCount() == g.edgeCount()) {
                 DS_TRACE(std::cerr << "running VC solver" << std::endl);
@@ -27,9 +27,9 @@ std::vector<int> Solver::solve(Instance g) {
                 break;
             }
 
-            TreewidthSolver ts;
+            TreewidthSolver ts(&cfg);
             DS_TRACE(std::cerr << "running treewidth solver" << std::endl);
-            if (ts.solve(g, config.decomposition_time_budget, config.decomposer_path)) {
+            if (ts.solve(g)) {
                 DS_TRACE(std::cerr << "treewidth solver success" << std::endl);
                 break;
             }
@@ -44,8 +44,8 @@ std::vector<int> Solver::solve(Instance g) {
 
         case SolverType::TreewidthDP: {
             DS_TRACE(std::cerr << "running treewidth solver" << std::endl);
-            TreewidthSolver ts;
-            if (!ts.solve(g, config.decomposition_time_budget, config.decomposer_path))
+            TreewidthSolver ts(&cfg);
+            if (!ts.solve(g))
                 throw std::logic_error("treewidth dp failed (treewidth might be too big?)");
             break;
         }
@@ -93,7 +93,7 @@ std::vector<int> Solver::solve(Instance g) {
 
         default:
             throw std::logic_error("invalid solver_type value of " +
-                                   std::to_string((int)config.solver_type) + " in SolverConfig");
+                                   std::to_string((int)cfg.solver_type) + " in SolverConfig");
     }
 
     sort(g.ds.begin(), g.ds.end());
@@ -113,7 +113,7 @@ int presolve_complexity(PresolverType pt) {
 }
 
 void Solver::presolve(Instance &g) {
-    reduce(g, config.reduction_rules, presolve_complexity(config.presolver_type));
+    reduce(g, cfg.reduction_rules, presolve_complexity(cfg.presolver_type));
 }
 
 }  // namespace DSHunter

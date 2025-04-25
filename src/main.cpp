@@ -6,8 +6,6 @@
 #include <memory>
 
 #include "dshunter/dshunter.h"
-#include "dshunter/solver/treewidth/td/flow_cutter_wrapper.h"
-#include "dshunter/solver/treewidth/td/nice_tree_decomposition.h"
 #include "dshunter/solver/treewidth/treewidth_solver.h"
 namespace {
 void print_help() {
@@ -61,16 +59,15 @@ enum SolverMode {
     HISTOGRAM,
 };
 
-void parse_arguments(int argc, char* argv[], std::string& input_file, std::string& output_file,
-                     DSHunter::SolverConfig& config, SolverMode& mode) {
-    struct option long_options[] = {{"input_file", required_argument, nullptr, 'i'},
-                                    {"output_file", required_argument, nullptr, 'o'},
-                                    {"solver", required_argument, nullptr, 's'},
-                                    {"decomposer", required_argument, nullptr, 'd'},
-                                    {"mode", required_argument, nullptr, 'm'},
-                                    {"presolve", required_argument, nullptr, 'p'},
-                                    {"help", no_argument, nullptr, 'h'},
-                                    {nullptr, 0, nullptr, 0}};
+void parse_arguments(int argc, char* argv[], std::string& input_file, std::string& output_file, DSHunter::SolverConfig& config, SolverMode& mode) {
+    struct option long_options[] = { { "input_file", required_argument, nullptr, 'i' },
+                                     { "output_file", required_argument, nullptr, 'o' },
+                                     { "solver", required_argument, nullptr, 's' },
+                                     { "decomposer", required_argument, nullptr, 'd' },
+                                     { "mode", required_argument, nullptr, 'm' },
+                                     { "presolve", required_argument, nullptr, 'p' },
+                                     { "help", no_argument, nullptr, 'h' },
+                                     { nullptr, 0, nullptr, 0 } };
 
     int opt;
     while ((opt = getopt_long(argc, argv, "i:o:m:p:sh", long_options, nullptr)) != -1) {
@@ -183,20 +180,20 @@ void export_presolution(const DSHunter::Instance& g, std::ostream& output) {
 
     for (auto u : g.nodes) {
         for (auto [v, status] : g[u].adj) {
-            if (u < v) output << u << " " << v << " " << (int)status << "\n";
+            if (u < v)
+                output << u << " " << v << " " << (int)status << "\n";
         }
     }
 }
 
-void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::ostream& output,
-                      SolverMode mode) {
+void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::ostream& output, SolverMode mode) {
     DSHunter::Instance g(input);
     DSHunter::Solver solver(config);
 
     if (mode == TREEWIDTH) {
         solver.presolve(g);
-        auto decomposition = DSHunter::FlowCutter::decompose(g, 0, config.decomposition_time_budget,
-                                                             DSHunter::GOOD_ENOUGH_TREEWIDTH);
+        DSHunter::TreewidthSolver ts(&config);
+        auto decomposition = ts.decomposer.decompose(g).value();
         auto treewidth = decomposition.width;
         output << treewidth << std::endl;
         return;
@@ -204,15 +201,13 @@ void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::
 
     if (mode == HISTOGRAM) {
         solver.presolve(g);
-        auto td = DSHunter::NiceTreeDecomposition::decompose(g, config.decomposition_time_budget,
-                                                             DSHunter::GOOD_ENOUGH_TREEWIDTH,
-                                                             DSHunter::MAX_HANDLED_TREEWIDTH, config.decomposer_path)
-                      .value();
-        int width = td.width();
+        DSHunter::TreewidthSolver ts(&config);
+        auto td = ts.decomposer.decompose(g).value();
+
+        int width = td.width;
         std::vector<int> counts(width + 1);
-        for (int i = 0; i < td.n_nodes(); i++)
-            if (td[i].type == DSHunter::NiceTreeDecomposition::NodeType::Join)
-                ++counts[td[i].bag.size()];
+        for (int i = 0; i < td.size(); i++)
+            ++counts[td.bag[i].size()];
 
         std::cout << width << "\n";
         for (int i = 0; i <= width; i++) {
