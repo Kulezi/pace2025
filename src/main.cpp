@@ -193,7 +193,7 @@ void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::
     if (mode == TREEWIDTH) {
         solver.presolve(g);
         DSHunter::TreewidthSolver ts(&config);
-        auto decomposition = ts.decomposer.decompose(g).value();
+        auto decomposition = ts.decomposer->decompose(g).value();
         auto treewidth = decomposition.width;
         output << treewidth << std::endl;
         return;
@@ -202,7 +202,7 @@ void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::
     if (mode == HISTOGRAM) {
         solver.presolve(g);
         DSHunter::TreewidthSolver ts(&config);
-        auto td = ts.decomposer.decompose(g).value();
+        auto td = ts.decomposer->decompose(g).value();
 
         int width = td.width;
         std::vector<int> counts(width + 1);

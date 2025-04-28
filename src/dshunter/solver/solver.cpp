@@ -33,7 +33,7 @@ std::vector<int> Solver::solve(Instance g) {
                 DS_TRACE(std::cerr << "treewidth solver success" << std::endl);
                 break;
             }
-
+            exit(1);
             DS_TRACE(std::cerr << "falling back to branching solver" << std::endl);
             BranchingSolver bs;
             std::vector<int> ds;

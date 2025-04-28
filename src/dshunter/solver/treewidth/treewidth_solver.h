@@ -2,6 +2,7 @@
 #define DS_TREEWIDTH_SOLVER_H
 #include <chrono>
 #include <cstdint>
+#include <memory>
 
 #include "../../instance.h"
 #include "../solver.h"
@@ -17,17 +18,19 @@ struct TreewidthSolver {
     bool solve(Instance &g);
 
     const SolverConfig *cfg;
-    Decomposer decomposer;
+    std::unique_ptr<Decomposer> decomposer;
 
    private:
     std::vector<std::vector<int>> c;
+    Instance g;
+    NiceTreeDecomposition td;
     inline int cost(const Instance &g, int v);
 
     // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3] extended to handle forced
     // edges.
-    int getC(const Instance &g, NiceTreeDecomposition &td, int t, TernaryFun f);
+    int getC(int t, TernaryFun f);
 
-    void recoverDS(Instance &g, NiceTreeDecomposition &td, int t, TernaryFun f);
+    void recoverDS(int t, TernaryFun f);
 
     uint64_t getMemoryUsage(const NiceTreeDecomposition &td);
 };

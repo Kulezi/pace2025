@@ -7,6 +7,7 @@
 
 namespace DSHunter {
 
+Instance::Instance() = default;
 // Constructs graph from input stream assuming DIMACS-like .gr format.
 Instance::Instance(std::istream &in) : ds{} {
     std::string line;

@@ -35,8 +35,9 @@ struct NiceTreeDecomposition {
         int r_child;
     };
 
+    NiceTreeDecomposition();
     static NiceTreeDecomposition nicify(
-        const Instance& g, TreeDecomposition td);
+        Instance g, TreeDecomposition td);
 
     const Node& operator[](int v) const;
     int root;
@@ -46,7 +47,7 @@ struct NiceTreeDecomposition {
     void print() const;
 
    private:
-    const Instance g;
+    Instance g;
     std::vector<Node> decomp;
     static const int NONE = -1;
 
