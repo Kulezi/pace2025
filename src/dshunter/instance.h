@@ -57,6 +57,8 @@ struct Instance {
     // Nodes already removed from the graph considered as the dominating set candidates.
     std::vector<int> ds;
 
+    // Constructs an empty graph.
+    Instance();
     // Constructs graph from input stream assuming DIMACS-like .gr format.
     Instance(std::istream &in);
 

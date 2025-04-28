@@ -9,7 +9,8 @@
 #include "../../../utils.h"
 namespace DSHunter {
 
-NiceTreeDecomposition NiceTreeDecomposition::nicify(const Instance &g, TreeDecomposition td) {
+NiceTreeDecomposition::NiceTreeDecomposition() = default;
+NiceTreeDecomposition NiceTreeDecomposition::nicify(Instance g, TreeDecomposition td) {
     auto rooted_decomposition = RootedTreeDecomposition(td);
     rooted_decomposition.sortBags();
     rooted_decomposition.equalizeJoinChildren();

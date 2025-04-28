@@ -1,17 +1,18 @@
 #include "exec_decomposer.h"
+
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <cerrno>
+#include <cstring>
 #include <optional>
 #include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
-#include <cerrno>
-#include <cstring>
 
 #include "../../../utils.h"
 
@@ -63,7 +64,8 @@ std::optional<TreeDecomposition> ExecDecomposer::decompose(const Instance& input
         oss << "p tw " << input_graph.nodeCount() << " " << input_graph.edgeCount() << "\n";
         for (auto u : input_graph.nodes) {
             for (auto [v, _] : input_graph[u].adj) {
-                if (u > v) continue;
+                if (u > v)
+                    continue;
                 oss << rv[u] + 1 << " " << rv[v] + 1 << "\n";
             }
         }
@@ -110,7 +112,8 @@ std::optional<TreeDecomposition> ExecDecomposer::decompose(const Instance& input
     bool header_found = false;
     // Read solution line
     while (std::getline(iss, line)) {
-        if (line.empty()) continue;
+        if (line.empty())
+            continue;
         if (line[0] == 'c') {
             std::cerr << "execDecompose: " << line << std::endl;
             continue;
@@ -142,7 +145,8 @@ std::optional<TreeDecomposition> ExecDecomposer::decompose(const Instance& input
     }
     // Read bags and edges
     while (std::getline(iss, line)) {
-        if (line.empty() || line[0] == 'c') continue;
+        if (line.empty() || line[0] == 'c')
+            continue;
         std::istringstream lss(line);
         char prefix;
         lss >> prefix;

@@ -1,13 +1,13 @@
 #include "treewidth_solver.h"
 #include "td/exec_decomposer.h"
 #include "td/flow_cutter_decomposer.h"
-
+#include <memory>
 #include "../../utils.h"
 
 namespace {
-DSHunter::Decomposer getDecomposer(const DSHunter::SolverConfig *cfg) {
-    if (cfg->decomposer_path.empty()) return DSHunter::FlowCutterDecomposer(cfg);
-    return DSHunter::ExecDecomposer(cfg);
+std::unique_ptr<DSHunter::Decomposer> getDecomposer(const DSHunter::SolverConfig *cfg) {
+    if (cfg->decomposer_path.empty()) return std::make_unique<DSHunter::FlowCutterDecomposer>(cfg);
+    return std::make_unique<DSHunter::ExecDecomposer>(cfg);
 }
 }  // namespace
 
@@ -18,19 +18,23 @@ constexpr int UNSET = -1, INF = 1'000'000'000;
 
 // Returns true if instance was solved. Solution set is stored in given instance.
 // Returns false if it would lead to exceeding the memory limit.
-bool TreewidthSolver::solve(Instance &g) {
-    auto o = decomposer.decompose(g);
-    if (!o.has_value())
-        return false;
+bool TreewidthSolver::solve(Instance &instance) {
+    g = instance;
 
-    auto td = NiceTreeDecomposition::nicify(g, o.value());
+    auto o = decomposer->decompose(g);
+    if (!o.has_value()){
+        std::cerr << "Decomposition failed" << std::endl;
+        return false;
+}
+    td = NiceTreeDecomposition::nicify(g, o.value());
     if (getMemoryUsage(td) > cfg->max_memory_in_bytes)
         return false;
 
     c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
 
-    getC(g, td, td.root, 0);
-    recoverDS(g, td, td.root, 0);
+    getC(td.root, 0);
+    recoverDS(td.root, 0);
+    instance.ds = g.ds;
     return true;
 }
 
@@ -38,7 +42,7 @@ inline int TreewidthSolver::cost(const Instance &g, int v) { return g[v].is_extr
 
 // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3] extended to handle forced
 // edges.
-int TreewidthSolver::getC(const Instance &g, NiceTreeDecomposition &td, int t, TernaryFun f) {
+int TreewidthSolver::getC(int t, TernaryFun f) {
     const auto &node = td[t];
     DS_ASSERT(f < pow3[node.bag.size()]);
 
@@ -63,7 +67,7 @@ int TreewidthSolver::getC(const Instance &g, NiceTreeDecomposition &td, int t, T
             if (f_v == Color::WHITE && !g.isDominated(node.v))
                 return c[t][f] = INF;
             else {
-                return c[t][f] = getC(g, td, node.l_child, cut(f, pos));
+                return c[t][f] = getC(node.l_child, cut(f, pos));
             }
         }
         case NiceTreeDecomposition::NodeType::IntroduceEdge: {
@@ -80,27 +84,27 @@ int TreewidthSolver::getC(const Instance &g, NiceTreeDecomposition &td, int t, T
                 // We are forced to take at least one of the endpoints of the edge to the
                 // dominating set.
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    return c[t][f] = getC(g, td, node.l_child, set(f, pos_v, Color::GRAY));
+                    return c[t][f] = getC(node.l_child, set(f, pos_v, Color::GRAY));
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    return c[t][f] = getC(g, td, node.l_child, set(f, pos_u, Color::GRAY));
+                    return c[t][f] = getC(node.l_child, set(f, pos_u, Color::GRAY));
                 else if (f_u == Color::BLACK || f_v == Color::BLACK)
-                    return c[t][f] = getC(g, td, node.l_child, f);
+                    return c[t][f] = getC(node.l_child, f);
                 else
                     return c[t][f] = INF;
             } else {
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    return c[t][f] = getC(g, td, node.l_child, set(f, pos_v, Color::GRAY));
+                    return c[t][f] = getC(node.l_child, set(f, pos_v, Color::GRAY));
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    return c[t][f] = getC(g, td, node.l_child, set(f, pos_u, Color::GRAY));
+                    return c[t][f] = getC(node.l_child, set(f, pos_u, Color::GRAY));
                 else
-                    return c[t][f] = getC(g, td, node.l_child, f);
+                    return c[t][f] = getC(node.l_child, f);
             }
         }
         case NiceTreeDecomposition::NodeType::Forget: {
             int pos_w = bag_pos(td[node.l_child].bag, node.v);
             return c[t][f] = std::min(
-                       cost(g, node.v) + getC(g, td, node.l_child, insert(f, pos_w, Color::BLACK)),
-                       getC(g, td, node.l_child, insert(f, pos_w, Color::WHITE)));
+                       cost(g, node.v) + getC(node.l_child, insert(f, pos_w, Color::BLACK)),
+                       getC(node.l_child, insert(f, pos_w, Color::WHITE)));
         }
         case NiceTreeDecomposition::NodeType::Join: {
 #if DS_BENCHMARK
@@ -144,7 +148,7 @@ int TreewidthSolver::getC(const Instance &g, NiceTreeDecomposition &td, int t, T
                     std::chrono::high_resolution_clock::now() - start;
 #endif
                 c[t][f] = std::min(c[t][f],
-                                   getC(g, td, node.l_child, f_1) + getC(g, td, node.r_child, f_2));
+                                   getC(node.l_child, f_1) + getC(node.r_child, f_2));
             }
             return c[t][f];
         }
@@ -153,7 +157,7 @@ int TreewidthSolver::getC(const Instance &g, NiceTreeDecomposition &td, int t, T
     throw std::logic_error("Unknown node type reached in calc_c!");
 }
 
-void TreewidthSolver::recoverDS(Instance &g, NiceTreeDecomposition &td, int t, TernaryFun f) {
+void TreewidthSolver::recoverDS(int t, TernaryFun f) {
     auto &node = td[t];
     DS_ASSERT(f < pow3[node.bag.size()]);
     DS_ASSERT(!c[t].empty() && c[t][f] != UNSET);
@@ -167,7 +171,7 @@ void TreewidthSolver::recoverDS(Instance &g, NiceTreeDecomposition &td, int t, T
     switch (node.type) {
         case NiceTreeDecomposition::NodeType::IntroduceVertex: {
             int pos = bag_pos(node.bag, node.v);
-            recoverDS(g, td, node.l_child, cut(f, pos));
+            recoverDS(node.l_child, cut(f, pos));
             return;
         }
         case NiceTreeDecomposition::NodeType::IntroduceEdge: {
@@ -182,32 +186,32 @@ void TreewidthSolver::recoverDS(Instance &g, NiceTreeDecomposition &td, int t, T
                       edge_status == EdgeStatus::FORCED);
             if (edge_status == EdgeStatus::FORCED) {
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    recoverDS(g, td, node.l_child, set(f, pos_v, Color::GRAY));
+                    recoverDS(node.l_child, set(f, pos_v, Color::GRAY));
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    recoverDS(g, td, node.l_child, set(f, pos_u, Color::GRAY));
+                    recoverDS(node.l_child, set(f, pos_u, Color::GRAY));
                 else if (f_u == Color::BLACK || f_v == Color::BLACK)
-                    recoverDS(g, td, node.l_child, f);
+                    recoverDS(node.l_child, f);
                 else
                     throw std::logic_error(
                         "entered IntroduceEdge state corresponding to no solution");
             } else {
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    recoverDS(g, td, node.l_child, set(f, pos_v, Color::GRAY));
+                    recoverDS(node.l_child, set(f, pos_v, Color::GRAY));
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    recoverDS(g, td, node.l_child, set(f, pos_u, Color::GRAY));
+                    recoverDS(node.l_child, set(f, pos_u, Color::GRAY));
                 else
-                    recoverDS(g, td, node.l_child, f);
+                    recoverDS(node.l_child, f);
             }
             return;
         }
         case NiceTreeDecomposition::NodeType::Forget: {
             int pos_w = bag_pos(td[node.l_child].bag, node.v);
             if (c[t][f] ==
-                cost(g, node.v) + getC(g, td, node.l_child, insert(f, pos_w, Color::BLACK))) {
+                cost(g, node.v) + getC(node.l_child, insert(f, pos_w, Color::BLACK))) {
                 g.ds.push_back(node.v);
-                recoverDS(g, td, node.l_child, insert(f, pos_w, Color::BLACK));
+                recoverDS(node.l_child, insert(f, pos_w, Color::BLACK));
             } else {
-                recoverDS(g, td, node.l_child, insert(f, pos_w, Color::WHITE));
+                recoverDS(node.l_child, insert(f, pos_w, Color::WHITE));
             }
             return;
         }
@@ -239,9 +243,9 @@ void TreewidthSolver::recoverDS(Instance &g, NiceTreeDecomposition &td, int t, T
                     }
                 }
 
-                if (c[t][f] == getC(g, td, node.l_child, f_1) + getC(g, td, node.r_child, f_2)) {
-                    recoverDS(g, td, node.l_child, f_1);
-                    recoverDS(g, td, node.r_child, f_2);
+                if (c[t][f] == getC(node.l_child, f_1) + getC(node.r_child, f_2)) {
+                    recoverDS(node.l_child, f_1);
+                    recoverDS(node.r_child, f_2);
                     return;
                 }
             }
