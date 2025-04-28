@@ -171,29 +171,34 @@ bool applyAlberMainRule2(DSHunter::Instance& g, int v, int w) {
     if (N_prison_intersect_B.empty())
         return false;
 
-    auto red_v = redNeighbours(g, v);
-    auto red_w = redNeighbours(g, w);
+    auto red_v = redNeighbours(g, v).size();
+    auto red_w = redNeighbours(g, w).size();
 
     if (canBeDominatedBySingleNode(g, N_prison_intersect_B, N_guard, N_prison)) {
         return false;
     }
 
     bool can_be_dominated_by_just_v =
-        contains(N_v_without, N_prison_intersect_B) && red_w.size() == 0;
+        contains(N_v_without, N_prison_intersect_B);
     bool can_be_dominated_by_just_w =
-        contains(N_w_without, N_prison_intersect_B) && red_v.size() == 0;
+        contains(N_w_without, N_prison_intersect_B);
 
     DS_TRACE(std::cerr << "trying to apply " << __func__ << dbg(v) << dbg(w) << std::endl);
-    if (can_be_dominated_by_just_v && can_be_dominated_by_just_w) {
+    if (can_be_dominated_by_just_v && can_be_dominated_by_just_w && red_v == 0 && red_w == 0) {
         return applyCase1_1(g, v, w, N_prison, N_guard, N_v_without, N_w_without);
-    }
-    if (can_be_dominated_by_just_v) {
+    } 
+    
+    if (can_be_dominated_by_just_v && red_w == 0) {
         return applyCase1_2(g, v, N_prison, N_v_without, N_guard);
     }
-    if (can_be_dominated_by_just_w) {
+    if (can_be_dominated_by_just_w && red_v == 0) {
         return applyCase1_3(g, w, N_prison, N_w_without, N_guard);
     }
-    return applyCase2(g, v, w, N_vw_without, N_prison, N_guard);
+    if (!can_be_dominated_by_just_v && !can_be_dominated_by_just_w) {
+        return applyCase2(g, v, w, N_vw_without, N_prison, N_guard);
+    }
+
+    return false;
 }
 }  // namespace
 
