@@ -43,6 +43,9 @@ TernaryFun cut(TernaryFun f, size_t x);
 TernaryFun insert(TernaryFun f, size_t x, Color c);
 TernaryFun set(TernaryFun f, size_t x, Color c);
 
+// Set x'th trit of f to c assuming it was zero before, we can omit unnecessary division then.
+TernaryFun setUnset(TernaryFun f, size_t x, Color c);
+
 Color at(TernaryFun f, size_t x);
 char val(Color c);
 

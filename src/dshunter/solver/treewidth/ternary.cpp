@@ -32,6 +32,11 @@ TernaryFun set(TernaryFun f, size_t x, Color c) {
     return f + ((int)c - (int)at(f, x)) * pow3[x];
 }
 
+TernaryFun setUnset(TernaryFun f, size_t x, Color c) {
+    DS_ASSERT(x <= MAX_EXPONENT);
+    return f + (int)c * pow3[x];
+}
+
 Color at(TernaryFun f, size_t x) {
     DS_ASSERT(x <= MAX_EXPONENT);
     return (Color)(f / pow3[x] % 3);
