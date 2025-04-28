@@ -1,12 +1,15 @@
 #include "treewidth_solver.h"
+
+#include <memory>
+
+#include "../../utils.h"
 #include "td/exec_decomposer.h"
 #include "td/flow_cutter_decomposer.h"
-#include <memory>
-#include "../../utils.h"
 
 namespace {
 std::unique_ptr<DSHunter::Decomposer> getDecomposer(const DSHunter::SolverConfig *cfg) {
-    if (cfg->decomposer_path.empty()) return std::make_unique<DSHunter::FlowCutterDecomposer>(cfg);
+    if (cfg->decomposer_path.empty())
+        return std::make_unique<DSHunter::FlowCutterDecomposer>(cfg);
     return std::make_unique<DSHunter::ExecDecomposer>(cfg);
 }
 }  // namespace
@@ -22,10 +25,10 @@ bool TreewidthSolver::solve(Instance &instance) {
     g = instance;
 
     auto o = decomposer->decompose(g);
-    if (!o.has_value()){
+    if (!o.has_value()) {
         std::cerr << "Decomposition failed" << std::endl;
         return false;
-}
+    }
     td = NiceTreeDecomposition::nicify(g, o.value());
     if (getMemoryUsage(td) > cfg->max_memory_in_bytes)
         return false;
@@ -107,32 +110,26 @@ int TreewidthSolver::getC(int t, TernaryFun f) {
                        getC(node.l_child, insert(f, pos_w, Color::WHITE)));
         }
         case NiceTreeDecomposition::NodeType::Join: {
-            int zeros = 0;
             size_t N = node.bag.size();
+            std::vector<int> zeroes;
             for (size_t i = 0; i < N; ++i) {
                 if (at(f, i) == Color::WHITE)
-                    zeros++;
+                    zeroes.push_back(i);
             }
 
             // Iterate over all combinations of choosing f_1(v), f_2(v) for positions where
             // f(v) = 0.
-            for (int mask = 0; mask < (1 << zeros); mask++) {
-
-                int zero = 0;
+            for (int mask = 0; mask < (1 << zeroes.size()); mask++) {
                 // The value of f_1, f_2 will be the same on all trits that ain't 0 in f, so
                 // we don't need to touch those.
                 TernaryFun f_1 = f, f_2 = f;
-                for (size_t i = 0; i < N; ++i) {
-                    if (at(f, i) == Color::WHITE) {
-                        if (mask >> zero & 1) {
-                            f_1 = set(f_1, i, Color::GRAY);
-                        } else {
-                            f_2 = set(f_2, i, Color::GRAY);
-                        }
-                        ++zero;
+                for (size_t i = 0; i < zeroes.size(); ++i) {
+                    if (mask >> i & 1) {
+                        f_1 = set(f_1, zeroes[i], Color::GRAY);
+                    } else {
+                        f_2 = set(f_2, zeroes[i], Color::GRAY);
                     }
                 }
-
                 c[t][f] = std::min(c[t][f],
                                    getC(node.l_child, f_1) + getC(node.r_child, f_2));
             }
@@ -202,30 +199,24 @@ void TreewidthSolver::recoverDS(int t, TernaryFun f) {
             return;
         }
         case NiceTreeDecomposition::NodeType::Join: {
-            int zeros = 0;
             size_t N = node.bag.size();
+            std::vector<int> zeroes;
             for (size_t i = 0; i < N; ++i) {
                 if (at(f, i) == Color::WHITE)
-                    zeros++;
+                    zeroes.push_back(i);
             }
 
             // Iterate over all combinations of choosing f_1(v), f_2(v) for positions where
             // f(v) = 0.
-            for (int mask = 0; mask < (1 << zeros); mask++) {
-                int zero = 0;
+            for (int mask = 0; mask < (1 << zeroes.size()); mask++) {
                 // The value of f_1, f_2 will be the same on all trits that ain't 0 in f, so
                 // we don't need to touch those.
                 TernaryFun f_1 = f, f_2 = f;
-                for (size_t i = 0; i < N; ++i) {
-                    if (at(f, i) == Color::WHITE) {
-                        if (mask >> zero & 1) {
-                            f_1 = set(f_1, i, Color::GRAY);
-                            f_2 = set(f_2, i, Color::WHITE);
-                        } else {
-                            f_1 = set(f_1, i, Color::WHITE);
-                            f_2 = set(f_2, i, Color::GRAY);
-                        }
-                        ++zero;
+                for (size_t i = 0; i < zeroes.size(); ++i) {
+                    if (mask >> i & 1) {
+                        f_1 = set(f_1, zeroes[i], Color::GRAY);
+                    } else {
+                        f_2 = set(f_2, zeroes[i], Color::GRAY);
                     }
                 }
 
