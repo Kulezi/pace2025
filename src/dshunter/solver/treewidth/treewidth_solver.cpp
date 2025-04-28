@@ -87,18 +87,18 @@ int TreewidthSolver::getC(int t, TernaryFun f) {
                 // We are forced to take at least one of the endpoints of the edge to the
                 // dominating set.
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    return c[t][f] = getC(node.l_child, set(f, pos_v, Color::GRAY));
+                    return c[t][f] = getC(node.l_child, setUnset(f, pos_v, Color::GRAY));
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    return c[t][f] = getC(node.l_child, set(f, pos_u, Color::GRAY));
+                    return c[t][f] = getC(node.l_child, setUnset(f, pos_u, Color::GRAY));
                 else if (f_u == Color::BLACK || f_v == Color::BLACK)
                     return c[t][f] = getC(node.l_child, f);
                 else
                     return c[t][f] = INF;
             } else {
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    return c[t][f] = getC(node.l_child, set(f, pos_v, Color::GRAY));
+                    return c[t][f] = getC(node.l_child, setUnset(f, pos_v, Color::GRAY));
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    return c[t][f] = getC(node.l_child, set(f, pos_u, Color::GRAY));
+                    return c[t][f] = getC(node.l_child, setUnset(f, pos_u, Color::GRAY));
                 else
                     return c[t][f] = getC(node.l_child, f);
             }
@@ -125,9 +125,9 @@ int TreewidthSolver::getC(int t, TernaryFun f) {
                 TernaryFun f_1 = f, f_2 = f;
                 for (size_t i = 0; i < zeroes.size(); ++i) {
                     if (mask >> i & 1) {
-                        f_1 = set(f_1, zeroes[i], Color::GRAY);
+                        f_1 = setUnset(f_1, zeroes[i], Color::GRAY);
                     } else {
-                        f_2 = set(f_2, zeroes[i], Color::GRAY);
+                        f_2 = setUnset(f_2, zeroes[i], Color::GRAY);
                     }
                 }
                 c[t][f] = std::min(c[t][f],
@@ -169,9 +169,9 @@ void TreewidthSolver::recoverDS(int t, TernaryFun f) {
                       edge_status == EdgeStatus::FORCED);
             if (edge_status == EdgeStatus::FORCED) {
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    recoverDS(node.l_child, set(f, pos_v, Color::GRAY));
+                    recoverDS(node.l_child, setUnset(f, pos_v, Color::GRAY));
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    recoverDS(node.l_child, set(f, pos_u, Color::GRAY));
+                    recoverDS(node.l_child, setUnset(f, pos_u, Color::GRAY));
                 else if (f_u == Color::BLACK || f_v == Color::BLACK)
                     recoverDS(node.l_child, f);
                 else
@@ -179,9 +179,9 @@ void TreewidthSolver::recoverDS(int t, TernaryFun f) {
                         "entered IntroduceEdge state corresponding to no solution");
             } else {
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    recoverDS(node.l_child, set(f, pos_v, Color::GRAY));
+                    recoverDS(node.l_child, setUnset(f, pos_v, Color::GRAY));
                 else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    recoverDS(node.l_child, set(f, pos_u, Color::GRAY));
+                    recoverDS(node.l_child, setUnset(f, pos_u, Color::GRAY));
                 else
                     recoverDS(node.l_child, f);
             }
@@ -214,9 +214,9 @@ void TreewidthSolver::recoverDS(int t, TernaryFun f) {
                 TernaryFun f_1 = f, f_2 = f;
                 for (size_t i = 0; i < zeroes.size(); ++i) {
                     if (mask >> i & 1) {
-                        f_1 = set(f_1, zeroes[i], Color::GRAY);
+                        f_1 = setUnset(f_1, zeroes[i], Color::GRAY);
                     } else {
-                        f_2 = set(f_2, zeroes[i], Color::GRAY);
+                        f_2 = setUnset(f_2, zeroes[i], Color::GRAY);
                     }
                 }
 
