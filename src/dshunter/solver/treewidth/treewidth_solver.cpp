@@ -126,9 +126,7 @@ int TreewidthSolver::getC(int t, TernaryFun f) {
                     if (at(f, i) == Color::WHITE) {
                         if (mask >> zero & 1) {
                             f_1 = set(f_1, i, Color::GRAY);
-                            f_2 = set(f_2, i, Color::WHITE);
                         } else {
-                            f_1 = set(f_1, i, Color::WHITE);
                             f_2 = set(f_2, i, Color::GRAY);
                         }
                         ++zero;
