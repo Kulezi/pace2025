@@ -109,9 +109,15 @@ int TreewidthSolver::getC(int t, TernaryFun f) {
         }
         case NiceTreeDecomposition::NodeType::Forget: {
             int pos_w = bag_pos(td[node.l_child].bag, node.v);
-            return c[t][f] = std::min(
-                       cost(g, node.v) + getC(node.l_child, insert(f, pos_w, Color::BLACK)),
-                       getC(node.l_child, insert(f, pos_w, Color::WHITE)));
+            int cost_take = cost(g, node.v);
+            // Skip the branching if we already know the solution would be unoptimal.
+            if (cost_take < INF) {
+                return c[t][f] = std::min(
+                           cost_take + getC(node.l_child, insert(f, pos_w, Color::BLACK)),
+                           getC(node.l_child, insert(f, pos_w, Color::WHITE)));
+            }
+
+            return c[t][f] = getC(node.l_child, insert(f, pos_w, Color::WHITE));
         }
         case NiceTreeDecomposition::NodeType::Join: {
             size_t N = node.bag.size();
