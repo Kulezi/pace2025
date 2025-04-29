@@ -13,7 +13,7 @@ Dependencies:
 ### Building
 ```
 ./scripts/install_dependencies.sh
-cmake -B build && cd build && make
+cd release && cmake -DCMAKE_BUILD_TYPE=Release && make
 ```
 
 ### Running
