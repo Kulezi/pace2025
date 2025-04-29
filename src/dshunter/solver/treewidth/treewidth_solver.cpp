@@ -41,7 +41,11 @@ bool TreewidthSolver::solve(Instance &instance) {
     return true;
 }
 
-inline int TreewidthSolver::cost(const Instance &g, int v) { return g[v].is_extra ? INF : 1; }
+inline int TreewidthSolver::cost(const Instance &g, int v) {
+    if (g[v].is_extra || g.isDisregarded(v))
+        return INF;
+    return 1;
+}
 
 // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3] extended to handle forced
 // edges.
