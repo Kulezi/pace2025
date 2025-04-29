@@ -37,8 +37,17 @@ bool GurobiSolver::solve(Instance &g) {
                     m.addConstr(edge_constraint >= 1);
                 }
             }
+            
             node_constraint += is_selected[rv[v]];
-            m.addConstr(node_constraint >= 1);
+            if (!g.isDominated(v)) {
+                m.addConstr(node_constraint >= 1);
+            }
+
+            if (g.isDisregarded(v)) {
+                GRBLinExpr disregard_contraint = 0;
+                disregard_contraint += is_selected[rv[v]];
+                m.addConstr(disregard_contraint <= 0);
+            }
         }
 
         GRBLinExpr obj = 0;
