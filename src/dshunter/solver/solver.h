@@ -32,30 +32,28 @@ struct SolverConfig {
     int good_enough_treewidth;
     int max_treewidth;
     size_t max_memory_in_bytes;
+    int max_bag_branch_depth;
 
     SolverConfig(std::vector<ReductionRule> rrules, SolverType st, PresolverType pt)
-        : reduction_rules(rrules), solver_type(st), presolver_type(pt) {
-    }
+        : reduction_rules(rrules), solver_type(st), presolver_type(pt) {}
 
     SolverConfig()
         : reduction_rules(DSHunter::get_default_reduction_rules()),
           solver_type(SolverType::Default),
           presolver_type(PresolverType::Full),
-          decomposition_time_budget(300s),
+          decomposition_time_budget(10s),
           decomposer_path(),
           random_seed(0),
           good_enough_treewidth(14),
           max_treewidth(18),
-          max_memory_in_bytes(8UL << 30UL) {
-    }
+          max_memory_in_bytes(8UL << 30UL),
+          max_bag_branch_depth(6) {}
 };
 
 struct Solver {
     SolverConfig cfg;
-    Solver() : cfg(SolverConfig()) {
-    }
-    Solver(SolverConfig sc) : cfg(sc) {
-    }
+    Solver() : cfg(SolverConfig()) {}
+    Solver(SolverConfig sc) : cfg(sc) {}
 
     std::vector<int> solve(Instance g);
     void presolve(Instance &g);

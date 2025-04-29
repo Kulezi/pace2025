@@ -18,6 +18,9 @@ struct TreeDecomposition {
     int size() const;
     void print() const;
 
+    int biggestBag() const;
+    void removeNode(int v);
+
     void addEdge(int a, int b);
 };
 }  // namespace DSHunter

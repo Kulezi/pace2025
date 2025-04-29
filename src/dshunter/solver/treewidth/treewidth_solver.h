@@ -12,27 +12,35 @@
 
 namespace DSHunter {
 struct TreewidthSolver {
-    TreewidthSolver(const SolverConfig *cfg);
+    TreewidthSolver(SolverConfig *cfg);
     // Returns true if instance was solved,
     // false if the width of found decompositions was too big to handle.
     bool solve(Instance &g);
 
-    const SolverConfig *cfg;
+    SolverConfig *cfg;
     std::unique_ptr<Decomposer> decomposer;
 
    private:
     std::vector<std::vector<int>> c;
     Instance g;
+    inline int cost(int v);
+    
     NiceTreeDecomposition td;
-    inline int cost(const Instance &g, int v);
+    bool solveDecomp(Instance &instance, TreeDecomposition td);
+
+
+    bool solveBagBranching(Instance &instance, TreeDecomposition td, int remaining_depth);
+    bool solveBagKiller(Instance &instance, TreeDecomposition td, int remaining_depth);
+    bool solveJoinKiller(Instance &instance, TreeDecomposition td, int remaining_depth);
 
     // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3] extended to handle forced
     // edges.
     int getC(int t, TernaryFun f);
-
+    
     void recoverDS(int t, TernaryFun f);
-
+    
     uint64_t getMemoryUsage(const NiceTreeDecomposition &td);
+    
 };
 }  // namespace DSHunter
 #endif
