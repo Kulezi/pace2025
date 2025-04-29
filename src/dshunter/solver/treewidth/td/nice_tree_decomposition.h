@@ -36,6 +36,7 @@ struct NiceTreeDecomposition {
     };
 
     NiceTreeDecomposition();
+    
     static NiceTreeDecomposition nicify(
         Instance g, TreeDecomposition td);
 
