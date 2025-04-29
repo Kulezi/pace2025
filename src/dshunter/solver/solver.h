@@ -41,7 +41,7 @@ struct SolverConfig {
         : reduction_rules(DSHunter::get_default_reduction_rules()),
           solver_type(SolverType::Default),
           presolver_type(PresolverType::Full),
-          decomposition_time_budget(10s),
+          decomposition_time_budget(300s),
           decomposer_path(),
           random_seed(0),
           good_enough_treewidth(14),
