@@ -188,10 +188,10 @@ bool applyAlberMainRule2(DSHunter::Instance& g, int v, int w) {
         return applyCase1_1(g, v, w, N_prison, N_guard, N_v_without, N_w_without);
     } 
     
-    if (can_be_dominated_by_just_v && red_w == 0) {
+    if (can_be_dominated_by_just_v && !can_be_dominated_by_just_w && red_w == 0) {
         return applyCase1_2(g, v, N_prison, N_v_without, N_guard);
     }
-    if (can_be_dominated_by_just_w && red_v == 0) {
+    if (!can_be_dominated_by_just_v && can_be_dominated_by_just_w && red_v == 0) {
         return applyCase1_3(g, w, N_prison, N_w_without, N_guard);
     }
     if (!can_be_dominated_by_just_v && !can_be_dominated_by_just_w) {
