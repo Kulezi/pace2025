@@ -27,7 +27,7 @@ struct NiceTreeDecomposition {
     struct Node {
         int id;
         NodeType type;
-        std::vector<int> bag;
+        int bag_size;
 
         int v;   // Introduced/forgotten vertex, or -1 if not applicable.
         int to;  // Other endpoint of an introduced edge, or -1 if not applicable.
@@ -47,7 +47,7 @@ struct NiceTreeDecomposition {
 
     int n_nodes() const;
     int width() const;
-    void print() const;
+    void print();
 
    private:
     Instance g;
@@ -58,10 +58,11 @@ struct NiceTreeDecomposition {
     NiceTreeDecomposition(Instance g, const RootedTreeDecomposition& rooted_decomposition);
     int createNode(NodeType type, std::vector<int> bag = {}, int v = NONE, int to = NONE, int lChild = NONE, int rChild = NONE);
 
-    void printDecomp(int v, int level) const;
+    std::vector<int> bag;
+    void printDecomp(int v, int level);
 
-    int makeDecompositionNodeFromRootedDecomposition(const RootedTreeDecomposition& rtd,
-                                                     int rtd_node_id);
+    std::pair<int, std::vector<int>> makeDecompositionNodeFromRootedDecomposition(const RootedTreeDecomposition& rtd,
+                                                                             int rtd_node_id);
 
     int makeIntroduceForgetSequenceFrom(std::vector<int> head_bag, std::vector<int> tail_bag, int tail_id);
 };
