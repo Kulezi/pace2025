@@ -30,9 +30,9 @@ bool TreewidthSolver::solve(Instance &instance) {
 
     auto td = o.value();
     std::cerr << "Best found decomposition width: " << td.width << std::endl;
-    if (td.width > 15) {
-        std::cerr << "Decomposition width too big, considering bag-branching" << std::endl;
-        return solveJoinKiller(instance, td, cfg->max_bag_branch_depth);
+    if (td.width > cfg->good_enough_treewidth) {
+        std::cerr << "Decomposition width > " << cfg->good_enough_treewidth << " considering reducing it with bag-branching" << std::endl;
+        return solveBranching(instance, td, cfg->max_bag_branch_depth);
     }
 
     return solveDecomp(instance, td);
@@ -56,138 +56,12 @@ bool TreewidthSolver::solveDecomp(Instance &instance, TreeDecomposition raw_td) 
     return true;
 }
 
-bool TreewidthSolver::solveBagBranching(Instance &instance, TreeDecomposition td, int remaining_depth) {
-    int biggest_bag = td.biggestBag();
-    int tw = td.bag[biggest_bag].size();
-    for (int i = 0; i < cfg->max_bag_branch_depth - remaining_depth; i++) { std::cerr << " "; }
-    std::cerr << tw << "\n";
-
-    if (remaining_depth == 0 || instance.nodeCount() == 0) {
-        if (tw > 15) {
-            std::cerr << "insufficient depth to reach tw < 15\n";
-            return false;
-        }
-        return solveDecomp(instance, td);
-    }
-
-    DS_ASSERT(!td.bag[biggest_bag].empty());
-    int v = td.bag[biggest_bag][0];
-    for (auto u : td.bag[biggest_bag]) {
-        if (instance.deg(u) > instance.deg(v))
-            v = u;
-    }
-
-    std::cerr << dbg(v) << dbg(instance.deg(v)) << dbg(instance.forcedDeg(v)) << std::endl;
-    std::vector<int> best_ds;
-    for (auto taken : instance.neighbourhoodIncluding(v)) {
-        auto new_instance = instance;
-        auto new_td = td;
-        new_instance.take(taken);
-        new_td.removeNode(taken);
-
-        if (taken != v) {
-            new_instance.removeNode(v);
-            new_td.removeNode(v);
-        }
-
-        auto old = new_instance.nodes;
-        reduce(new_instance, cfg->reduction_rules);
-        for (auto v : remove(old, new_instance.nodes))
-            new_td.removeNode(v);
-
-        if (!solveBagBranching(new_instance, new_td, remaining_depth - 1)) {
-            best_ds = {};
-            break;
-        }
-
-        if (best_ds.empty() || best_ds.size() > new_instance.ds.size()) {
-            best_ds = new_instance.ds;
-        }
-    }
-
-    if (best_ds.empty())
-        return false;
-
-    instance.ds = best_ds;
-    return true;
-}
-
-bool TreewidthSolver::solveBagKiller(Instance &instance, TreeDecomposition td, int remaining_depth) {
-    int biggest_bag = td.biggestBag();
-    int tw = td.bag[biggest_bag].size();
-
-    int cutoff = 15;
-    std::vector<int> important_bags;
-    for (int i = 0; i < td.size(); i++) {
-        if (td.bag[i].size() > cutoff)
-            important_bags.push_back(i);
-    }
-
-    std::vector<int> counts(instance.all_nodes.size(), 0);
-    std::cerr << dbg(remaining_depth) << " sizes: ";
-    for (auto bag : important_bags) {
-        std::cerr << td.bag[bag].size() << " ";
-        for (auto v : td.bag[bag]) counts[v]++;
-    }
-    std::cerr << std::endl;
-
-    if (tw <= 15)
-        return solveDecomp(instance, td);
-
-    if (remaining_depth == 0) {
-        std::cerr << "insufficient depth to reach tw < 15\n";
-        return false;
-    }
-
-    DS_ASSERT(!td.bag[biggest_bag].empty());
-    int v = td.bag[biggest_bag][0];
-    for (auto u : td.bag[biggest_bag]) {
-        if (counts[v] < counts[u] || (counts[v] == counts[u] && instance.deg(v) > instance.deg(u)))
-            v = u;
-    }
-
-    std::cerr << dbg(v) << dbg(instance.deg(v)) << dbg(instance.forcedDeg(v)) << dbg(counts[v]) << std::endl;
-    std::vector<int> best_ds;
-    for (auto taken : instance.neighbourhoodIncluding(v)) {
-        auto new_instance = instance;
-        auto new_td = td;
-        new_instance.take(taken);
-        new_td.removeNode(taken);
-
-        if (taken != v) {
-            new_instance.removeNode(v);
-            new_td.removeNode(v);
-        }
-
-        auto old = new_instance.nodes;
-        reduce(new_instance, cfg->reduction_rules);
-        for (auto v : remove(old, new_instance.nodes))
-            new_td.removeNode(v);
-
-        if (!solveBagKiller(new_instance, new_td, remaining_depth - 1)) {
-            best_ds = {};
-            break;
-        }
-
-        if (best_ds.empty() || best_ds.size() > new_instance.ds.size()) {
-            best_ds = new_instance.ds;
-        }
-    }
-
-    if (best_ds.empty())
-        return false;
-
-    instance.ds = best_ds;
-    return true;
-}
-
-
-bool TreewidthSolver::solveJoinKiller(Instance &instance, TreeDecomposition td, int remaining_depth) {
+bool TreewidthSolver::solveBranching(Instance &instance, TreeDecomposition td, int remaining_depth) {
     int biggest_bag = td.biggestBag();
     int tw = td.bag[biggest_bag].size();
     int join_tw = 0;
 
-    int cutoff = 13;
+    const int cutoff = cfg->good_enough_treewidth;
     std::vector<int> important_bags;
     for (int i = 0; i < td.size(); i++) {
         if (td.bag[i].size() > cutoff && td.adj[i].size() > 2) {
@@ -237,7 +111,7 @@ bool TreewidthSolver::solveJoinKiller(Instance &instance, TreeDecomposition td, 
         for (auto v : remove(old, new_instance.nodes))
             new_td.removeNode(v);
 
-        if (!solveJoinKiller(new_instance, new_td, remaining_depth - 1)) {
+        if (!solveBranching(new_instance, new_td, remaining_depth - 1)) {
             best_ds = {};
             break;
         }
