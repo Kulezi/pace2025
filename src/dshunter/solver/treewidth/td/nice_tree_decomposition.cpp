@@ -24,7 +24,8 @@ NiceTreeDecomposition::NiceTreeDecomposition(Instance g,
                                              const RootedTreeDecomposition& rooted_decomposition)
     : g(g), decomp() {
     root = makeDecompositionNodeFromRootedDecomposition(rooted_decomposition,
-                                                        rooted_decomposition.root);
+                                                        rooted_decomposition.root)
+               .first;
 }
 
 const NiceTreeDecomposition::Node& NiceTreeDecomposition::operator[](int v) const {
@@ -36,12 +37,12 @@ int NiceTreeDecomposition::n_nodes() const { return decomp.size(); }
 int NiceTreeDecomposition::width() const {
     int max_width = 0;
     for (auto& v : decomp)
-        if (max_width < (int)v.bag.size())
-            max_width = (int)v.bag.size();
+        if (max_width < v.bag_size)
+            max_width = v.bag_size;
     return max_width;
 }
 
-void NiceTreeDecomposition::print() const {
+void NiceTreeDecomposition::print() {
     std::cerr << "n_nodes: " << n_nodes() << ", width: " << width() << "\n";
     printDecomp(root, 0);
 }
@@ -60,7 +61,7 @@ int NiceTreeDecomposition::createNode(NodeType type, std::vector<int> bag, int v
     decomp.push_back(Node{
         .id = (int)decomp.size(),
         .type = type,
-        .bag = bag,
+        .bag_size = (int)bag.size(),
         .v = v,
         .to = to,
         .l_child = lChild,
@@ -72,7 +73,7 @@ int NiceTreeDecomposition::createNode(NodeType type, std::vector<int> bag, int v
     return decomp.back().id;
 }
 
-void NiceTreeDecomposition::printDecomp(int v, int level) const {
+void NiceTreeDecomposition::printDecomp(int v, int level) {
     std::cerr << std::string(level, ' ');
     std::string vertex_label = "UNKNOWN";
 
@@ -97,39 +98,52 @@ void NiceTreeDecomposition::printDecomp(int v, int level) const {
     }
 
     std::cerr << v << "." << vertex_label << " [";
-    for (auto i : node.bag) std::cerr << " " << i;
+    for (auto i : bag) std::cerr << " " << i;
     std::cerr << " ]\n";
 
-    if (node.type != NodeType::Leaf)
+    if (node.type != NodeType::Leaf) {
+        if (node.type == NodeType::IntroduceVertex) {
+            bag.erase(bag.begin() + node.pos_v);
+        }
+        if (node.type == NodeType::Forget) {
+            bag.insert(bag.begin() + node.pos_v, node.v);
+        }
         printDecomp(node.l_child, level + 1);
+        if (node.type == NodeType::IntroduceVertex) {
+            bag.insert(bag.begin() + node.pos_v, node.v);
+        }
+        if (node.type == NodeType::Forget) {
+            bag.erase(bag.begin() + node.pos_v);
+        }
+    }
     if (node.type == NodeType::Join)
         printDecomp(node.r_child, level + 1);
 }
 
-int NiceTreeDecomposition::makeDecompositionNodeFromRootedDecomposition(
+std::pair<int, std::vector<int>> NiceTreeDecomposition::makeDecompositionNodeFromRootedDecomposition(
     const RootedTreeDecomposition& rtd, int rtd_node_id) {
     auto& rtd_node = rtd[rtd_node_id];
     int children_count = rtd_node.children.size();
 
     if (children_count == 0) {
-        return createNode(NiceTreeDecomposition::NodeType::Leaf);
+        return { createNode(NiceTreeDecomposition::NodeType::Leaf), {} };
     }
 
     else if (children_count == 2) {
         DS_ASSERT(rtd_node.bag == rtd[rtd_node.children[0]].bag &&
                   rtd_node.bag == rtd[rtd_node.children[1]].bag);
 
-        int l = makeDecompositionNodeFromRootedDecomposition(rtd, rtd[rtd_node_id].children[0]);
-        int r = makeDecompositionNodeFromRootedDecomposition(rtd, rtd[rtd_node_id].children[1]);
-        return createNode(NiceTreeDecomposition::NodeType::Join, rtd_node.bag, NONE, NONE, l, r);
+        auto [l, l_bag] = makeDecompositionNodeFromRootedDecomposition(rtd, rtd[rtd_node_id].children[0]);
+        auto [r, r_bag] = makeDecompositionNodeFromRootedDecomposition(rtd, rtd[rtd_node_id].children[1]);
+        return { createNode(NiceTreeDecomposition::NodeType::Join, rtd_node.bag, NONE, NONE, l, r), l_bag };
     } else {
         DS_ASSERT(children_count == 1);
 
-        int child = makeDecompositionNodeFromRootedDecomposition(rtd, rtd[rtd_node_id].children[0]);
-        if (decomp[child].bag == rtd_node.bag)
-            return child;
+        auto [child, child_bag] = makeDecompositionNodeFromRootedDecomposition(rtd, rtd[rtd_node_id].children[0]);
+        if (child_bag == rtd_node.bag)
+            return { child, child_bag };
 
-        return makeIntroduceForgetSequenceFrom(rtd_node.bag, decomp[child].bag, child);
+        return { makeIntroduceForgetSequenceFrom(rtd_node.bag, child_bag, child), rtd_node.bag };
     }
 }
 

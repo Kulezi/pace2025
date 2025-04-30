@@ -265,12 +265,12 @@ inline int TreewidthSolver::cost(int v) {
 // edges.
 int TreewidthSolver::getC(int t, TernaryFun f) {
     const auto &node = td[t];
-    DS_ASSERT(f < pow3[node.bag.size()]);
+    DS_ASSERT(f < pow3[node.bag_size]);
 
     if (!c[t].empty() && c[t][f] != UNSET)
         return c[t][f];
     if (c[t].empty())
-        c[t].resize(pow3[node.bag.size()], UNSET);
+        c[t].resize(pow3[node.bag_size], UNSET);
     c[t][f] = INF;
 
     switch (node.type) {
@@ -329,7 +329,7 @@ int TreewidthSolver::getC(int t, TernaryFun f) {
             return c[t][f] = getC(node.l_child, insert(f, pos_v, Color::WHITE));
         }
         case NiceTreeDecomposition::NodeType::Join: {
-            size_t N = node.bag.size();
+            size_t N = node.bag_size;
             std::vector<int> zeroes;
             for (size_t i = 0; i < N; ++i) {
                 if (at(f, i) == Color::WHITE)
@@ -361,7 +361,7 @@ int TreewidthSolver::getC(int t, TernaryFun f) {
 
 void TreewidthSolver::recoverDS(int t, TernaryFun f) {
     auto &node = td[t];
-    DS_ASSERT(f < pow3[node.bag.size()]);
+    DS_ASSERT(f < pow3[node.bag_size]);
     DS_ASSERT(!c[t].empty() && c[t][f] != UNSET);
     switch (node.type) {
         case NiceTreeDecomposition::NodeType::IntroduceVertex: {
@@ -411,7 +411,7 @@ void TreewidthSolver::recoverDS(int t, TernaryFun f) {
             return;
         }
         case NiceTreeDecomposition::NodeType::Join: {
-            size_t N = node.bag.size();
+            size_t N = node.bag_size;
             std::vector<int> zeroes;
             for (size_t i = 0; i < N; ++i) {
                 if (at(f, i) == Color::WHITE)
@@ -449,7 +449,7 @@ void TreewidthSolver::recoverDS(int t, TernaryFun f) {
 uint64_t TreewidthSolver::getMemoryUsage(const NiceTreeDecomposition &td) {
     uint64_t res = 0;
     for (int i = 0; i < td.n_nodes(); i++) {
-        res += pow3[td[i].bag.size()] * sizeof(int) + sizeof(std::vector<int>);
+        res += pow3[td[i].bag_size] * sizeof(int) + sizeof(std::vector<int>);
     }
 
     return res;
