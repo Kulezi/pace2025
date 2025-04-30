@@ -47,6 +47,16 @@ void NiceTreeDecomposition::print() const {
 }
 
 int NiceTreeDecomposition::createNode(NodeType type, std::vector<int> bag, int v, int to, int lChild, int rChild) {
+    int pos_v = -1;
+    if (v != -1) {
+        pos_v = std::lower_bound(bag.begin(), bag.end(), v) - bag.begin();
+    }
+
+    int pos_to = -1;
+    if (v != -1) {
+        pos_to = std::lower_bound(bag.begin(), bag.end(), to) - bag.begin();
+    }
+
     decomp.push_back(Node{
         .id = (int)decomp.size(),
         .type = type,
@@ -55,6 +65,8 @@ int NiceTreeDecomposition::createNode(NodeType type, std::vector<int> bag, int v
         .to = to,
         .l_child = lChild,
         .r_child = rChild,
+        .pos_v = pos_v,
+        .pos_to = pos_to,
     });
 
     return decomp.back().id;
