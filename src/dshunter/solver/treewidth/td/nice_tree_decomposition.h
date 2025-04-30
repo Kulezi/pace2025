@@ -23,7 +23,7 @@ struct NiceTreeDecomposition {
         Forget,
         Join
     };
-    
+
     struct Node {
         int id;
         NodeType type;
@@ -33,10 +33,12 @@ struct NiceTreeDecomposition {
         int to;  // Other endpoint of an introduced edge, or -1 if not applicable.
         int l_child;
         int r_child;
+        int pos_v;   // Position of vertex v in this nodes' bag or in l_childs' bag in the case of a Forget node, -1 if unapplicable.
+        int pos_to;  // Position of vertex to in this nodes' bag, -1 if unapplicable.
     };
 
     NiceTreeDecomposition();
-    
+
     static NiceTreeDecomposition nicify(
         Instance g, TreeDecomposition td);
 

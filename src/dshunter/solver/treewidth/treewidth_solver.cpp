@@ -30,7 +30,7 @@ bool TreewidthSolver::solve(Instance &instance) {
 
     auto td = o.value();
     std::cerr << "Best found decomposition width: " << td.width << std::endl;
-    if (td.width > 14) {
+    if (td.width > 15) {
         std::cerr << "Decomposition width too big, considering bag-branching" << std::endl;
         return solveJoinKiller(instance, td, cfg->max_bag_branch_depth);
     }
@@ -272,17 +272,12 @@ int TreewidthSolver::getC(int t, TernaryFun f) {
     if (c[t].empty())
         c[t].resize(pow3[node.bag.size()], UNSET);
     c[t][f] = INF;
-    auto bag_pos = [&](const std::vector<int> &bag, int v) -> int {
-        int pos = 0;
-        while (bag[pos] != v) ++pos;
-        return pos;
-    };
 
     switch (node.type) {
         case NiceTreeDecomposition::NodeType::Leaf:
             return c[t][f] = 0;
         case NiceTreeDecomposition::NodeType::IntroduceVertex: {
-            int pos = bag_pos(node.bag, node.v);
+            int pos = node.pos_v;
             Color f_v = at(f, pos);
             // This vertex could already be dominated by some reduction rule.
             if (f_v == Color::WHITE && !g.isDominated(node.v))
@@ -292,8 +287,8 @@ int TreewidthSolver::getC(int t, TernaryFun f) {
             }
         }
         case NiceTreeDecomposition::NodeType::IntroduceEdge: {
-            int pos_u = bag_pos(node.bag, node.to);
-            int pos_v = bag_pos(node.bag, node.v);
+            int pos_u = node.pos_to;
+            int pos_v = node.pos_v;
 
             Color f_u = at(f, pos_u);
             Color f_v = at(f, pos_v);
@@ -322,16 +317,16 @@ int TreewidthSolver::getC(int t, TernaryFun f) {
             }
         }
         case NiceTreeDecomposition::NodeType::Forget: {
-            int pos_w = bag_pos(td[node.l_child].bag, node.v);
+            int pos_v = node.pos_v;
             int cost_take = cost(node.v);
             // Skip the branching if we already know the solution would be unoptimal.
             if (cost_take < INF) {
                 return c[t][f] = std::min(
-                           cost_take + getC(node.l_child, insert(f, pos_w, Color::BLACK)),
-                           getC(node.l_child, insert(f, pos_w, Color::WHITE)));
+                           cost_take + getC(node.l_child, insert(f, pos_v, Color::BLACK)),
+                           getC(node.l_child, insert(f, pos_v, Color::WHITE)));
             }
 
-            return c[t][f] = getC(node.l_child, insert(f, pos_w, Color::WHITE));
+            return c[t][f] = getC(node.l_child, insert(f, pos_v, Color::WHITE));
         }
         case NiceTreeDecomposition::NodeType::Join: {
             size_t N = node.bag.size();
@@ -368,22 +363,15 @@ void TreewidthSolver::recoverDS(int t, TernaryFun f) {
     auto &node = td[t];
     DS_ASSERT(f < pow3[node.bag.size()]);
     DS_ASSERT(!c[t].empty() && c[t][f] != UNSET);
-
-    auto bag_pos = [&](const std::vector<int> &bag, int v) -> int {
-        int pos = 0;
-        while (bag[pos] != v) ++pos;
-        return pos;
-    };
-
     switch (node.type) {
         case NiceTreeDecomposition::NodeType::IntroduceVertex: {
-            int pos = bag_pos(node.bag, node.v);
+            int pos = node.pos_v;
             recoverDS(node.l_child, cut(f, pos));
             return;
         }
         case NiceTreeDecomposition::NodeType::IntroduceEdge: {
-            int pos_u = bag_pos(node.bag, node.to);
-            int pos_v = bag_pos(node.bag, node.v);
+            int pos_u = node.pos_to;
+            int pos_v = node.pos_v;
 
             Color f_u = at(f, pos_u);
             Color f_v = at(f, pos_v);
@@ -412,13 +400,13 @@ void TreewidthSolver::recoverDS(int t, TernaryFun f) {
             return;
         }
         case NiceTreeDecomposition::NodeType::Forget: {
-            int pos_w = bag_pos(td[node.l_child].bag, node.v);
+            int pos_v = node.pos_v;
             if (c[t][f] ==
-                cost(node.v) + getC(node.l_child, insert(f, pos_w, Color::BLACK))) {
+                cost(node.v) + getC(node.l_child, insert(f, pos_v, Color::BLACK))) {
                 g.ds.push_back(node.v);
-                recoverDS(node.l_child, insert(f, pos_w, Color::BLACK));
+                recoverDS(node.l_child, insert(f, pos_v, Color::BLACK));
             } else {
-                recoverDS(node.l_child, insert(f, pos_w, Color::WHITE));
+                recoverDS(node.l_child, insert(f, pos_v, Color::WHITE));
             }
             return;
         }
