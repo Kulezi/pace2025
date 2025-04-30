@@ -28,10 +28,7 @@ struct TreewidthSolver {
     NiceTreeDecomposition td;
     bool solveDecomp(Instance &instance, TreeDecomposition td);
 
-
-    bool solveBagBranching(Instance &instance, TreeDecomposition td, int remaining_depth);
-    bool solveBagKiller(Instance &instance, TreeDecomposition td, int remaining_depth);
-    bool solveJoinKiller(Instance &instance, TreeDecomposition td, int remaining_depth);
+    bool solveBranching(Instance &instance, TreeDecomposition td, int remaining_depth);
 
     // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3] extended to handle forced
     // edges.
