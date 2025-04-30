@@ -8,15 +8,15 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{geometry}
+\usepackage{titling}
+\setlength{\droptitle}{-0.5in}
 \geometry{margin=1in}
-
 % Title
 \title{Różowe wierzchołki}
 \author{Paweł Putra}
 \date{\today}
 
 \begin{document}
-
 \maketitle
 
 \section{Wstęp}
@@ -36,8 +36,20 @@ to pokoloruj $u$ na różowo.
 \subsubsection{Redukcja dla pojedyńczego wierzchołka}
 \emph{Jeśli istnieje różowy wierzchołek, który jest zdominowany - usuń go z grafu.}
 
-\subsubsection{Redukcja sąsiedztwa}
+\subsubsection{Redukcja różowego sąsiedztwa}
 \emph{Jeśli istnieje \textbf{niezdominowany} nieróżowy wierzchołek $v$, że całe $N(v)$ jest różowe, weź go do rozwiązania i usuń $N[v]$ z grafu.}
+
+\subsubsection{Redukcja zdominowanego sąsiedztwa}
+\emph{Jeśli istnieje nieróżowy wierzchołek $v$ to jeśli:
+\begin{itemize}
+ \item całe $N(v)$ jest zdominowane
+ \item $N(v)$ zawiera jakiś nieróżowy wierzchołek
+ \item zachodzi jedno z: \begin{itemize}
+    \item z $v$ nie wychodzą żadne czerwone krawędzie
+    \item z $v$ wychodzi dokładnie jedna czerowna krawędź do nieróżowego wierzchołka
+ \end{itemize}
+\end{itemize}}
+to pokoloruj $v$ na różowo.
 
 \subsection{Wpływ na AlberSimpleRule1}
 Było: \emph{Jeśli istnieje \textbf{czarna} krawędź, której oba końce są zdominowane - usuń ją.}\\

@@ -77,6 +77,7 @@ bool Instance::isDisregarded(int v) const {
 }
 
 void Instance::markDisregarded(int v) {
+    DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
     all_nodes[v].membership_status = MembershipStatus::DISREGARDED;
 }
 
