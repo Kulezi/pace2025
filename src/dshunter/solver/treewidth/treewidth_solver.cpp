@@ -12,12 +12,23 @@ std::unique_ptr<DSHunter::Decomposer> getDecomposer(const DSHunter::SolverConfig
         return std::make_unique<DSHunter::FlowCutterDecomposer>(cfg);
     return std::make_unique<DSHunter::ExecDecomposer>(cfg);
 }
+
+uint64_t getMemoryUsage(const DSHunter::NiceTreeDecomposition &td) {
+    uint64_t res = 0;
+    for (int i = 0; i < td.n_nodes(); i++) {
+        res += DSHunter::pow3[td[i].bag_size] * sizeof(int) + sizeof(std::vector<int>);
+    }
+
+    return res;
+}
+
+constexpr int UNSET = -1, INF = 1'000'000'000;
+
 }  // namespace
 
 namespace DSHunter {
 TreewidthSolver::TreewidthSolver(SolverConfig *cfg) : cfg(cfg), decomposer(getDecomposer(cfg)) {}
 
-constexpr int UNSET = -1, INF = 1'000'000'000;
 
 // Returns true if instance was solved. Solution set is stored in given instance.
 // Returns false if it would lead to exceeding the memory limit.
@@ -31,8 +42,19 @@ bool TreewidthSolver::solve(Instance &instance) {
     auto td = o.value();
     std::cerr << "Best found decomposition width: " << td.width << std::endl;
     if (td.width > cfg->good_enough_treewidth) {
-        std::cerr << "Decomposition width > " << cfg->good_enough_treewidth << " considering reducing it with bag-branching" << std::endl;
-        return solveBranching(instance, td, cfg->max_bag_branch_depth);
+        std::cerr << "Decomposition width > " << cfg->good_enough_treewidth << " considering reducing it with bag-branching of depth at most " << cfg->max_bag_branch_depth << std::endl;
+        auto estimate = estimateBranching(instance, td);
+        std::cerr << "bag-branching of depth at most " << cfg->max_bag_branch_depth << "is ";
+        if (estimate.depth_needed <= cfg->max_bag_branch_depth) {
+            std::cerr << "enough, proceeding with bag-branching\n";
+        } else {
+            std::cerr << "not enough, not trying bag-branching\n";
+            return false;
+        }
+
+        solved_leaves = 0;
+        total_leaves = estimate.leaves;
+        return solveBranching(instance, td);
     }
 
     return solveDecomp(instance, td);
@@ -41,9 +63,9 @@ bool TreewidthSolver::solve(Instance &instance) {
 bool TreewidthSolver::solveDecomp(Instance &instance, TreeDecomposition raw_td) {
     g = instance;
     td = NiceTreeDecomposition::nicify(g, raw_td);
-    std::cerr << "solving td(" << td.width();
+    std::cerr << "solving td(" << td.width() << ") ";
     if (getMemoryUsage(td) > cfg->max_memory_in_bytes) {
-        std::cerr << ") FAIL\n";
+        std::cerr << "FAIL\n";
         return false;
     }
 
@@ -52,38 +74,34 @@ bool TreewidthSolver::solveDecomp(Instance &instance, TreeDecomposition raw_td) 
     getC(td.root, 0);
     recoverDS(td.root, 0);
     instance.ds = g.ds;
-    std::cerr << ") SUCCESS(" << g.ds.size() << ")\n";
+    std::cerr << "SUCCESS[" << g.ds.size() << "]\n";
     return true;
 }
 
-bool TreewidthSolver::solveBranching(Instance &instance, TreeDecomposition td, int remaining_depth) {
+
+TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(Instance &instance, TreeDecomposition td, int depth) {
     int biggest_bag = td.biggestBag();
-    int tw = td.bag[biggest_bag].size();
     int join_tw = 0;
 
     const int cutoff = cfg->good_enough_treewidth;
     std::vector<int> important_bags;
     for (int i = 0; i < td.size(); i++) {
-        if (td.bag[i].size() > cutoff && td.adj[i].size() > 2) {
+        if ((int)td.bag[i].size() > cutoff && td.adj[i].size() > 2) {
             important_bags.push_back(i);
             join_tw = std::max(join_tw, (int)td.bag[i].size());
         }
     }
 
     std::vector<int> counts(instance.all_nodes.size(), 0);
-    std::cerr << dbg(remaining_depth) << " sizes: ";
     for (auto bag : important_bags) {
-        std::cerr << td.bag[bag].size() << " ";
         for (auto v : td.bag[bag]) counts[v]++;
     }
-    std::cerr << std::endl;
 
     if (join_tw <= cutoff)
-        return solveDecomp(instance, td);
+        return {depth, 1};
 
-    if (remaining_depth == 0) {
-        std::cerr << "insufficient depth to reach tw < 15\n";
-        return false;
+    if (depth == cfg->max_bag_branch_depth) {
+        return {INF, 1};
     }
 
     DS_ASSERT(!td.bag[biggest_bag].empty());
@@ -93,7 +111,61 @@ bool TreewidthSolver::solveBranching(Instance &instance, TreeDecomposition td, i
             v = u;
     }
 
-    std::cerr << dbg(v) << dbg(instance.deg(v)) << dbg(instance.forcedDeg(v)) << dbg(counts[v]) << std::endl;
+    std::vector<int> best_ds;
+
+    BranchingEstimate total_estimate{0, 0};
+    for (auto taken : instance.neighbourhoodIncluding(v)) {
+        auto new_instance = instance;
+        auto new_td = td;
+        new_instance.take(taken);
+        new_td.removeNode(taken);
+
+        if (taken != v) {
+            new_instance.removeNode(v);
+            new_td.removeNode(v);
+        }
+
+        auto estimate = estimateBranching(new_instance, new_td, depth + 1);
+        if (estimate.depth_needed >= INF) return estimate;
+
+        total_estimate.depth_needed = std::max(total_estimate.depth_needed, estimate.depth_needed);
+        total_estimate.leaves += estimate.leaves;
+    }
+
+    return total_estimate;
+}
+
+
+bool TreewidthSolver::solveBranching(Instance &instance, TreeDecomposition td) {
+    int biggest_bag = td.biggestBag();
+    int join_tw = 0;
+
+    const int cutoff = cfg->good_enough_treewidth;
+    std::vector<int> important_bags;
+    for (int i = 0; i < td.size(); i++) {
+        if ((int)td.bag[i].size() > cutoff && td.adj[i].size() > 2) {
+            important_bags.push_back(i);
+            join_tw = std::max(join_tw, (int)td.bag[i].size());
+        }
+    }
+
+    std::vector<int> counts(instance.all_nodes.size(), 0);
+    for (auto bag : important_bags) {
+        for (auto v : td.bag[bag]) counts[v]++;
+    }
+
+    if (join_tw <= cutoff) {
+        std::cerr << "branch " << ++solved_leaves << "/" << total_leaves << " ";
+        return solveDecomp(instance, td);
+    }
+
+    DS_ASSERT(!td.bag[biggest_bag].empty());
+    int v = td.bag[biggest_bag][0];
+    for (auto u : td.bag[biggest_bag]) {
+        if (counts[v] < counts[u] || (counts[v] == counts[u] && instance.deg(v) > instance.deg(u)))
+            v = u;
+    }
+
     std::vector<int> best_ds;
     for (auto taken : instance.neighbourhoodIncluding(v)) {
         auto new_instance = instance;
@@ -106,12 +178,7 @@ bool TreewidthSolver::solveBranching(Instance &instance, TreeDecomposition td, i
             new_td.removeNode(v);
         }
 
-        auto old = new_instance.nodes;
-        reduce(new_instance, cfg->reduction_rules);
-        for (auto v : remove(old, new_instance.nodes))
-            new_td.removeNode(v);
-
-        if (!solveBranching(new_instance, new_td, remaining_depth - 1)) {
+        if (!solveBranching(new_instance, new_td)) {
             best_ds = {};
             break;
         }
@@ -127,7 +194,6 @@ bool TreewidthSolver::solveBranching(Instance &instance, TreeDecomposition td, i
     instance.ds = best_ds;
     return true;
 }
-
 
 inline int TreewidthSolver::cost(int v) {
     if (g[v].is_extra || g.isDisregarded(v))
@@ -318,15 +384,6 @@ void TreewidthSolver::recoverDS(int t, TernaryFun f) {
         default:
             return;
     }
-}
-
-uint64_t TreewidthSolver::getMemoryUsage(const NiceTreeDecomposition &td) {
-    uint64_t res = 0;
-    for (int i = 0; i < td.n_nodes(); i++) {
-        res += pow3[td[i].bag_size] * sizeof(int) + sizeof(std::vector<int>);
-    }
-
-    return res;
 }
 
 }  // namespace DSHunter
