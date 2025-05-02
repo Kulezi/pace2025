@@ -33,6 +33,7 @@ struct SolverConfig {
     int max_treewidth;
     size_t max_memory_in_bytes;
     int max_bag_branch_depth;
+    std::chrono::time_point<std::chrono::steady_clock> solve_start;
 
     SolverConfig(std::vector<ReductionRule> rrules, SolverType st, PresolverType pt)
         : reduction_rules(rrules), solver_type(st), presolver_type(pt) {}
@@ -41,13 +42,21 @@ struct SolverConfig {
         : reduction_rules(DSHunter::get_default_reduction_rules()),
           solver_type(SolverType::Default),
           presolver_type(PresolverType::Full),
-          decomposition_time_budget(10s),
+          decomposition_time_budget(300s),
           decomposer_path(),
           random_seed(0),
           good_enough_treewidth(14),
           max_treewidth(18),
           max_memory_in_bytes(8UL << 30UL),
           max_bag_branch_depth(6) {}
+
+    int millisElapsed() {
+        return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - solve_start).count();
+    }
+
+    void logLine(std::string s) {
+        std::cerr << "c " << millisElapsed() << " " << s << std::endl; 
+    }
 };
 
 struct Solver {

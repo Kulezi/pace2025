@@ -1,5 +1,6 @@
 #include "treewidth_solver.h"
 
+#include <format>
 #include <memory>
 
 #include "../../utils.h"
@@ -29,26 +30,24 @@ constexpr int UNSET = -1, INF = 1'000'000'000;
 namespace DSHunter {
 TreewidthSolver::TreewidthSolver(SolverConfig *cfg) : cfg(cfg), decomposer(getDecomposer(cfg)) {}
 
-
 // Returns true if instance was solved. Solution set is stored in given instance.
 // Returns false if it would lead to exceeding the memory limit.
 bool TreewidthSolver::solve(Instance &instance) {
     auto o = decomposer->decompose(instance);
     if (!o.has_value()) {
-        std::cerr << "Decomposition failed" << std::endl;
+        cfg->logLine("decomposition failed");
         return false;
     }
 
     auto td = o.value();
-    std::cerr << "Best found decomposition width: " << td.width << std::endl;
+    cfg->logLine("best found decomposition width: " + std::to_string(td.width));
     if (td.width > cfg->good_enough_treewidth) {
-        std::cerr << "Decomposition width > " << cfg->good_enough_treewidth << " considering reducing it with bag-branching of depth at most " << cfg->max_bag_branch_depth << std::endl;
+        cfg->logLine(std::format("decomposition width > {}, considering reducing it with bag-branching of depth at most {}", cfg->good_enough_treewidth, cfg->max_bag_branch_depth));
         auto estimate = estimateBranching(instance, td);
-        std::cerr << "bag-branching of depth at most " << cfg->max_bag_branch_depth << "is ";
         if (estimate.depth_needed <= cfg->max_bag_branch_depth) {
-            std::cerr << "enough, proceeding with bag-branching\n";
+            cfg->logLine(std::format("bag-branching of depth at most {} is enough, proceeding with bag-branching", cfg->max_bag_branch_depth));
         } else {
-            std::cerr << "not enough, not trying bag-branching\n";
+            cfg->logLine(std::format("bag-branching of depth at most {} is not enough, aborting bag-branching", cfg->max_bag_branch_depth));
             return false;
         }
 
@@ -63,9 +62,8 @@ bool TreewidthSolver::solve(Instance &instance) {
 bool TreewidthSolver::solveDecomp(Instance &instance, TreeDecomposition raw_td) {
     g = instance;
     td = NiceTreeDecomposition::nicify(g, raw_td);
-    std::cerr << "solving td(" << td.width() << ") ";
+    cfg->logLine(std::format("solving td({})", td.width()));
     if (getMemoryUsage(td) > cfg->max_memory_in_bytes) {
-        std::cerr << "FAIL\n";
         return false;
     }
 
@@ -74,10 +72,9 @@ bool TreewidthSolver::solveDecomp(Instance &instance, TreeDecomposition raw_td) 
     getC(td.root, 0);
     recoverDS(td.root, 0);
     instance.ds = g.ds;
-    std::cerr << "SUCCESS[" << g.ds.size() << "]\n";
+    cfg->logLine(std::format("found solution of size {}", g.ds.size()));
     return true;
 }
-
 
 TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(Instance &instance, TreeDecomposition td, int depth) {
     int biggest_bag = td.biggestBag();
@@ -98,10 +95,10 @@ TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(Instance &
     }
 
     if (join_tw <= cutoff)
-        return {depth, 1};
+        return { depth, 1 };
 
     if (depth == cfg->max_bag_branch_depth) {
-        return {INF, 1};
+        return { INF, 1 };
     }
 
     DS_ASSERT(!td.bag[biggest_bag].empty());
@@ -113,7 +110,7 @@ TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(Instance &
 
     std::vector<int> best_ds;
 
-    BranchingEstimate total_estimate{0, 0};
+    BranchingEstimate total_estimate{ 0, 0 };
     for (auto taken : instance.neighbourhoodIncluding(v)) {
         auto new_instance = instance;
         auto new_td = td;
@@ -126,7 +123,8 @@ TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(Instance &
         }
 
         auto estimate = estimateBranching(new_instance, new_td, depth + 1);
-        if (estimate.depth_needed >= INF) return estimate;
+        if (estimate.depth_needed >= INF)
+            return estimate;
 
         total_estimate.depth_needed = std::max(total_estimate.depth_needed, estimate.depth_needed);
         total_estimate.leaves += estimate.leaves;
@@ -134,7 +132,6 @@ TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(Instance &
 
     return total_estimate;
 }
-
 
 bool TreewidthSolver::solveBranching(Instance &instance, TreeDecomposition td) {
     int biggest_bag = td.biggestBag();
@@ -155,7 +152,8 @@ bool TreewidthSolver::solveBranching(Instance &instance, TreeDecomposition td) {
     }
 
     if (join_tw <= cutoff) {
-        std::cerr << "branch " << ++solved_leaves << "/" << total_leaves << " ";
+        cfg->logLine(std::format("branch {}/{}", solved_leaves, total_leaves));
+        solved_leaves++;
         return solveDecomp(instance, td);
     }
 

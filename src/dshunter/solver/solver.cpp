@@ -10,8 +10,18 @@
 namespace DSHunter {
 
 std::vector<int> Solver::solve(Instance g) {
+    cfg.solve_start = std::chrono::steady_clock::now();
     auto initial_instance = g;
+
+    int n_old = g.nodeCount();
+    int m_old = g.edgeCount();
+    cfg.logLine("starting presolve");
     presolve(g);
+    cfg.logLine("presolve done");
+    cfg.logLine(std::format("reduced n from {} to {}", n_old, g.nodeCount()));
+    cfg.logLine(std::format("disregarded node count {}", ([&]() { int res = 0; for (auto v : g.nodes) if (g.isDisregarded(v)) res++; return res; })()));
+    cfg.logLine(std::format("reduced m from {} to {}", m_old, g.edgeCount()));
+    cfg.logLine(std::format("forced edge count {}", g.forcedEdgeCount()));
 
     if (g.nodes.empty()) {
         verify_solution(initial_instance, g.ds);
@@ -21,20 +31,20 @@ std::vector<int> Solver::solve(Instance g) {
     switch (cfg.solver_type) {
         case SolverType::Default: {
             if (g.forcedEdgeCount() == g.edgeCount()) {
-                DS_TRACE(std::cerr << "running VC solver" << std::endl);
+                cfg.logLine("running vc solver");
                 VCSolver vs;
                 g.ds = vs.solve(g);
                 break;
             }
 
             TreewidthSolver ts(&cfg);
-            DS_TRACE(std::cerr << "running treewidth solver" << std::endl);
+            cfg.logLine("running treewidth solver");
             if (ts.solve(g)) {
-                DS_TRACE(std::cerr << "treewidth solver success" << std::endl);
+                cfg.logLine("treewidth solver success");
                 break;
             }
-            exit(1);
-            DS_TRACE(std::cerr << "falling back to branching solver" << std::endl);
+
+            cfg.logLine("treewidth solver failed, falling back to branching solver");
             BranchingSolver bs;
             std::vector<int> ds;
             bs.solve(g, ds);
@@ -43,7 +53,7 @@ std::vector<int> Solver::solve(Instance g) {
         }
 
         case SolverType::TreewidthDP: {
-            DS_TRACE(std::cerr << "running treewidth solver" << std::endl);
+            cfg.logLine("running treewidth solver");
             TreewidthSolver ts(&cfg);
             if (!ts.solve(g))
                 throw std::logic_error("treewidth dp failed (treewidth might be too big?)");
@@ -51,14 +61,14 @@ std::vector<int> Solver::solve(Instance g) {
         }
 
         case SolverType::Bruteforce: {
-            DS_TRACE(std::cerr << "running bruteforce solver" << std::endl);
+            cfg.logLine("running bruteforce solver");
             BruteforceSolver bs;
             bs.solve(g);
             break;
         }
 
         case SolverType::Branching: {
-            DS_TRACE(std::cerr << "running branching solver" << std::endl);
+            cfg.logLine("running branching solver");
             BranchingSolver bs;
 
             std::vector<int> ds;
@@ -68,7 +78,7 @@ std::vector<int> Solver::solve(Instance g) {
         }
 
         case SolverType::ReduceToVertexCover: {
-            DS_TRACE(std::cerr << "running vertex cover solver" << std::endl);
+            cfg.logLine("running vc solver");
 
             if (g.forcedEdgeCount() != g.edgeCount()) {
                 throw std::logic_error(
@@ -82,7 +92,7 @@ std::vector<int> Solver::solve(Instance g) {
         }
 
         case SolverType::Gurobi: {
-            DS_TRACE(std::cerr << "running gurobi solver" << std::endl);
+            cfg.logLine("running gurobi solver");
 
             GurobiSolver gs;
             if (!gs.solve(g)) {
@@ -98,7 +108,9 @@ std::vector<int> Solver::solve(Instance g) {
 
     sort(g.ds.begin(), g.ds.end());
 
+    cfg.logLine("verifying solution");
     verify_solution(initial_instance, g.ds);
+    cfg.logLine("solution of size " + std::to_string(g.ds.size()) + "verified");
     return g.ds;
 }
 
