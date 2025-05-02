@@ -166,12 +166,21 @@ bool TreewidthSolver::solveBranching(Instance &instance, TreeDecomposition td) {
 
     std::vector<int> best_ds;
     for (auto taken : instance.neighbourhoodIncluding(v)) {
+        if (g.isDisregarded(taken))
+            continue;
         auto new_instance = instance;
         auto new_td = td;
         new_instance.take(taken);
         new_td.removeNode(taken);
 
         if (taken != v) {
+            auto adj = g[v].adj;
+            for (auto [u, s] : adj) {
+                if (s == EdgeStatus::FORCED) {
+                    g.take(u);
+                    new_td.removeNode(u);
+                }
+            }
             new_instance.removeNode(v);
             new_td.removeNode(v);
         }
