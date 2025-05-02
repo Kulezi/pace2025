@@ -4,11 +4,12 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <map>
 
 #include "dshunter/dshunter.h"
 #include "dshunter/solver/treewidth/treewidth_solver.h"
 namespace {
-void print_help() {
+void printHelp() {
     std::cout
         << "Usage:\n"
         << "  dshunter [--input_file <graph.gr/graph.ads>]\n"
@@ -59,7 +60,7 @@ enum SolverMode {
     HISTOGRAM,
 };
 
-void parse_arguments(int argc, char* argv[], std::string& input_file, std::string& output_file, DSHunter::SolverConfig& config, SolverMode& mode) {
+void parseArguments(int argc, char* argv[], std::string& input_file, std::string& output_file, DSHunter::SolverConfig& config, SolverMode& mode) {
     struct option long_options[] = { { "input_file", required_argument, nullptr, 'i' },
                                      { "output_file", required_argument, nullptr, 'o' },
                                      { "solver", required_argument, nullptr, 's' },
@@ -119,15 +120,15 @@ void parse_arguments(int argc, char* argv[], std::string& input_file, std::strin
                     throw std::logic_error(std::string(optarg) + " is not a valid --mode value");
                 break;
             case 'h':
-                print_help();
+                printHelp();
                 break;
             default:
-                print_help();
+                printHelp();
         }
     }
 }
 
-std::unique_ptr<std::istream> get_input_stream(const std::string& input_file) {
+std::unique_ptr<std::istream> getInputStream(const std::string& input_file) {
     if (!input_file.empty()) {
         auto input_stream = std::make_unique<std::ifstream>(input_file);
         if (!input_stream->is_open()) {
@@ -139,7 +140,7 @@ std::unique_ptr<std::istream> get_input_stream(const std::string& input_file) {
     return std::make_unique<std::istream>(std::cin.rdbuf());
 }
 
-std::unique_ptr<std::ostream> get_output_stream(const std::string& output_file) {
+std::unique_ptr<std::ostream> getOutputStream(const std::string& output_file) {
     if (!output_file.empty()) {
         auto output_stream = std::make_unique<std::ofstream>(output_file);
         if (!output_stream->is_open()) {
@@ -169,7 +170,7 @@ std::unique_ptr<std::ostream> get_output_stream(const std::string& output_file) 
 //          1 means extra node.
 // comments starting with c can be only at the beginning of the file.
 
-void export_presolution(const DSHunter::Instance& g, std::ostream& output) {
+void exportPresolution(const DSHunter::Instance& g, std::ostream& output) {
     output << "p ads " << g.nodeCount() << " " << g.edgeCount() << " " << g.ds.size() << "\n";
     for (auto v : g.ds) output << v << " ";
     output << "\n";
@@ -186,10 +187,15 @@ void export_presolution(const DSHunter::Instance& g, std::ostream& output) {
     }
 }
 
-void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::ostream& output, SolverMode mode) {
+void solveAndOutput(DSHunter::SolverConfig& config, std::istream& input, std::ostream& output, SolverMode mode) {
     DSHunter::Instance g(input);
     DSHunter::Solver solver(config);
+    std::map<int,int> cnt;
+    for (auto v : g.nodes) {
+        cnt[g.deg(v)]++;
+    }
 
+    for(auto [k, v] : cnt) std::cerr << k << " " << v << std::endl;
     if (mode == TREEWIDTH) {
         solver.presolve(g);
         DSHunter::TreewidthSolver ts(&config);
@@ -218,7 +224,7 @@ void solve_and_output(DSHunter::SolverConfig& config, std::istream& input, std::
 
     if (mode == PRESOLUTION) {
         solver.presolve(g);
-        export_presolution(g, output);
+        exportPresolution(g, output);
         std::cerr << dbg(g.edgeCount()) << dbg(g.forcedEdgeCount()) << std::endl;
         return;
     }
@@ -238,10 +244,10 @@ int main(int argc, char* argv[]) {
     DSHunter::SolverConfig config;
     SolverMode mode = SOLUTION;
 
-    parse_arguments(argc, argv, input_file, output_file, config, mode);
+    parseArguments(argc, argv, input_file, output_file, config, mode);
 
-    auto input = get_input_stream(input_file);
-    auto output = get_output_stream(output_file);
+    auto input = getInputStream(input_file);
+    auto output = getOutputStream(output_file);
 
-    solve_and_output(config, *input, *output, mode);
+    solveAndOutput(config, *input, *output, mode);
 }
