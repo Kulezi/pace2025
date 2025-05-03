@@ -3,12 +3,10 @@
 namespace DSHunter {
 
 bool forceEdgeRule(Instance& g) {
-    static int guwno = 0;
-
-    auto goober = g.nodes;
+    auto nodes = g.nodes;
     bool ret = false;
-    for (auto v : goober) {
-        if (!std::binary_search(goober.begin(), goober.end(), v)) continue;
+    for (auto v : nodes) {
+        if (!std::binary_search(nodes.begin(), nodes.end(), v)) continue;
         if (g.deg(v) == 2 && !g.isDominated(v)) {
             auto e1 = g[v].adj[0];
             auto e2 = g[v].adj[1];

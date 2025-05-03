@@ -7,6 +7,11 @@
 
 namespace DSHunter {
 
+Node::Node(int v, bool is_extra) : n_closed({ v }),
+                                   domination_status(DominationStatus::UNDOMINATED),
+                                   membership_status(MembershipStatus::UNDECIDED),
+                                   is_extra(is_extra) {}
+
 Instance::Instance() = default;
 // Constructs graph from input stream assuming DIMACS-like .gr format.
 Instance::Instance(std::istream &in) : ds{} {
@@ -25,12 +30,12 @@ Instance::Instance(std::istream &in) : ds{} {
             int b = 0;
             tokens >> b;
             ++read_edges;
-            all_nodes[a].adj.emplace_back(b, EdgeStatus::UNCONSTRAINED);
-            all_nodes[b].adj.emplace_back(a, EdgeStatus::UNCONSTRAINED);
+            unorderedAddDirectedEdge(a, b);
+            unorderedAddDirectedEdge(b, a);
         }
     }
 
-    for (auto v : nodes) sort(all_nodes[v].adj.begin(), all_nodes[v].adj.end());
+    sortAdjacencyLists();
 
     if (header_edges != read_edges)
         throw std::logic_error("expected " + std::to_string(header_edges) + " edges, found " +
@@ -42,13 +47,12 @@ void Instance::parse_header(std::stringstream &tokens, int &header_edges) {
     int n_nodes = 0;
     tokens >> problem >> n_nodes >> header_edges;
 
-    // if (problem != "ds")
-    //     throw std::logic_error("expected problem type to be 'ds', found '" + problem + "'");
-
-    all_nodes.resize(n_nodes + 1,
-                     { {}, DominationStatus::UNDOMINATED, MembershipStatus::UNDECIDED, false });
+    all_nodes.reserve(n_nodes + 1);
+    all_nodes.emplace_back(0, false);
+    all_nodes[0].n_closed = {};
     for (int i = 1; i <= n_nodes; ++i) {
         nodes.push_back(i);
+        all_nodes.emplace_back(i, false);
     }
 }
 
@@ -92,7 +96,7 @@ void Instance::forceEdge(int u, int v) {
 
     // All vertices that see both endpoints of this edge must be dominated by one of them,
     // so we can mark them as dominated.
-    auto edgeNeighbourhood = intersect(neighbourhoodExcluding(u), neighbourhoodExcluding(v));
+    auto edgeNeighbourhood = intersect(all_nodes[u].n_open, all_nodes[v].n_open);
     for (auto w : edgeNeighbourhood) {
         markDominated(w);
     }
@@ -120,27 +124,31 @@ int Instance::forcedDeg(int v) const {
 int Instance::addNode() {
     DS_TRACE(std::cerr << __func__ << std::endl);
     int v = all_nodes.size();
-    nodes.push_back(all_nodes.size());
-    all_nodes.push_back({ {}, DominationStatus::UNDOMINATED, MembershipStatus::UNDECIDED, true });
+    nodes.push_back(v);
+    all_nodes.emplace_back(v);
     return v;
+}
+
+bool Instance::hasNode(int v) {
+    return (int)all_nodes.size() > v && !all_nodes[v].n_closed.empty();
 }
 
 // Removes the node with given id.
 // Complexity: O(deg(v) + sum over deg(v) of neighbours)
 void Instance::removeNode(int v) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
-    if (find(nodes.begin(), nodes.end(), v) == nodes.end())
+    if (!hasNode(v))
         return;
     for (auto [u, status] : all_nodes[v].adj) {
         // Edges like this can only be removed by calling take().
         DS_ASSERT(status != EdgeStatus::FORCED || isTaken(v));
-        remove(all_nodes[u].adj, Endpoint{ v, status });
-        DS_ASSERT(is_sorted(all_nodes[u].adj.begin(), all_nodes[u].adj.end()));
+        removeDirectedEdge(u, v);
     }
-    all_nodes[v].adj.clear();
 
+    all_nodes[v].adj.clear();
+    all_nodes[v].n_open.clear();
+    all_nodes[v].n_closed.clear();
     remove(nodes, v);
-    DS_ASSERT(std::is_sorted(all_nodes[v].adj.begin(), all_nodes[v].adj.end()));
 }
 
 // Removes nodes in the given list from the graph.
@@ -151,29 +159,18 @@ void Instance::removeNodes(const std::vector<int> &l) {
 
 // Adds an unconstrained edge between nodes with id's u and v.
 // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
-void Instance::addEdge(int u, int v) {
+void Instance::addEdge(int u, int v, EdgeStatus status) {
     DS_TRACE(std::cerr << __func__ << dbg(u) << dbg(v) << std::endl);
-    insert(all_nodes[u].adj, Endpoint{ v, EdgeStatus::UNCONSTRAINED });
-    insert(all_nodes[v].adj, Endpoint{ u, EdgeStatus::UNCONSTRAINED });
+    addDirectedEdge(u, v, status);
+    addDirectedEdge(v, u, status);
 }
 
 // Removes edge (v, w) from the graph.
 // Complexity: O(deg(v) + deg(w))
-void Instance::removeEdge(int v, int w) {
-    DS_TRACE(std::cerr << __func__ << dbg(v) << dbg(w) << std::endl);
-    remove(all_nodes[v].adj, { w, EdgeStatus::ANY });
-    remove(all_nodes[w].adj, { v, EdgeStatus::ANY });
-}
-
-// Same meaning as N[v] notation.
-// Complexity: O(deg(v)).
-const std::vector<int> Instance::neighbourhoodIncluding(int v) const {
-    std::vector<int> res(all_nodes[v].adj.size());
-    for (size_t i = 0; i < all_nodes[v].adj.size(); ++i) {
-        res[i] = all_nodes[v].adj[i].to;
-    }
-    insert(res, v);
-    return res;
+void Instance::removeEdge(int u, int v) {
+    DS_TRACE(std::cerr << __func__ << dbg(u) << dbg(v) << std::endl);
+    removeDirectedEdge(u, v);
+    removeDirectedEdge(v, u);
 }
 
 // Returns the number of edges in the graph.
@@ -190,21 +187,11 @@ int Instance::forcedEdgeCount() const {
     return sum_deg / 2;
 }
 
-// Same meaning as N(v) notation.
-// Complexity: O(1)
-std::vector<int> Instance::neighbourhoodExcluding(int v) const {
-    std::vector<int> res(all_nodes[v].adj.size());
-    for (size_t i = 0; i < all_nodes[v].adj.size(); ++i) {
-        res[i] = all_nodes[v].adj[i].to;
-    }
-    return res;
-}
-
 // Returns true if and only if undirected edge (u, v) is present in the graph.
-// Complexity: O(deg(u)) !
+// Complexity: O(log(deg(u))) !
 bool Instance::hasEdge(int u, int v) const {
-    return std::find(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{ v, EdgeStatus::ANY }) !=
-           all_nodes[u].adj.end();
+    auto &node = all_nodes[u];
+    return std::binary_search(node.n_open.begin(), node.n_open.begin(), v);
 }
 
 // Inserts given node to the dominating set, changing the status of
@@ -213,18 +200,22 @@ bool Instance::hasEdge(int u, int v) const {
 void Instance::take(int v) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
     DS_ASSERT(!isTaken(v));
-    if (all_nodes[v].is_extra) {
-        for (auto u : neighbourhoodExcluding(v)) {
+
+    auto &node = all_nodes[v];
+    if (node.is_extra) {
+        // Copy as we will invalidate our iterator if we operate on the original vector.
+        auto n_open = node.n_open;
+        for (auto u : n_open) {
             DS_ASSERT(!isTaken(u));
             take(u);
         }
 
         return;
     }
-    all_nodes[v].membership_status = MembershipStatus::TAKEN;
+    node.membership_status = MembershipStatus::TAKEN;
 
     ds.push_back(v);
-    for (auto u : neighbourhoodExcluding(v)) {
+    for (auto u : node.n_open) {
         DS_ASSERT(!isTaken(u));
         markDominated(u);
     }
@@ -249,7 +240,7 @@ std::vector<std::vector<int>> Instance::split() const {
                 int w = q.front();
                 q.pop();
 
-                for (auto [u, _] : all_nodes[w].adj) {
+                for (auto u : all_nodes[w].n_open) {
                     if (component[u] < 0) {
                         component[u] = components;
                         q.push(u);
@@ -275,6 +266,35 @@ void Instance::setEdgeStatus(int u, int v, EdgeStatus status) {
     DS_ASSERT(it_v != all_nodes[v].adj.end());
 
     it_u->status = it_v->status = status;
+}
+
+void Instance::addDirectedEdge(int u, int v, EdgeStatus status) {
+    auto &node = all_nodes[u];
+    insert(node.adj, Endpoint{ v, status });
+    insert(node.n_open, v);
+    insert(node.n_closed, v);
+}
+
+void Instance::removeDirectedEdge(int u, int v) {
+    auto &node = all_nodes[u];
+    remove(node.adj, Endpoint{ v, EdgeStatus::ANY });
+    remove(node.n_open, v);
+    remove(node.n_closed, v);
+}
+
+void Instance::unorderedAddDirectedEdge(int u, int v, EdgeStatus status) {
+    auto &node = all_nodes[u];
+    node.adj.emplace_back(v, status);
+    node.n_open.push_back(v);
+    node.n_closed.push_back(v);
+}
+
+void Instance::sortAdjacencyLists() {
+    for (auto &node : all_nodes) {
+        sort(node.adj.begin(), node.adj.end());
+        sort(node.n_open.begin(), node.n_open.end());
+        sort(node.n_closed.begin(), node.n_closed.end());
+    }
 }
 
 const Node &Instance::operator[](int v) const { return all_nodes[v]; }

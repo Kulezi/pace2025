@@ -1,7 +1,7 @@
 #include "../rrules.h"
 namespace {
 bool allNeighboursArePink(DSHunter::Instance& g, int u) {
-    for (auto [v, _] : g[u].adj) {
+    for (auto v : g[u].n_open) {
         if (!g.isDisregarded(v))
             return false;
     }

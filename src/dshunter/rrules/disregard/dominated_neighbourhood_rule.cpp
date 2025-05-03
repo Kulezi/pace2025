@@ -1,7 +1,7 @@
 #include "../rrules.h"
 namespace {
 bool allNeighboursAreDominated(DSHunter::Instance& g, int u) {
-    for (auto [v, _] : g[u].adj) {
+    for (auto v : g[u].n_open) {
         if (!g.isDominated(v))
             return false;
     }
@@ -10,7 +10,7 @@ bool allNeighboursAreDominated(DSHunter::Instance& g, int u) {
 }
 
 bool atLeastOneNeighbourCanBeTaken(DSHunter::Instance& g, int u) {
-    for (auto [v, _] : g[u].adj) {
+    for (auto v : g[u].n_open) {
         if (!g.isDisregarded(v))
             return true;
     }

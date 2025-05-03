@@ -26,7 +26,7 @@ void BruteforceSolver::solve(Instance &g) {
             if (mask >> i & 1) {
                 ds.push_back(v);
                 taken[v] = dominated[v] = true;
-                for (auto [u, _] : g[v].adj)
+                for (auto u : g[v].n_open)
                     dominated[u] = true;
             }
         }

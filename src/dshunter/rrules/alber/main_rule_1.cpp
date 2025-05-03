@@ -26,7 +26,7 @@ bool isExit(const DSHunter::Instance& g, int u, int v) {
 // Complexity: O(deg(u)^2)
 std::vector<int> exitNeighbourhood(DSHunter::Instance& g, int u) {
     std::vector<int> N_exit;
-    for (auto [v, _] : g[u].adj) {
+    for (auto v : g[u].n_open) {
         if (isExit(g, v, u))
             N_exit.push_back(v);
     }
@@ -37,18 +37,17 @@ std::vector<int> exitNeighbourhood(DSHunter::Instance& g, int u) {
 namespace DSHunter {
 bool alberMainRule1(Instance& g) {
     for (auto u : g.nodes) {
-        if (g.isDisregarded(u)) continue;
-        auto N_v_without = g.neighbourhoodExcluding(u);
+        if (g.isDisregarded(u))
+            continue;
 
         std::vector<int> N_exit = exitNeighbourhood(g, u), N_guard, N_prison;
 
-        for (auto v : remove(N_v_without, N_exit)) {
-            auto N_u = g.neighbourhoodExcluding(v);
-            if (!intersect(N_u, N_exit).empty())
+        for (auto v : remove(g[u].n_open, N_exit)) {
+            if (!intersect(g[v].n_open, N_exit).empty())
                 N_guard.push_back(v);
         }
 
-        N_prison = remove(remove(N_v_without, N_exit), N_guard);
+        N_prison = remove(remove(g[u].n_open, N_exit), N_guard);
 
         if (!N_prison.empty() && hasUndominatedNode(g, N_prison)) {
             DS_TRACE(std::cerr << "applying " << __func__ << dbg(u) << dbgv(N_prison)

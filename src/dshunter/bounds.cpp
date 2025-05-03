@@ -20,7 +20,7 @@ int greedy_upper_bound(const DSHunter::Instance &g) {
     for (auto u : nodes) {
         if (!g.isDominated(u))
             undominated_neighbors[u]++;
-        for (auto v : g.neighbourhoodExcluding(u))
+        for (auto v : g[u].n_open)
             if (!g.isDominated(v))
                 undominated_neighbors[u]++;
 
@@ -41,7 +41,7 @@ int greedy_upper_bound(const DSHunter::Instance &g) {
             --undominated_neighbors[u];
             if (undominated_neighbors[u] > 0)
                 pq.push({ undominated_neighbors[u], u });
-            for (auto v : g.neighbourhoodExcluding(u)) {
+            for (auto v : g[u].n_open) {
                 if (taken[v])
                     continue;
                 --undominated_neighbors[v];
@@ -60,7 +60,7 @@ int greedy_upper_bound(const DSHunter::Instance &g) {
 
         dominate(v);
         taken[v] = true;
-        for (auto u : g.neighbourhoodExcluding(v)) dominate(u);
+        for (auto u : g[v].n_open) dominate(u);
         ++upper_bound;
     }
 

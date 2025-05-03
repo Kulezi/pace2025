@@ -2,7 +2,7 @@
 namespace {
 
 bool haveCommonNonDisregardedNeighbour(const DSHunter::Instance& g, int u, int v_1, int v_2) {
-    for (auto [w, _] : g[v_1].adj) {
+    for (auto w : g[v_1].n_open) {
         if (w == u || g.isDisregarded(w))
             continue;
         if (g.hasEdge(w, v_2))

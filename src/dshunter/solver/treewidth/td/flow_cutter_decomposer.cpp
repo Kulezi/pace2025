@@ -58,7 +58,7 @@ struct TransferGraph {
 
         int nextArc = 0;
         for (auto v : inputGraph.nodes) {
-            for (auto [w, _] : inputGraph[v].adj) {
+            for (auto w : inputGraph[v].n_open) {
                 g.head[nextArc] = mapping[v];
                 g.tail[nextArc] = mapping[w];
                 ++nextArc;

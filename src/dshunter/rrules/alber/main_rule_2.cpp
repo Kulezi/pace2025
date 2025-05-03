@@ -108,8 +108,7 @@ void populateExitNodes(const DSHunter::Instance& g, const std::vector<int>& N_vw
 
 void populateGuardNodes(const DSHunter::Instance& g, const std::vector<int>& N_vw_without, const std::vector<int>& N_exit, std::vector<int>& N_guard) {
     for (auto u : remove(N_vw_without, N_exit)) {
-        auto N_u = g.neighbourhoodExcluding(u);
-        if (!intersect(N_u, N_exit).empty()) {
+        if (!intersect(g[u].n_open, N_exit).empty()) {
             N_guard.push_back(u);
         }
     }
@@ -136,8 +135,8 @@ bool canBeDominatedBySingleNode(const DSHunter::Instance& g,
                                 const std::vector<int>& N_guard,
                                 const std::vector<int>& N_prison) {
     auto intersection_can_be_dominated_by_single_from = [&](const std::vector<int>& nodes) {
-        for (auto x : nodes)
-            if (contains(g.neighbourhoodIncluding(x), N_prison_intersect_B))
+        for (auto v : nodes)
+            if (contains(g[v].n_closed, N_prison_intersect_B))
                 return true;
         return false;
     };
@@ -148,10 +147,8 @@ bool canBeDominatedBySingleNode(const DSHunter::Instance& g,
 // Tries to apply Main Rule 2 for a given pair of vertices - DOI 10.1007/s10479-006-0045-4, p. 4
 // Complexity: O((deg(v) + deg(w))^2)
 bool applyAlberMainRule2(DSHunter::Instance& g, int v, int w) {
-    auto N_v_without = g.neighbourhoodExcluding(v);
-    auto N_w_without = g.neighbourhoodExcluding(w);
-    auto N_vw_with = unite(g.neighbourhoodIncluding(v), g.neighbourhoodIncluding(w));
-    auto N_vw_without = unite(N_v_without, N_w_without);
+    auto N_vw_with = unite(g[v].n_closed, g[w].n_closed);
+    auto N_vw_without = unite(g[v].n_open, g[w].n_open);
 
     std::vector<int> N_exit, N_guard, N_prison;
     populateExitNodes(g, N_vw_without, v, w, N_exit);
@@ -179,20 +176,20 @@ bool applyAlberMainRule2(DSHunter::Instance& g, int v, int w) {
     }
 
     bool can_be_dominated_by_just_v =
-        contains(N_v_without, N_prison_intersect_B);
+        contains(g[v].n_open, N_prison_intersect_B);
     bool can_be_dominated_by_just_w =
-        contains(N_w_without, N_prison_intersect_B);
+        contains(g[w].n_open, N_prison_intersect_B);
 
     DS_TRACE(std::cerr << "trying to apply " << __func__ << dbg(v) << dbg(w) << std::endl);
     if (can_be_dominated_by_just_v && can_be_dominated_by_just_w && red_v == 0 && red_w == 0) {
-        return applyCase1_1(g, v, w, N_prison, N_guard, N_v_without, N_w_without);
-    } 
-    
+        return applyCase1_1(g, v, w, N_prison, N_guard, g[v].n_open, g[w].n_open);
+    }
+
     if (can_be_dominated_by_just_v && !can_be_dominated_by_just_w && red_w == 0) {
-        return applyCase1_2(g, v, N_prison, N_v_without, N_guard);
+        return applyCase1_2(g, v, N_prison, g[v].n_open, N_guard);
     }
     if (!can_be_dominated_by_just_v && can_be_dominated_by_just_w && red_v == 0) {
-        return applyCase1_3(g, w, N_prison, N_w_without, N_guard);
+        return applyCase1_3(g, w, N_prison, g[w].n_open, N_guard);
     }
     if (!can_be_dominated_by_just_v && !can_be_dominated_by_just_w) {
         return applyCase2(g, v, w, N_vw_without, N_prison, N_guard);
@@ -211,7 +208,8 @@ bool alberMainRule2(Instance& g) {
     // since we only look at distances upto 3.
     int zero_dist = BFS_INF - 4;
     for (auto v : g.nodes) {
-        if (g.isDisregarded(v)) continue;
+        if (g.isDisregarded(v))
+            continue;
         std::queue<int> q;
         dis[v] = zero_dist;
         q.push(v);
@@ -221,7 +219,7 @@ bool alberMainRule2(Instance& g) {
             if (dis[w] > zero_dist && !g.isDisregarded(w) && applyAlberMainRule2(g, v, w))
                 return true;
             if (dis[w] < zero_dist + 4) {
-                for (auto [x, _] : g[w].adj) {
+                for (auto x : g[w].n_open) {
                     if (dis[x] > dis[w] + 1) {
                         dis[x] = dis[w] + 1;
                         q.push(x);
