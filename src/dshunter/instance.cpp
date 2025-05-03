@@ -58,6 +58,12 @@ void Instance::parse_header(std::stringstream &tokens, int &header_edges) {
 
 // Returns the number of nodes in the graph.
 size_t Instance::nodeCount() const { return nodes.size(); }
+size_t Instance::disregardedNodeCount() const {
+    size_t cnt = 0;
+    for (auto v : nodes)
+        if (isDisregarded(v)) cnt++;
+    return cnt;
+}
 
 bool Instance::isDominated(int v) const {
     return all_nodes[v].domination_status == DominationStatus::DOMINATED;
@@ -161,8 +167,11 @@ void Instance::removeNodes(const std::vector<int> &l) {
 // Complexity: O(deg(v)), due to maintaining adjacency list to be sorted.
 void Instance::addEdge(int u, int v, EdgeStatus status) {
     DS_TRACE(std::cerr << __func__ << dbg(u) << dbg(v) << std::endl);
-    addDirectedEdge(u, v, status);
-    addDirectedEdge(v, u, status);
+    addDirectedEdge(u, v, EdgeStatus::UNCONSTRAINED);
+    addDirectedEdge(v, u, EdgeStatus::UNCONSTRAINED);
+    if (status == EdgeStatus::FORCED) {
+        forceEdge(u, v);
+    }
 }
 
 // Removes edge (v, w) from the graph.
@@ -191,7 +200,7 @@ int Instance::forcedEdgeCount() const {
 // Complexity: O(log(deg(u))) !
 bool Instance::hasEdge(int u, int v) const {
     auto &node = all_nodes[u];
-    return std::binary_search(node.n_open.begin(), node.n_open.begin(), v);
+    return std::binary_search(node.n_open.begin(), node.n_open.end(), v);
 }
 
 // Inserts given node to the dominating set, changing the status of

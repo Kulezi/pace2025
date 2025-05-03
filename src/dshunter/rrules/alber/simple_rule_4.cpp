@@ -18,8 +18,11 @@ bool tryMidpoint(DSHunter::Instance& g, bool forced_by_edge, int u, int v, int w
 namespace DSHunter {
 
 bool alberSimpleRule4(Instance& g) {
-    for (auto v : g.nodes) {
-        if (g.isDominated(v) && g.deg(v) == 3) {
+    auto nodes = g.nodes;
+    bool reduced = false;
+
+    for (auto v : nodes) {
+        if (g.hasNode(v) && g.isDominated(v) && g.deg(v) == 3) {
             auto [u_1, s_1] = g[v].adj[0];
             auto [u_2, s_2] = g[v].adj[1];
             auto [u_3, s_3] = g[v].adj[2];
@@ -36,13 +39,13 @@ bool alberSimpleRule4(Instance& g) {
                     tryMidpoint(g, (bool)s_3, u_3, u_1, u_2)) {
                     DS_TRACE(std::cerr << "applying " << __func__ << dbg(v) << std::endl);
                     g.removeNode(v);
-                    return true;
+                    reduced = true;
                 }
             }
         }
     }
 
-    return false;
+    return reduced;
 }
 
 ReductionRule AlberSimpleRule4("AlberSimpleRule4 (dominated degree 3 vertex removal)", alberSimpleRule4, 2, 1);

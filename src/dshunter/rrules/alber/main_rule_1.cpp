@@ -36,8 +36,11 @@ std::vector<int> exitNeighbourhood(DSHunter::Instance& g, int u) {
 }  // namespace
 namespace DSHunter {
 bool alberMainRule1(Instance& g) {
-    for (auto u : g.nodes) {
-        if (g.isDisregarded(u))
+    auto nodes = g.nodes;
+    bool reduced = false;
+
+    for (auto u : nodes) {
+        if (!g.hasNode(u) || g.isDisregarded(u))
             continue;
 
         std::vector<int> N_exit = exitNeighbourhood(g, u), N_guard, N_prison;
@@ -56,11 +59,11 @@ bool alberMainRule1(Instance& g) {
 
             for (auto v : N_prison) g.removeNode(v);
             for (auto v : N_guard) g.removeNode(v);
-            return true;
+            reduced = true;
         }
     }
 
-    return false;
+    return reduced;
 }
 
 ReductionRule AlberMainRule1("AlberMainRule1", alberMainRule1, 3, 1);

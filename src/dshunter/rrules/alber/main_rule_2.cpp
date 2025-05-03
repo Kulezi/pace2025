@@ -201,14 +201,17 @@ bool applyAlberMainRule2(DSHunter::Instance& g, int v, int w) {
 
 namespace DSHunter {
 bool alberMainRule2(Instance& g) {
+    auto nodes = g.nodes;
+    bool reduced = false;
+
     // Allocate the array once for use in breadth-first search.
     std::vector<int> dis(g.all_nodes.size(), BFS_INF);
 
     // Avoid rewriting the distances by considering zero to be INF - 4 * (# checked nodes),
     // since we only look at distances upto 3.
     int zero_dist = BFS_INF - 4;
-    for (auto v : g.nodes) {
-        if (g.isDisregarded(v))
+    for (auto v : nodes) {
+        if (!g.hasNode(v) || g.isDisregarded(v))
             continue;
         std::queue<int> q;
         dis[v] = zero_dist;
@@ -216,8 +219,12 @@ bool alberMainRule2(Instance& g) {
         while (!q.empty()) {
             int w = q.front();
             q.pop();
-            if (dis[w] > zero_dist && !g.isDisregarded(w) && applyAlberMainRule2(g, v, w))
-                return true;
+            if (dis[w] > zero_dist && !g.isDisregarded(w) && applyAlberMainRule2(g, v, w)) {
+                reduced = true;
+                // We might've removed node v from the graph so we break out of the while loop.
+                // We can still look new pairs after v.
+                break;
+            }
             if (dis[w] < zero_dist + 4) {
                 for (auto x : g[w].n_open) {
                     if (dis[x] > dis[w] + 1) {
@@ -231,7 +238,7 @@ bool alberMainRule2(Instance& g) {
         zero_dist -= 4;
     }
 
-    return false;
+    return reduced;
 }
 
 ReductionRule AlberMainRule2("AlberMainRule2", alberMainRule2, 4, 2);

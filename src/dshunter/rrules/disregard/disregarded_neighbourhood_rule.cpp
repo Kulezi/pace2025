@@ -11,18 +11,16 @@ bool allNeighboursArePink(DSHunter::Instance& g, int u) {
 namespace DSHunter {
 
 bool disregardedNeighbourhoodRule(Instance& g) {
-    std::vector<int> to_take;
-    for (auto u : g.nodes) {
-        if (!g.isDominated(u) && !g.isDisregarded(u) && allNeighboursArePink(g, u)) {
-            to_take.push_back(u);
+    auto nodes = g.nodes;
+    bool reduced = false;
+    for (auto u : nodes) {
+        if (g.hasNode(u) && !g.isDominated(u) && !g.isDisregarded(u) && allNeighboursArePink(g, u)) {
+            g.take(u);
+            reduced = true;
         }
     }
 
-    for (auto u : to_take) {
-        g.take(u);
-    }
-
-    return !to_take.empty();
+    return reduced;
 }
 
 ReductionRule DisregardedNeighbourhoodRule("DisregardedNeighbourhoodRule", disregardedNeighbourhoodRule, 2, 1);

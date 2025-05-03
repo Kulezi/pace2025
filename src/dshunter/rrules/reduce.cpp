@@ -1,15 +1,12 @@
 #include "rrules.h"
-
+#include <format>
 namespace DSHunter {
 bool ReductionRule::apply(Instance& g) const {
-    DS_TRACE(std::cerr << "trying to apply " << name << " (n=" << g.nodeCount() << ", m="
-                       << g.edgeCount() << ", f=" << g.forcedEdgeCount() << ")" << std::endl);
+    DS_TRACE(std::cerr << std::format("trying to apply {} (n={}, m={}, f={}, d={})", name, g.nodeCount(), g.edgeCount(), g.forcedEdgeCount(), g.disregardedNodeCount()) << std::endl);
 
     bool applied = f(g);
 
-    DS_TRACE(if (applied) std::cerr << "succesfully applied " << name << " (n=" << g.nodeCount()
-                                    << ", m=" << g.edgeCount() << ", f=" << g.forcedEdgeCount()
-                                    << ")" << std::endl;
+    DS_TRACE(if (applied) std::cerr << std::format("successfully applied {} (n={}, m={}, f={}, d={})", name, g.nodeCount(), g.edgeCount(), g.forcedEdgeCount(), g.disregardedNodeCount()) << std::endl;
              else std::cerr << "failed to apply " << name << std::endl;);
     return applied;
 }

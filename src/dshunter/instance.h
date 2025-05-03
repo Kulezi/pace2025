@@ -71,6 +71,7 @@ struct Instance {
 
     // Returns the number of nodes in the graph.
     size_t nodeCount() const;
+    size_t disregardedNodeCount() const;
 
     // Returns the number of edges in the graph.
     // Complexity: O(n)
