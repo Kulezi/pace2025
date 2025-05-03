@@ -15,7 +15,7 @@ void verify_solution(Instance g, const std::vector<int> solution) {
                                    std::to_string(u));
 
         taken[u] = true;
-        for (auto v : g.neighbourhoodIncluding(u)) dominated[v] = true;
+        for (auto v : g[u].n_closed) dominated[v] = true;
     }
 
     for (auto u : g.nodes) {

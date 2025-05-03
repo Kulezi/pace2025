@@ -39,7 +39,7 @@ Instance take(Instance g, std::vector<int> to_take) {
 
 int undominatedDegree(const Instance &g, int v) {
     int d = !g.isDominated(v);
-    for (auto [w, _] : g[v].adj) {
+    for (auto w : g[v].n_open) {
         if (!g.isDominated(w))
             d++;
     }

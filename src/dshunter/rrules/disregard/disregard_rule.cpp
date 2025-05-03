@@ -19,7 +19,7 @@ bool disregardRule(Instance& g) {
         for (auto [v, s] : g[u].adj) {
             if (g[v].membership_status != MembershipStatus::DISREGARDED &&
                 g[u].membership_status == MembershipStatus::UNDECIDED &&
-                contains(g.neighbourhoodIncluding(v), g.neighbourhoodIncluding(u)) &&
+                contains(g[v].n_closed, g[u].n_closed) &&
                 !hasRedEdge(g, u, v)) {
                 g.markDisregarded(u);
                 DS_TRACE(std::cerr << "applied DisregardRule to node " << u << std::endl);

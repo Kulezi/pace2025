@@ -111,7 +111,7 @@ TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(Instance &
     std::vector<int> best_ds;
 
     BranchingEstimate total_estimate{ 0, 0 };
-    for (auto taken : instance.neighbourhoodIncluding(v)) {
+    for (auto taken : instance[v].n_closed) {
         auto new_instance = instance;
         auto new_td = td;
         new_instance.take(taken);
@@ -165,7 +165,7 @@ bool TreewidthSolver::solveBranching(Instance &instance, TreeDecomposition td) {
     }
 
     std::vector<int> best_ds;
-    for (auto taken : instance.neighbourhoodIncluding(v)) {
+    for (auto taken : instance[v].n_closed) {
         if (g.isDisregarded(taken))
             continue;
         auto new_instance = instance;

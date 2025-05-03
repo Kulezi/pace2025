@@ -63,7 +63,7 @@ std::optional<TreeDecomposition> ExecDecomposer::decompose(const Instance& input
         std::ostringstream oss;
         oss << "p tw " << input_graph.nodeCount() << " " << input_graph.edgeCount() << "\n";
         for (auto u : input_graph.nodes) {
-            for (auto [v, _] : input_graph[u].adj) {
+            for (auto v: input_graph[u].n_open) {
                 if (u > v)
                     continue;
                 oss << rv[u] + 1 << " " << rv[v] + 1 << "\n";
