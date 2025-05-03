@@ -1,12 +1,15 @@
 #include "../rrules.h"
 namespace DSHunter {
 bool alberSimpleRule2(Instance& g) {
-    std::vector<int> to_remove;
-    std::vector<int> to_take;
-    for (auto v : g.nodes) {
-        if (g.isDominated(v)) {
+    auto nodes = g.nodes;
+    bool reduced = false;
+    
+    for (auto v : nodes) {
+        if (g.hasNode(v) && g.isDominated(v)) {
             if (g.deg(v) == 0) {
-                to_remove.push_back(v);
+                DS_TRACE(std::cerr << "applying " << __func__ << " (remove) " << dbg(v) << std::endl);
+                g.removeNode(v);
+                reduced = true;
             } else if (g.deg(v) == 1) {
                 auto [w, status] = g[v].adj[0];
 
@@ -18,25 +21,15 @@ bool alberSimpleRule2(Instance& g) {
                 // larger degree. If the other end of the edge also would be a candidate for
                 // this reduction, apply it only to the vertex with smaller label.
                 if (status == EdgeStatus::FORCED && (g.isDisregarded(v) || !(g.deg(w) == 1 && v > w))) {
-                    to_take.push_back(w);
+                    DS_TRACE(std::cerr << "applying " << __func__ << " (take) " << dbg(v) << std::endl);
+                    g.take(w);
+                    reduced = true;
                 }
             }
         }
     }
 
-    for (auto v : to_take) {
-        if (!g.isTaken(v)) {
-            DS_TRACE(std::cerr << "applying " << __func__ << " (take) " << dbg(v) << std::endl);
-            g.take(v);
-        }
-    }
-
-    for (auto v : to_remove) {
-        DS_TRACE(std::cerr << "applying " << __func__ << " (remove) " << dbg(v) << std::endl);
-        g.removeNode(v);
-    }
-
-    return !to_remove.empty() || !to_take.empty();
+    return reduced;
 }
 
 ReductionRule AlberSimpleRule2("AlberSimpleRule2 (dominated leaf removal)", alberSimpleRule2, 2, 1);

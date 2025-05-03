@@ -190,12 +190,7 @@ void exportPresolution(const DSHunter::Instance& g, std::ostream& output) {
 void solveAndOutput(DSHunter::SolverConfig& config, std::istream& input, std::ostream& output, SolverMode mode) {
     DSHunter::Instance g(input);
     DSHunter::Solver solver(config);
-    std::map<int,int> cnt;
-    for (auto v : g.nodes) {
-        cnt[g.deg(v)]++;
-    }
 
-    for(auto [k, v] : cnt) std::cerr << k << " " << v << std::endl;
     if (mode == TREEWIDTH) {
         solver.presolve(g);
         DSHunter::TreewidthSolver ts(&config);
