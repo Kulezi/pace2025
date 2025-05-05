@@ -168,6 +168,10 @@ std::unique_ptr<std::ostream> getOutputStream(const std::string& output_file) {
 //      reductions
 //          0 means original node,
 //          1 means extra node.
+// Last m lines describe the edges of the graph in format
+// 'u v f' where:
+//      u and v are the nodes being connected
+//      f is the edge status, 0 means unconstrained, 1 means forced.
 // comments starting with c can be only at the beginning of the file.
 
 void exportPresolution(const DSHunter::Instance& g, std::ostream& output) {
