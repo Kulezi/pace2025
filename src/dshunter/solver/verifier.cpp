@@ -1,5 +1,7 @@
 #ifndef DS_VERIFIER_H
 #define DS_VERIFIER_H
+#include <format>
+
 #include "../instance.h"
 #include "../utils.h"
 namespace DSHunter {
@@ -11,8 +13,7 @@ void verify_solution(Instance g, const std::vector<int> solution) {
     std::vector<bool> taken(g.all_nodes.size(), false);
     for (auto u : solution) {
         if (taken[u])
-            throw std::logic_error("solution contains duplicates, one of which is vertex " +
-                                   std::to_string(u));
+            throw std::logic_error(std::format("solution contains duplicates, one of which is vertex {}", u));
 
         taken[u] = true;
         for (auto v : g[u].n_closed) dominated[v] = true;
@@ -20,11 +21,10 @@ void verify_solution(Instance g, const std::vector<int> solution) {
 
     for (auto u : g.nodes) {
         if (!dominated[u])
-            throw std::logic_error("solution doesn't dominate vertex " + std::to_string(u));
+            throw std::logic_error(std::format("solution doesn't dominate vertex {}", u));
         for (auto [v, s] : g[u].adj) {
             if (s == EdgeStatus::FORCED && !taken[u] && !taken[v])
-                throw std::logic_error("forced edge (" + std::to_string(u) + ", " +
-                                       std::to_string(v) + ") is unsatisfied");
+                throw std::logic_error(std::format("forced edge ({}, {}) is unsatisfied", u, v));
         }
     }
 }
