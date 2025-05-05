@@ -9,9 +9,11 @@ using DSHunter::intersect, DSHunter::contains, DSHunter::unite, DSHunter::remove
 constexpr int BFS_INF = INT_MAX;
 
 bool applyCase1_1(DSHunter::Instance& g, int v, int w, const std::vector<int>& N_prison, const std::vector<int>& N_guard, const std::vector<int>& N_v_without, const std::vector<int>& N_w_without) {
+    // Calculate intersection before we invalidate our references.
+    auto removable_intersection = intersect(intersect(N_guard, N_v_without), N_w_without);
     if (!g.hasEdge(v, w)) {
         // Don't apply the reduction if it doesn't reduce the size of the graph.
-        if (N_prison.size() + intersect(intersect(N_guard, N_v_without), N_w_without).size() <= 3)
+        if (N_prison.size() + removable_intersection.size() <= 3)
             return false;
         DS_TRACE(std::cerr << "applying " << __func__ << " (with gadget vertex) " << dbg(v)
                            << dbg(w) << dbgv(N_prison) << dbgv(N_guard) << dbgv(N_v_without)
@@ -29,7 +31,7 @@ bool applyCase1_1(DSHunter::Instance& g, int v, int w, const std::vector<int>& N
         g.addEdge(w, z3);
 
         g.removeNodes(N_prison);
-        g.removeNodes(intersect(intersect(N_guard, N_v_without), N_w_without));
+        g.removeNodes(removable_intersection);
         return true;
     }
     DS_TRACE(std::cerr << "applying " << __func__ << " (edge forcing) " << dbg(v) << dbg(w)
@@ -40,7 +42,7 @@ bool applyCase1_1(DSHunter::Instance& g, int v, int w, const std::vector<int>& N
         g.forceEdge(v, w);
     }
     g.removeNodes(N_prison);
-    g.removeNodes(intersect(intersect(N_guard, N_v_without), N_w_without));
+    g.removeNodes(removable_intersection);
 
     return true;
 }
@@ -48,19 +50,20 @@ bool applyCase1_1(DSHunter::Instance& g, int v, int w, const std::vector<int>& N
 bool applyCase1_2(DSHunter::Instance& g, int v, const std::vector<int>& N_prison, const std::vector<int>& N_v_without, const std::vector<int>& N_guard) {
     DS_TRACE(std::cerr << "applying " << __func__ << dbg(v) << dbgv(N_prison) << dbgv(N_guard)
                        << dbgv(N_v_without) << std::endl);
+    auto removable_intersection = intersect(N_v_without, N_guard);
     g.take(v);
     g.removeNodes(N_prison);
-    g.removeNodes(intersect(N_v_without, N_guard));
+    g.removeNodes(removable_intersection);
     return true;
 }
 
 bool applyCase1_3(DSHunter::Instance& g, int w, const std::vector<int>& N_prison, const std::vector<int>& N_w_without, const std::vector<int>& N_guard) {
     DS_TRACE(std::cerr << "applying " << __func__ << dbg(w) << dbgv(N_prison) << dbgv(N_guard)
                        << dbgv(N_w_without) << std::endl);
+    auto removable_intersection = intersect(N_w_without, N_guard);
     g.take(w);
-    g.removeNode(w);
     g.removeNodes(N_prison);
-    g.removeNodes(intersect(N_w_without, N_guard));
+    g.removeNodes(removable_intersection);
     return true;
 }
 
