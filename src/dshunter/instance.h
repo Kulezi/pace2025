@@ -61,13 +61,12 @@ struct Instance {
     // Nodes already removed from the graph considered as the dominating set candidates.
     std::vector<int> ds;
 
+    std::vector<std::vector<int>> sets_to_hit;
     // Constructs an empty graph.
     Instance();
 
     // Constructs graph from input stream assuming DIMACS-like .gr format.
     Instance(std::istream &in);
-
-    void parse_header(std::stringstream &tokens, int &header_edges);
 
     // Returns the number of nodes in the graph.
     size_t nodeCount() const;
@@ -143,6 +142,9 @@ struct Instance {
 
     void unorderedAddDirectedEdge(int u, int v, EdgeStatus status = EdgeStatus::UNCONSTRAINED);
     void sortAdjacencyLists();
+
+    void parseDS(std::istream &in, int n_nodes, int header_edges);
+    void parseADS(std::istream &in, int n_nodes, int header_edges, int d);
 };
 }  // namespace DSHunter
 #endif  // INSTANCE_H

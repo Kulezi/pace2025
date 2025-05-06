@@ -6,7 +6,8 @@ const std::vector<ReductionRule> get_default_reduction_rules() {
 
         // Rules regarding disregarding.
         DisregardRule,
-        DominatedNeighbourhoodRule,
+        DominatedNeighbourhoodMarkingRule,
+        DominatedNeighbourhoodTakingRule,
         RemoveDisregardedRule,
         DisregardedNeighbourhoodRule,
 
@@ -18,7 +19,7 @@ const std::vector<ReductionRule> get_default_reduction_rules() {
 
         // Then more expensive rules.
         AlberMainRule1,
-        AlberMainRule2
+        // AlberMainRule2
     };
     return rules;
 }

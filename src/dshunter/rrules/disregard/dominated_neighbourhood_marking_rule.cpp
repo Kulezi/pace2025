@@ -30,7 +30,7 @@ bool otherEndCanBeTaken(DSHunter::Instance& g, int u) {
 }  // namespace
 namespace DSHunter {
 
-bool dominatedNeighbourhoodRule(Instance& g) {
+bool dominatedNeighbourhoodMarkingRule(Instance& g) {
     bool reduced = false;
     for (auto u : g.nodes) {
         if (!g.isDisregarded(u) && allNeighboursAreDominated(g, u) && atLeastOneNeighbourCanBeTaken(g, u)) {
@@ -44,6 +44,6 @@ bool dominatedNeighbourhoodRule(Instance& g) {
     return reduced;
 }
 
-ReductionRule DominatedNeighbourhoodRule("DominatedNeighbourhoodRule", dominatedNeighbourhoodRule, 2, 1);
+ReductionRule DominatedNeighbourhoodMarkingRule("DominatedNeighbourhoodMarkingRule", dominatedNeighbourhoodMarkingRule, 2, 1);
 
 }  // namespace DSHunter

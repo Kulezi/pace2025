@@ -79,7 +79,8 @@ extern ReductionRule ForceEdgeRule;
 extern ReductionRule DisregardRule;
 extern ReductionRule RemoveDisregardedRule;
 extern ReductionRule DisregardedNeighbourhoodRule;
-extern ReductionRule DominatedNeighbourhoodRule;
+extern ReductionRule DominatedNeighbourhoodMarkingRule;
+extern ReductionRule DominatedNeighbourhoodTakingRule;
 
 const std::vector<ReductionRule> get_default_reduction_rules();
 }  // namespace DSHunter
