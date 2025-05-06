@@ -17,6 +17,7 @@ std::vector<int> Solver::solve(Instance g) {
     int m_old = g.edgeCount();
     cfg.logLine("starting presolve");
     presolve(g);
+
     cfg.logLine("presolve done");
     cfg.logLine(std::format("reduced n from {} to {}", n_old, g.nodeCount()));
     cfg.logLine(std::format("disregarded node count {}", ([&]() { int res = 0; for (auto v : g.nodes) if (g.isDisregarded(v)) res++; return res; })()));
@@ -28,28 +29,46 @@ std::vector<int> Solver::solve(Instance g) {
         return g.ds;
     }
 
+    std::vector<int> ds = g.ds;
+    auto components = g.split();
+
+    cfg.logLine(std::format("reduced graph has {} components", components.size()));
+    for (auto component : components) {
+        g.ds.clear();
+        g.nodes = component;
+        auto component_ds = solveConnected(g);
+        ds.insert(ds.begin(), component_ds.begin(), component_ds.end());
+    }
+
+    sort(ds.begin(), ds.end());
+
+    cfg.logLine("verifying solution");
+    verify_solution(initial_instance, ds);
+    cfg.logLine(std::format("solution of size {} verified", ds.size()));
+    return ds;
+}
+
+std::vector<int> Solver::solveConnected(Instance &g) {
     switch (cfg.solver_type) {
         case SolverType::Default: {
             if (g.forcedEdgeCount() == g.edgeCount()) {
                 cfg.logLine("running vc solver");
                 VCSolver vs;
-                g.ds = vs.solve(g);
-                break;
+                return vs.solve(g);
             }
 
             TreewidthSolver ts(&cfg);
             cfg.logLine("running treewidth solver");
             if (ts.solve(g)) {
                 cfg.logLine("treewidth solver success");
-                break;
+                return g.ds;
             }
 
             cfg.logLine("treewidth solver failed, falling back to branching solver");
             BranchingSolver bs;
             std::vector<int> ds;
             bs.solve(g, ds);
-            g.ds = ds;
-            break;
+            return ds;
         }
 
         case SolverType::TreewidthDP: {
@@ -57,14 +76,14 @@ std::vector<int> Solver::solve(Instance g) {
             TreewidthSolver ts(&cfg);
             if (!ts.solve(g))
                 throw std::logic_error("treewidth dp failed (treewidth might be too big?)");
-            break;
+            return g.ds;
         }
 
         case SolverType::Bruteforce: {
             cfg.logLine("running bruteforce solver");
             BruteforceSolver bs;
             bs.solve(g);
-            break;
+            return g.ds;
         }
 
         case SolverType::Branching: {
@@ -73,8 +92,7 @@ std::vector<int> Solver::solve(Instance g) {
 
             std::vector<int> ds;
             bs.solve(g, ds);
-            g.ds = ds;
-            break;
+            return ds;
         }
 
         case SolverType::ReduceToVertexCover: {
@@ -87,8 +105,7 @@ std::vector<int> Solver::solve(Instance g) {
             }
 
             VCSolver vs;
-            g.ds = vs.solve(g);
-            break;
+            return vs.solve(g);
         }
 
         case SolverType::Gurobi: {
@@ -98,19 +115,12 @@ std::vector<int> Solver::solve(Instance g) {
             if (!gs.solve(g)) {
                 throw std::logic_error("gurobi didn't find a solution in time");
             }
-            break;
+            return g.ds;
         }
 
         default:
             throw std::logic_error(std::format("invalid solver_type value of {} in SolverConfig", (int)cfg.solver_type));
     }
-
-    sort(g.ds.begin(), g.ds.end());
-
-    cfg.logLine("verifying solution");
-    verify_solution(initial_instance, g.ds);
-    cfg.logLine(std::format("solution of size {} verified", g.ds.size()));
-    return g.ds;
 }
 
 int presolve_complexity(PresolverType pt) {
