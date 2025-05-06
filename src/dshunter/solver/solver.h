@@ -66,6 +66,9 @@ struct Solver {
 
     std::vector<int> solve(Instance g);
     void presolve(Instance &g);
+
+    private:
+    std::vector<int> solveConnected(Instance &g);
 };
 
 }  // namespace DSHunter
