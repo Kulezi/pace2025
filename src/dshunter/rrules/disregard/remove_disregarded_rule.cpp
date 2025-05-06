@@ -11,7 +11,8 @@ bool removeDisregardedRule(Instance& g) {
     }
 
     for (auto u : to_take) {
-        for (auto [v, s] : g[u].adj) {
+        auto adj = g[u].adj;
+        for (auto [v, s] : adj) {
             if (s == EdgeStatus::FORCED) {
                 DS_ASSERT(!g.isDisregarded(v));
                 g.take(v);

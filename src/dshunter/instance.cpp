@@ -16,7 +16,9 @@ Instance::Instance() = default;
 // Constructs graph from input stream assuming DIMACS-like .gr format.
 Instance::Instance(std::istream &in) : ds{} {
     std::string line;
-    int header_edges, read_edges = 0;
+    int header_edges, read_edges = 0, nodes_to_read = 0;
+
+    std::string problem;
     while (std::getline(in, line)) {
         std::stringstream tokens(line);
         std::string s;
@@ -24,36 +26,104 @@ Instance::Instance(std::istream &in) : ds{} {
         if (s[0] == 'c')
             continue;
         if (s[0] == 'p') {
-            parse_header(tokens, header_edges);
-        } else {
-            int a = stoi(s);
-            int b = 0;
-            tokens >> b;
-            ++read_edges;
-            unorderedAddDirectedEdge(a, b);
-            unorderedAddDirectedEdge(b, a);
+            int n_nodes = 0;
+            tokens >> problem >> n_nodes >> header_edges;
+            all_nodes.reserve(n_nodes + 1);
+            all_nodes.emplace_back(0, false);
+            all_nodes[0].n_closed = {};
+
+
+            if (problem == "ads") {
+                int d;
+                tokens >> d;
+                parseADS(in, n_nodes, header_edges, d);
+            } else {
+                for (int i = 1; i <= n_nodes; ++i) {
+                    nodes.push_back(i);
+                    all_nodes.emplace_back(i, false);
+                }
+                parseDS(in, n_nodes, header_edges);
+            }
+
+            break;
         }
     }
 
     sortAdjacencyLists();
+}
+
+void Instance::parseADS(std::istream &in, int n_nodes, int header_edges, int d) {
+    int read_edges = 0;
+
+    // Read dominating set elements.
+    {
+        std::string line;
+        std::getline(in, line);
+        std::stringstream tokens(line);
+        ds = std::vector<int>(d);
+        for (auto &v : ds) tokens >> v;
+    }
+
+    // Read node descriptions.
+    {
+        for (int i = 1; i <= n_nodes; i++) {
+            std::string line;
+            std::getline(in, line);
+            std::cerr << line << std::endl;
+            std::stringstream tokens(line);
+
+            int v, d, m, e;
+            tokens >> v >> d >> m >> e;
+
+            while (all_nodes.size() <= v) {
+                all_nodes.emplace_back(all_nodes.size(), false);
+            }
+
+
+            nodes.push_back(v);
+            all_nodes[v].membership_status = (MembershipStatus)m;
+            all_nodes[v].domination_status = (DominationStatus)d;
+            all_nodes[v].is_extra = (bool)e;
+        }
+    }
+
+    for (int i = 1; i <= header_edges; i++) {
+        std::string line;
+        std::getline(in, line);
+        std::stringstream tokens(line);
+
+        std::string s;
+        int a, b, f;
+        tokens >> a >> b >> f;
+        ++read_edges;
+        unorderedAddDirectedEdge(a, b);
+        unorderedAddDirectedEdge(b, a);
+        if (f) {
+            setEdgeStatus(a, b, EdgeStatus::FORCED);
+        }
+    }
+}
+
+void Instance::parseDS(std::istream &in, int n_nodes, int header_edges) {
+    int read_edges = 0;
+    std::string line;
+    while (std::getline(in, line)) {
+        std::stringstream tokens(line);
+        std::string s;
+        tokens >> s;
+        if (s[0] == 'c')
+            continue;
+        int a = stoi(s);
+        int b = 0;
+        tokens >> b;
+        ++read_edges;
+        unorderedAddDirectedEdge(a, b);
+        unorderedAddDirectedEdge(b, a);
+    }
 
     if (header_edges != read_edges)
         throw std::logic_error("expected " + std::to_string(header_edges) + " edges, found " +
                                std::to_string(read_edges));
-}
-
-void Instance::parse_header(std::stringstream &tokens, int &header_edges) {
-    std::string problem;
-    int n_nodes = 0;
-    tokens >> problem >> n_nodes >> header_edges;
-
-    all_nodes.reserve(n_nodes + 1);
-    all_nodes.emplace_back(0, false);
-    all_nodes[0].n_closed = {};
-    for (int i = 1; i <= n_nodes; ++i) {
-        nodes.push_back(i);
-        all_nodes.emplace_back(i, false);
-    }
 }
 
 // Returns the number of nodes in the graph.
@@ -61,7 +131,8 @@ size_t Instance::nodeCount() const { return nodes.size(); }
 size_t Instance::disregardedNodeCount() const {
     size_t cnt = 0;
     for (auto v : nodes)
-        if (isDisregarded(v)) cnt++;
+        if (isDisregarded(v))
+            cnt++;
     return cnt;
 }
 
