@@ -7,7 +7,6 @@ const std::vector<ReductionRule> get_default_reduction_rules() {
         // Rules regarding disregarding.
         DisregardRule,
         DominatedNeighbourhoodMarkingRule,
-        DominatedNeighbourhoodTakingRule,
         RemoveDisregardedRule,
         DisregardedNeighbourhoodRule,
 
