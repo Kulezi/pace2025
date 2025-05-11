@@ -72,7 +72,11 @@ void Instance::parseADS(std::istream &in, int n_nodes, int header_edges, int d) 
             int v, d, m, e;
             tokens >> v >> d >> m >> e;
 
+<<<<<<< HEAD
             while (static_cast<int>(all_nodes.size()) <= v) {
+=======
+            while ((int)all_nodes.size() <= v) {
+>>>>>>> 3fa243b (instance.h: add exporting in .ads format)
                 all_nodes.emplace_back(all_nodes.size(), false);
             }
 
@@ -282,6 +286,7 @@ bool Instance::hasEdge(int u, int v) const {
 void Instance::take(int v) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
     DS_ASSERT(!isTaken(v));
+    DS_ASSERT(!isDisregarded(v));
 
     auto &node = all_nodes[v];
     if (node.is_extra) {
@@ -392,5 +397,45 @@ void Instance::sortAdjacencyLists() {
 }
 
 const Node &Instance::operator[](int v) const { return all_nodes[v]; }
+
+// .ads format description:
+//  first line is 'p ads n m d' where:
+//      n is the number of remaining nodes
+//      m is the number of remaining edges
+//      d is the number of nodes already known to be in the optimal dominating set
+//      (those nodes are guaranteed to not be present in the graph)
+//  second line is v_1, v_2, ..., v_d, being the list of nodes already known to be in the optimal
+//  dominating set following it are n lines describing the nodes of the remaining graph in format 'v
+//  s_d s_m e', where:
+//      v is the node number in the original graph, note nodes may not be numbered from 1 to n.
+//      s_d is the nodes domination status, 0 means undominated, 1 means dominated
+//      s_m is the nodes solution membership status, 0 means maybe, 1 means no, 2 means yes.
+//      e describes whether the node is an node non-existent in the original graph added by
+//      reductions
+//          0 means original node,
+//          1 means extra node.
+// Last m lines describe the edges of the graph in format
+// 'u v f' where:
+//      u and v are the nodes being connected
+//      f is the edge status, 0 means unconstrained, 1 means forced.
+// comments starting with c can be only at the beginning of the file.
+
+void Instance::exportADS(std::ostream& output) {
+    output << "p ads " << nodeCount() << " " << edgeCount() << " " << ds.size() << "\n";
+    for (auto v : ds) output << v << " ";
+    output << "\n";
+
+    for (auto v : nodes) {
+        output << v << " " << (int)all_nodes[v].domination_status << " " << (int)all_nodes[v].membership_status << " " << all_nodes[v].is_extra << "\n";
+    }
+
+    for (auto u : nodes) {
+        for (auto [v, status] : all_nodes[u].adj) {
+            if (u < v)
+                output << u << " " << v << " " << (int)status << "\n";
+        }
+    }
+}
+
 
 }  // namespace DSHunter
