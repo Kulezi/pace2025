@@ -111,11 +111,11 @@ std::vector<int> Solver::solveConnected(Instance &g) {
         case SolverType::Gurobi: {
             cfg.logLine("running gurobi solver");
 
-            GurobiSolver gs;
-            if (!gs.solve(g)) {
+            auto sol = GurobiSolver(g).solve();
+            if (!sol.has_value()) {
                 throw std::logic_error("gurobi didn't find a solution in time");
             }
-            return g.ds;
+            return sol.value();
         }
 
         default:
