@@ -136,6 +136,7 @@ struct Instance {
     std::vector<std::vector<int>> split() const;
 
     const Node &operator[](int v) const;
+    void exportADS(std::ostream& output);
 
    private:
     void setEdgeStatus(int u, int v, EdgeStatus status);

@@ -152,44 +152,6 @@ std::unique_ptr<std::ostream> getOutputStream(const std::string& output_file) {
     return std::make_unique<std::ostream>(std::cout.rdbuf());
 }
 
-// .ads format description:
-//  first line is 'p ads n m d' where:
-//      n is the number of remaining nodes
-//      m is the number of remaining edges
-//      d is the number of nodes already known to be in the optimal dominating set
-//      (those nodes are guaranteed to not be present in the graph)
-//  second line is v_1, v_2, ..., v_d, being the list of nodes already known to be in the optimal
-//  dominating set following it are n lines describing the nodes of the remaining graph in format 'v
-//  s_d s_m e', where:
-//      v is the node number in the original graph, note nodes may not be numbered from 1 to n.
-//      s_d is the nodes domination status, 0 means undominated, 1 means dominated
-//      s_m is the nodes solution membership status, 0 means maybe, 1 means no, 2 means yes.
-//      e describes whether the node is an node non-existent in the original graph added by
-//      reductions
-//          0 means original node,
-//          1 means extra node.
-// Last m lines describe the edges of the graph in format
-// 'u v f' where:
-//      u and v are the nodes being connected
-//      f is the edge status, 0 means unconstrained, 1 means forced.
-// comments starting with c can be only at the beginning of the file.
-
-void exportPresolution(const DSHunter::Instance& g, std::ostream& output) {
-    output << "p ads " << g.nodeCount() << " " << g.edgeCount() << " " << g.ds.size() << "\n";
-    for (auto v : g.ds) output << v << " ";
-    output << "\n";
-
-    for (auto v : g.nodes) {
-        output << v << " " << (int)g[v].domination_status << " " << (int)g[v].membership_status << " " << g[v].is_extra << "\n";
-    }
-
-    for (auto u : g.nodes) {
-        for (auto [v, status] : g[u].adj) {
-            if (u < v)
-                output << u << " " << v << " " << (int)status << "\n";
-        }
-    }
-}
 
 void solveAndOutput(DSHunter::SolverConfig& config, std::istream& input, std::ostream& output, SolverMode mode) {
     DSHunter::Instance g(input);
@@ -223,7 +185,7 @@ void solveAndOutput(DSHunter::SolverConfig& config, std::istream& input, std::os
 
     if (mode == PRESOLUTION) {
         solver.presolve(g);
-        exportPresolution(g, output);
+        g.exportADS(output);
         std::cerr << dbg(g.edgeCount()) << dbg(g.forcedEdgeCount()) << std::endl;
         return;
     }
