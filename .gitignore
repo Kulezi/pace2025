@@ -54,15 +54,26 @@ build/
 *.fdb_latexmk
 *.aux
 
+# Workspace
 .vscode/
+.idea/
 .solutions/
 debug/
 release/
 testing/
 
-rg.gr
+# Debug info
+.gdb_history
+*.gr
+
 *.log
 *.sol
-.gdb_history
+*.gexf
+*.svg
+*.csv
+*.edges
+*.data
+*.old
 
 src/ext/gurobi1201/
+
