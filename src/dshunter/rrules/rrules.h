@@ -63,9 +63,7 @@ bool disregardRule(Instance& g);
 
 bool removeDisregardedRule(Instance& g);
 
-bool disregardedNeighbourhoodRule(Instance& g);
-
-bool dominatedNeighbourhoodRle(Instance &g);
+bool singleDominatorRule(Instance& g);
 
 extern ReductionRule AlberMainRule1;
 extern ReductionRule AlberMainRule2;
@@ -78,7 +76,7 @@ extern ReductionRule ForceEdgeRule;
 
 extern ReductionRule DisregardRule;
 extern ReductionRule RemoveDisregardedRule;
-extern ReductionRule DisregardedNeighbourhoodRule;
+extern ReductionRule SingleDominatorRule;
 extern ReductionRule DominatedNeighbourhoodMarkingRule;
 
 const std::vector<ReductionRule> get_default_reduction_rules();

@@ -8,7 +8,8 @@ const std::vector<ReductionRule> get_default_reduction_rules() {
         DisregardRule,
         DominatedNeighbourhoodMarkingRule,
         RemoveDisregardedRule,
-        DisregardedNeighbourhoodRule,
+        SingleDominatorRule,
+
 
         // Cheap rules that only remove vertices.
         AlberSimpleRule1,

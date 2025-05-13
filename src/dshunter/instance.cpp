@@ -7,10 +7,7 @@
 
 namespace DSHunter {
 
-Node::Node(int v, bool is_extra) : n_closed({ v }),
-                                   domination_status(DominationStatus::UNDOMINATED),
-                                   membership_status(MembershipStatus::UNDECIDED),
-                                   is_extra(is_extra) {}
+Node::Node(int v, bool is_extra) : n_closed({ v }), dominators({ v }), domination_status(DominationStatus::UNDOMINATED), membership_status(MembershipStatus::UNDECIDED), is_extra(is_extra) {}
 
 Instance::Instance() = default;
 // Constructs graph from input stream assuming DIMACS-like .gr format.
@@ -30,8 +27,7 @@ Instance::Instance(std::istream &in) : ds{} {
             tokens >> problem >> n_nodes >> header_edges;
             all_nodes.reserve(n_nodes + 1);
             all_nodes.emplace_back(0, false);
-            all_nodes[0].n_closed = {};
-
+            all_nodes[0].n_closed = all_nodes[0].dominators = {};
 
             if (problem == "ads") {
                 int d;
@@ -78,7 +74,6 @@ void Instance::parseADS(std::istream &in, int n_nodes, int header_edges, int d) 
             while (all_nodes.size() <= v) {
                 all_nodes.emplace_back(all_nodes.size(), false);
             }
-
 
             nodes.push_back(v);
             all_nodes[v].membership_status = (MembershipStatus)m;
@@ -161,6 +156,9 @@ bool Instance::isDisregarded(int v) const {
 void Instance::markDisregarded(int v) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
     all_nodes[v].membership_status = MembershipStatus::DISREGARDED;
+    for (auto u : all_nodes[v].n_open) {
+        remove(all_nodes[u].dominators, v);
+    }
 }
 
 void Instance::forceEdge(int u, int v) {
@@ -353,6 +351,7 @@ void Instance::addDirectedEdge(int u, int v, EdgeStatus status) {
     insert(node.adj, Endpoint{ v, status });
     insert(node.n_open, v);
     insert(node.n_closed, v);
+    insert(node.dominators, v);
 }
 
 void Instance::removeDirectedEdge(int u, int v) {
@@ -360,6 +359,7 @@ void Instance::removeDirectedEdge(int u, int v) {
     remove(node.adj, Endpoint{ v, EdgeStatus::ANY });
     remove(node.n_open, v);
     remove(node.n_closed, v);
+    remove(node.dominators, v);
 }
 
 void Instance::unorderedAddDirectedEdge(int u, int v, EdgeStatus status) {
@@ -367,6 +367,7 @@ void Instance::unorderedAddDirectedEdge(int u, int v, EdgeStatus status) {
     node.adj.emplace_back(v, status);
     node.n_open.push_back(v);
     node.n_closed.push_back(v);
+    node.dominators.push_back(v);
 }
 
 void Instance::sortAdjacencyLists() {
@@ -374,6 +375,7 @@ void Instance::sortAdjacencyLists() {
         sort(node.adj.begin(), node.adj.end());
         sort(node.n_open.begin(), node.n_open.end());
         sort(node.n_closed.begin(), node.n_closed.end());
+        sort(node.dominators.begin(), node.dominators.end());
     }
 }
 
