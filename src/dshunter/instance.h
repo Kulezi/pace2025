@@ -40,6 +40,7 @@ struct Node {
     std::vector<Endpoint> adj;
     std::vector<int> n_open;
     std::vector<int> n_closed;
+    std::vector<int> dominators;
 
     DominationStatus domination_status;
     MembershipStatus membership_status;
