@@ -79,6 +79,8 @@ extern ReductionRule RemoveDisregardedRule;
 extern ReductionRule SingleDominatorRule;
 extern ReductionRule DominatedNeighbourhoodMarkingRule;
 
+extern ReductionRule SameDominatorsRule;
+
 const std::vector<ReductionRule> get_default_reduction_rules();
 }  // namespace DSHunter
 #endif  // RRULES_H

@@ -7,7 +7,16 @@ namespace DSHunter {
 bool sameDominatorsRule(Instance& g) {
     bool reduced = false;
     for (auto u : g.nodes) {
-        if ()
+        if (g.isDominated(u))
+            continue;
+
+        for (auto v : g[u].n_open) {
+            if (contains(g[v].dominators, g[u].dominators)) {
+                g.markDominated(u);
+                reduced = true;
+                break;
+            }
+        }
     }
 
     return reduced;

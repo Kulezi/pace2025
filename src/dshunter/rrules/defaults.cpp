@@ -9,7 +9,7 @@ const std::vector<ReductionRule> get_default_reduction_rules() {
         DominatedNeighbourhoodMarkingRule,
         RemoveDisregardedRule,
         SingleDominatorRule,
-
+        SameDominatorsRule,
 
         // Cheap rules that only remove vertices.
         AlberSimpleRule1,
@@ -19,7 +19,7 @@ const std::vector<ReductionRule> get_default_reduction_rules() {
 
         // Then more expensive rules.
         AlberMainRule1,
-        // AlberMainRule2
+        AlberMainRule2
     };
     return rules;
 }
