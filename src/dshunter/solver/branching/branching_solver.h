@@ -10,12 +10,12 @@ struct BranchingSolver {
 
     BranchingSolver();
     BranchingSolver(std::vector<ReductionRule> rrules);
-    void solve(Instance g, std::vector<int> &best_ds);
+    std::vector<int> solve(const Instance &g);
 
    private:
-    int selectNode(const Instance &g);
-
-    void branch(const Instance &g, int v, std::vector<int> &best_ds);
+    static int selectNode(const Instance &g);
+    void solve(Instance g, std::vector<int> &best_ds);
+    void branch(Instance &g, std::vector<int> &best_ds);
 };
 }  // namespace DSHunter
 #endif  // DS_BRANCHING_SOLVER_H

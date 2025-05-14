@@ -2,13 +2,16 @@
 
 #include <limits.h>
 
-#include <vector>
 #include <cstdint>
+#include <format>
+#include <vector>
 
 #include "../../bounds.h"
 #include "../../instance.h"
 #include "../../rrules/rrules.h"
 #include "../../utils.h"
+#include "dshunter/solver/heuristic/greedy.h"
+#include "dshunter/solver/treewidth/td/flow_cutter_decomposer.h"
 
 namespace {
 using DSHunter::Instance;
@@ -30,7 +33,7 @@ Instance take(Instance g, int v) {
     return g;
 }
 
-Instance take(Instance g, std::vector<int> to_take) {
+Instance take(Instance g, const std::vector<int> &to_take) {
     for (auto v : to_take) g.take(v);
     DS_TRACE(std::cerr << std::string(level, ' ') << "took" << dbgv(to_take) << dbgv(g.ds)
                        << std::endl);
@@ -38,13 +41,7 @@ Instance take(Instance g, std::vector<int> to_take) {
 }
 
 int undominatedDegree(const Instance &g, int v) {
-    int d = !g.isDominated(v);
-    for (auto w : g[v].n_open) {
-        if (!g.isDominated(w))
-            d++;
-    }
-
-    return d;
+    return static_cast<int>(g[v].dominatees.size());
 }
 
 int maxUndominatedDegreeNode(const Instance &g) {
@@ -73,6 +70,15 @@ int maxForcedDegreeNode(const Instance &g) {
     return best;
 }
 
+bool isSolvable(const Instance &g) {
+    for (auto v : g.nodes) {
+        if (!g.isDominated(v) && g[v].dominators.empty())
+            return false;
+    }
+
+    return true;
+}
+
 }  // namespace
 
 namespace DSHunter {
@@ -80,25 +86,34 @@ namespace DSHunter {
 BranchingSolver::BranchingSolver() : reduction_rules(get_default_reduction_rules()) {}
 BranchingSolver::BranchingSolver(std::vector<ReductionRule> rrules) : reduction_rules(rrules) {}
 
+std::vector<int> BranchingSolver::solve(const Instance &g) {
+    std::vector<int> best_ds = greedyDominatingSet(g);
+    solve(g, best_ds);
+    return best_ds;
+}
+
 void BranchingSolver::solve(Instance g, std::vector<int> &best_ds) {
     enter;
 
-    reduce(g, reduction_rules, 3);
-    if (!best_ds.empty() && g.ds.size() + DSHunter::lowerBound(g) >= best_ds.size()) {
+    reduce(g, reduction_rules, 1);
+    if (lowerBound(g) >= best_ds.size() || !isSolvable(g)) {
         leave;
     }
 
-    int v = selectNode(g);
-
-    if (v == -1) {
-        std::cerr << "best found: " << g.ds.size() << std::endl;
-        best_ds = g.ds;
-        leave;
+    auto split = g.split();
+    for (auto cc : split) {
+        g.nodes = cc;
+        std::vector<int> ds = greedyDominatingSet(g);
+        branch(g, ds);
+        g.ds = ds;
+        if (g.ds.size() >= best_ds.size()) {
+            leave;
+        }
     }
-
-    branch(g, v, best_ds);
+    best_ds = g.ds;
     leave;
 }
+
 
 int BranchingSolver::selectNode(const Instance &g) {
     int v = maxForcedDegreeNode(g);
@@ -107,34 +122,24 @@ int BranchingSolver::selectNode(const Instance &g) {
     return maxUndominatedDegreeNode(g);
 }
 
-void BranchingSolver::branch(const Instance &g, int v, std::vector<int> &best_ds) {
-    // Case 1: v belongs to DS -> dominate N(v)
-    // In case it is a leaf we can skip this case since taking the other end is always at least as
-    // good.
-    if (g.deg(v) != 1)
+void BranchingSolver::branch(Instance &g, std::vector<int> &best_ds) {
+    int v = selectNode(g);
+    if (v == -1) {
+        if (g.ds.size() < best_ds.size()) best_ds = g.ds;
+        return;
+    }
+
+    if (!g.isDisregarded(v))
         solve(take(g, v), best_ds);
+
+    g.markDisregarded(v);
 
     std::vector<int> to_take;
     for (auto [u, s] : g[v].adj)
         if (s == EdgeStatus::FORCED)
             to_take.push_back(u);
 
-    if (to_take.empty()) {
-        // Since v doesn't belong to DS we need to take some neighbour to the
-        // dominating set.
-
-        // TODO: When taking i-th neighbour we can remove neigbours 1, ..., i - 1, since we already
-        // handled cases where they are in the dominating set in the loop.
-        for (auto [u, s] : g[v].adj) {
-            DS_ASSERT(s == EdgeStatus::UNCONSTRAINED);
-            solve(take(g, u), best_ds);
-        }
-    }
-    // Case 2.2: v has forced edges, and we don't take v to the dominating set.
-    // In this case we need to take all its forced-edge connected neighbours into the dominating
-    // set.
-    else
-        solve(take(g, to_take), best_ds);
+    solve(take(g, to_take), best_ds);
 }
 
 }  // namespace DSHunter
