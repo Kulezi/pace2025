@@ -61,7 +61,6 @@ set(HEADER_IMPLEMENTATIONS
     src/dshunter/rrules/disregard/disregard_rule.cpp
     src/dshunter/rrules/disregard/remove_disregarded_rule.cpp
     src/dshunter/rrules/disregard/single_dominator_rule.cpp
-    src/dshunter/rrules/disregard/dominated_neighbourhood_marking_rule.cpp
     src/dshunter/rrules/dominate/same_dominators_rule.cpp
     src/dshunter/rrules/reduce.cpp
     src/dshunter/rrules/apply.cpp
