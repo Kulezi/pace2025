@@ -66,7 +66,6 @@ void Instance::parseADS(std::istream &in, int n_nodes, int header_edges, int d) 
         for (int i = 1; i <= n_nodes; i++) {
             std::string line;
             std::getline(in, line);
-            std::cerr << line << std::endl;
             std::stringstream tokens(line);
 
             int v, d, m, e;

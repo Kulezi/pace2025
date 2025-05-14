@@ -67,10 +67,7 @@ std::vector<int> Solver::solveConnected(Instance &g) {
             }
 
             cfg.logLine("treewidth solver failed, falling back to branching solver");
-            BranchingSolver bs;
-            std::vector<int> ds;
-            bs.solve(g, ds);
-            return ds;
+            return BranchingSolver().solve(g);
         }
 
         case SolverType::TreewidthDP: {
@@ -90,11 +87,7 @@ std::vector<int> Solver::solveConnected(Instance &g) {
 
         case SolverType::Branching: {
             cfg.logLine("running branching solver");
-            BranchingSolver bs;
-
-            std::vector<int> ds;
-            bs.solve(g, ds);
-            return ds;
+            return BranchingSolver().solve(g);
         }
 
         case SolverType::ReduceToVertexCover: {

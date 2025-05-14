@@ -131,7 +131,6 @@ struct Instance {
     bool hasEdge(int u, int v) const;
 
     // Splits the list of graph nodes into individual connected components.
-    // Note in case of a connected graph it returns an empty list.
     // Complexity: O(n + m)
     std::vector<std::vector<int>> split() const;
 
