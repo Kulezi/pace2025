@@ -33,6 +33,7 @@ struct Endpoint {
 };
 
 struct Node {
+    Node();
     Node(int v, bool is_extra = true);
 
     // List of adjacent nodes sorted by increasing node id.
@@ -41,6 +42,7 @@ struct Node {
     std::vector<int> n_open;
     std::vector<int> n_closed;
     std::vector<int> dominators;
+    std::vector<int> dominatees;
 
     DominationStatus domination_status;
     MembershipStatus membership_status;
@@ -96,7 +98,7 @@ struct Instance {
     // Complexity: O(1)
     int addNode();
 
-    bool hasNode(int v);
+    bool hasNode(int v) const;
 
     // Removes the node with given id.
     // Complexity: O(deg(v) + sum over deg(v) of neighbours)
@@ -141,7 +143,8 @@ struct Instance {
     void addDirectedEdge(int u, int v, EdgeStatus status);
     void removeDirectedEdge(int u, int v);
 
-    void unorderedAddDirectedEdge(int u, int v, EdgeStatus status = EdgeStatus::UNCONSTRAINED);
+    void initAddEdge(int u, int v, EdgeStatus status = EdgeStatus::UNCONSTRAINED);
+    void initAddDirectedEdge(int u, int v, EdgeStatus status = EdgeStatus::UNCONSTRAINED);
     void sortAdjacencyLists();
 
     void parseDS(std::istream &in, int n_nodes, int header_edges);
