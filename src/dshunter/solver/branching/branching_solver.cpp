@@ -84,7 +84,7 @@ void BranchingSolver::solve(Instance g, std::vector<int> &best_ds) {
     enter;
 
     reduce(g, reduction_rules, 3);
-    if (!best_ds.empty() && g.ds.size() + DSHunter::lower_bound(g) >= best_ds.size()) {
+    if (!best_ds.empty() && g.ds.size() + DSHunter::lowerBound(g) >= best_ds.size()) {
         leave;
     }
 

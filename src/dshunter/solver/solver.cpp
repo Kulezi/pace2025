@@ -1,5 +1,6 @@
 #include "solver.h"
 
+#include "../bounds.h"
 #include "../rrules/rrules.h"
 #include "branching/branching_solver.h"
 #include "bruteforce/bruteforce_solver.h"
@@ -23,6 +24,7 @@ std::vector<int> Solver::solve(Instance g) {
     cfg.logLine(std::format("disregarded node count {}", ([&]() { int res = 0; for (auto v : g.nodes) if (g.isDisregarded(v)) res++; return res; })()));
     cfg.logLine(std::format("reduced m from {} to {}", m_old, g.edgeCount()));
     cfg.logLine(std::format("forced edge count {}", g.forcedEdgeCount()));
+    cfg.logLine(std::format("{} <= |D| <= {}", lowerBound(g), upperBound(g)));
 
     if (g.nodes.empty()) {
         verify_solution(initial_instance, g.ds);

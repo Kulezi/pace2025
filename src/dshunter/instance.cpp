@@ -72,11 +72,7 @@ void Instance::parseADS(std::istream &in, int n_nodes, int header_edges, int d) 
             int v, d, m, e;
             tokens >> v >> d >> m >> e;
 
-<<<<<<< HEAD
             while (static_cast<int>(all_nodes.size()) <= v) {
-=======
-            while ((int)all_nodes.size() <= v) {
->>>>>>> 3fa243b (instance.h: add exporting in .ads format)
                 all_nodes.emplace_back(all_nodes.size(), false);
             }
 
