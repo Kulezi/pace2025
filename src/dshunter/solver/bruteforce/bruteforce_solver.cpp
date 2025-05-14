@@ -6,7 +6,11 @@
 namespace DSHunter {
 void BruteforceSolver::solve(Instance &g) {
     reduce(g, reduction_rules);
-    int n = g.nodeCount();
+
+    std::vector<int> nodes;
+    for (auto v : g.nodes) if (!g.isDisregarded(v)) nodes.push_back(v);
+
+    int n = static_cast<int>(nodes.size());
     std::vector<int> best_ds;
 
     for (int mask = 0; mask < (1 << n); mask++) {
@@ -21,7 +25,7 @@ void BruteforceSolver::solve(Instance &g) {
         std::vector<int> ds;
 
         for (int i = 0; i < n; i++) {
-            int v = g.nodes[i];
+            int v = nodes[i];
             DS_ASSERT(!taken[v]);
             if (mask >> i & 1) {
                 ds.push_back(v);
