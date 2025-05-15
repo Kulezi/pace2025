@@ -27,7 +27,7 @@ constexpr size_t pow3[MAX_EXPONENT + 1] = {
     387420489,
 };
 
-// e.g. WHITE = 0, GRAY = 0_dash, BLACK = 1 in platypus book.
+// e.g., WHITE = 0, GRAY = 0_dash, BLACK = 1 like in the platypus book.
 enum class Color {
     WHITE,
     GRAY,
@@ -36,19 +36,22 @@ enum class Color {
 
 using TernaryFun = size_t;
 
-// Remove x'th argument of f from the domain.
+// Removes xth argument of f from the domain.
 TernaryFun cut(TernaryFun f, size_t x);
 
-// Insert at position x.
+// Insert c at position x.
 TernaryFun insert(TernaryFun f, size_t x, Color c);
+
+// Set xth trit to c
 TernaryFun set(TernaryFun f, size_t x, Color c);
 
-// Set x'th trit of f to c assuming it was zero before, we can omit unnecessary division then.
+// Set xth trit of f to c assuming it was zero before, we omit unnecessary division then.
 TernaryFun setUnset(TernaryFun f, size_t x, Color c);
 
+// Return the value of f's xth trit.
 Color at(TernaryFun f, size_t x);
-char val(Color c);
 
+char val(Color c);
 TernaryFun toInt(std::string s);
 std::string toString(TernaryFun f);
 }  // namespace DSHunter
