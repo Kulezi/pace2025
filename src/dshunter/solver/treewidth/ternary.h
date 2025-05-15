@@ -37,19 +37,19 @@ enum class Color {
 using TernaryFun = size_t;
 
 // Removes xth argument of f from the domain.
-TernaryFun cut(TernaryFun f, size_t x);
+TernaryFun cut(TernaryFun f, int x);
 
 // Insert c at position x.
-TernaryFun insert(TernaryFun f, size_t x, Color c);
+TernaryFun insert(TernaryFun f, int x, Color c);
 
 // Set xth trit to c
-TernaryFun set(TernaryFun f, size_t x, Color c);
+TernaryFun set(TernaryFun f, int x, Color c);
 
 // Set xth trit of f to c assuming it was zero before, we omit unnecessary division then.
-TernaryFun setUnset(TernaryFun f, size_t x, Color c);
+TernaryFun setUnset(TernaryFun f, int x, Color c);
 
 // Return the value of f's xth trit.
-Color at(TernaryFun f, size_t x);
+Color at(TernaryFun f, int x);
 
 char val(Color c);
 TernaryFun toInt(std::string s);

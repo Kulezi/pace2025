@@ -41,49 +41,51 @@ void ExtendedInstance::removeNode(int v) {
 TreewidthSolver::TreewidthSolver(SolverConfig *cfg) : cfg(cfg), decomposer(getDecomposer(cfg)), solved_leaves(0), total_leaves(0) {}
 
 // Returns true if instance was solved. Solution set is stored in given instance.
-bool TreewidthSolver::solve(Instance &instance) {
+std::optional<std::vector<int>> TreewidthSolver::solve(const Instance &instance) {
     auto td = decomposer->decompose(instance);
     if (!td.has_value()) {
         cfg->logLine("decomposition failed");
-        return false;
+        return std::nullopt;
     }
 
     cfg->logLine("best found decomposition width: " + std::to_string(td->width));
     if (td->width > cfg->good_enough_treewidth) {
         cfg->logLine(std::format("decomposition width > {}, considering reducing it with bag-branching of depth at most {}", cfg->good_enough_treewidth, cfg->max_bag_branch_depth));
         auto e = ExtendedInstance(instance, *td);
-        auto estimate = estimateBranching(e);
-        if (estimate.depth_needed <= cfg->max_bag_branch_depth) {
+        auto [depth_needed, leaves] = estimateBranching(e);
+        if (depth_needed <= cfg->max_bag_branch_depth) {
             cfg->logLine(std::format("bag-branching of depth at most {} is enough, proceeding with bag-branching", cfg->max_bag_branch_depth));
         } else {
             cfg->logLine(std::format("bag-branching of depth at most {} is not enough, aborting bag-branching", cfg->max_bag_branch_depth));
-            return false;
+            return std::nullopt;
         }
 
         solved_leaves = 0;
-        total_leaves = estimate.leaves;
-        return solveBranching(e);
+        total_leaves = leaves;
+        if (solveBranching(e))
+            return e.ds;
+        else
+            return std::nullopt;
     }
 
     return solveDecomp(instance, *td);
 }
 
-bool TreewidthSolver::solveDecomp(Instance &instance, const TreeDecomposition &raw_td) {
+std::optional<std::vector<int>> TreewidthSolver::solveDecomp(const Instance &instance, const TreeDecomposition &raw_td) {
     g = instance;
     td = NiceTreeDecomposition::nicify(g, raw_td);
     cfg->logLine(std::format("solving td({})", td.width()));
     if (getMemoryUsage(td) > cfg->max_memory_in_bytes) {
         cfg->logLine(std::format("needed {} MB, aborting ", getMemoryUsage(td)));
-        return false;
+        return std::nullopt;
     }
 
     c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
 
     getC(td.root, 0);
     recoverDS(td.root, 0);
-    instance.ds = g.ds;
     cfg->logLine(std::format("found solution of size {}", g.ds.size()));
-    return true;
+    return g.ds;
 }
 
 std::pair<int, int> TreewidthSolver::getWidthAndSplitter(const ExtendedInstance &instance) const {
@@ -115,7 +117,7 @@ std::pair<int, int> TreewidthSolver::getWidthAndSplitter(const ExtendedInstance 
     return { join_tw, v };
 }
 
-TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(const ExtendedInstance& instance, int depth) {
+TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(const ExtendedInstance &instance, int depth) {
     auto [tw, v] = getWidthAndSplitter(instance);
 
     if (tw <= cfg->good_enough_treewidth) {
@@ -163,18 +165,23 @@ TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(const Exte
     return total_estimate;
 }
 
-bool TreewidthSolver::solveBranching(ExtendedInstance instance) {
+bool TreewidthSolver::solveBranching(ExtendedInstance &instance) {
     auto [tw, v] = getWidthAndSplitter(instance);
 
     if (tw <= cfg->good_enough_treewidth) {
         cfg->logLine(std::format("branch {}/{}", solved_leaves, total_leaves));
         solved_leaves++;
-        return solveDecomp(instance, instance.td);
+        auto ds = solveDecomp(instance, instance.td);
+        if (ds.has_value()) {
+            instance.ds = *ds;
+            return true;
+        }
+        return false;
     }
 
     std::vector<int> best_ds;
 
-    auto branch = [&](const ExtendedInstance &new_instance) {
+    auto branch = [&](ExtendedInstance &new_instance) {
         if (!solveBranching(new_instance)) {
             return false;
         }
