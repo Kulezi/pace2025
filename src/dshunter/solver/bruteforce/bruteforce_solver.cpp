@@ -4,9 +4,7 @@
 #include "../../utils.h"
 
 namespace DSHunter {
-void BruteforceSolver::solve(Instance &g) {
-    reduce(g, reduction_rules);
-
+std::vector<int> BruteforceSolver::solve(Instance g) {
     std::vector<int> nodes;
     for (auto v : g.nodes) if (!g.isDisregarded(v)) nodes.push_back(v);
 
@@ -56,5 +54,6 @@ void BruteforceSolver::solve(Instance &g) {
     }
 
     for (auto i : best_ds) g.ds.push_back(i);
+    return g.ds;
 }
 }  // namespace DSHunter

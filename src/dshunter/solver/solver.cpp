@@ -82,9 +82,7 @@ std::vector<int> Solver::solveConnected(Instance &g) {
 
         case SolverType::Bruteforce: {
             cfg.logLine("running bruteforce solver");
-            BruteforceSolver bs;
-            bs.solve(g);
-            return g.ds;
+            return BruteforceSolver().solve(g);
         }
 
         case SolverType::Branching: {
