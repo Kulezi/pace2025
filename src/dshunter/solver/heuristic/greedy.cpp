@@ -41,7 +41,7 @@ std::vector<int> greedyDominatingSet(const Instance &g) {
         auto [ufd_v, ud_v, v] = pq.top();
         pq.pop();
         // This might not be the minimum degree node anymore.
-        if (taken[v] || ufd_v > ufd[v] || ud_v > ud[v] || (ufd_v == 0 && ud_v == 0))
+        if (g.isDisregarded(v) || taken[v] || ufd_v > ufd[v] || ud_v > ud[v] || (ufd_v == 0 && ud_v == 0))
             continue;
 
         dominate(v);
@@ -62,7 +62,7 @@ std::vector<int> maximalScatteredSet(const Instance &g, int d) {
     std::vector<int> res = g.ds;
     std::vector<int> dis(g.all_nodes.size(), g.all_nodes.size());
     for (auto u : g.nodes) {
-        if (dis[u] <= d)
+        if (g.isDominated(u) || dis[u] <= d)
             continue;
         res.push_back(u);
         dis[u] = 0;

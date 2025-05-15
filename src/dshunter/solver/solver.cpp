@@ -19,7 +19,7 @@ std::vector<int> Solver::solve(Instance g) {
     cfg.logLine("starting presolve");
     presolve(g);
 
-    cfg.logLine("presolve done");
+    cfg.logLine(std::format("presolve done, found {} optimal set members", g.ds.size()));
     cfg.logLine(std::format("reduced n from {} to {}", n_old, g.nodeCount()));
     cfg.logLine(std::format("disregarded node count {}", ([&]() { int res = 0; for (auto v : g.nodes) if (g.isDisregarded(v)) res++; return res; })()));
     cfg.logLine(std::format("reduced m from {} to {}", m_old, g.edgeCount()));
@@ -33,15 +33,15 @@ std::vector<int> Solver::solve(Instance g) {
 
     std::vector<int> ds = g.ds;
     auto components = g.split();
-
     cfg.logLine(std::format("reduced graph has {} components", components.size()));
     for (size_t i = 0; i < components.size(); i++) {
         g.ds.clear();
         g.nodes = components[i];
-        cfg.logLine(std::format("solving component {}/{} with n={}, m={}", i+1, components.size(), g.nodeCount(), g.edgeCount()));
+        cfg.logLine(std::format("solving component {}/{} with n={}, m={}", i + 1, components.size(), g.nodeCount(), g.edgeCount()));
         auto component_ds = solveConnected(g);
-        cfg.logLine(std::format("solved component {}/{} with ds of size {} out of n={} nodes", i+1, components.size(), component_ds.size(), component_ds.size(), g.nodeCount()));
+        cfg.logLine(std::format("solved component {}/{} with ds of size {} out of n={} nodes", i + 1, components.size(), component_ds.size(), g.nodeCount()));
         ds.insert(ds.begin(), component_ds.begin(), component_ds.end());
+        cfg.logLine(std::format("ds_size: {}", ds.size()));
     }
 
     std::ranges::sort(ds);
@@ -61,11 +61,11 @@ std::vector<int> Solver::solveConnected(Instance &g) {
                 return vs.solve(g);
             }
 
-            TreewidthSolver ts(&cfg);
             cfg.logLine("running treewidth solver");
-            if (ts.solve(g)) {
+            auto ds = TreewidthSolver(&cfg).solve(g);
+            if (ds.has_value()) {
                 cfg.logLine("treewidth solver success");
-                return g.ds;
+                return *ds;
             }
 
             cfg.logLine("treewidth solver failed, falling back to branching solver");
@@ -75,9 +75,10 @@ std::vector<int> Solver::solveConnected(Instance &g) {
         case SolverType::TreewidthDP: {
             cfg.logLine("running treewidth solver");
             TreewidthSolver ts(&cfg);
-            if (!ts.solve(g))
+            auto ds = TreewidthSolver(&cfg).solve(g);
+            if (!ds.has_value())
                 throw std::logic_error("treewidth dp failed (treewidth might be too big?)");
-            return g.ds;
+            return *ds;
         }
 
         case SolverType::Bruteforce: {

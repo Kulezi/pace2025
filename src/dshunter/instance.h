@@ -1,8 +1,8 @@
 #ifndef INSTANCE_H
 #define INSTANCE_H
-#include <algorithm>
 #include <sstream>
 #include <vector>
+
 namespace DSHunter {
 
 enum class DominationStatus {
@@ -135,8 +135,13 @@ struct Instance {
     // Complexity: O(n + m)
     [[nodiscard]] std::vector<std::vector<int>> split() const;
 
-    bool isSolvable() {
-        return std::ranges::all_of(nodes, [this](int v) { return isDominated(v) || all_nodes[v].dominators.empty(); });
+    bool isSolvable() const {
+        for (auto v : nodes) {
+            if (!isDominated(v) && all_nodes[v].dominators.empty()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     const Node &operator[](int v) const;

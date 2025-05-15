@@ -309,7 +309,7 @@ void Instance::take(int v) {
 }
 
 std::vector<std::vector<int>> Instance::split() const {
-    std::vector<int> component(all_nodes.size(), -1);
+    std::vector component(all_nodes.size(), -1);
     int components = 0;
 
     // Assign nodes to connected components using breadth-first search.

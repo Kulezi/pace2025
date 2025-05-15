@@ -47,7 +47,7 @@ struct SolverConfig {
           max_treewidth(18),
           max_memory_in_bytes(16UL << 30UL),
           max_bag_branch_depth(7),
-          max_branching_reductions_complexity(2) {}
+          max_branching_reductions_complexity(0) {}
 
     SolverConfig() : SolverConfig(DSHunter::get_default_reduction_rules(), SolverType::Default, PresolverType::Full) {}
     [[nodiscard]] int64_t millisElapsed() const {
