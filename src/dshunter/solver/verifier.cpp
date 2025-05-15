@@ -6,11 +6,9 @@
 #include "../utils.h"
 namespace DSHunter {
 
-// Checks whether the given solution is a valid dominating set of the given instance.
-// Throws a std::logic_error if it isn't.
-void verify_solution(Instance g, const std::vector<int> solution) {
-    std::vector<bool> dominated(g.all_nodes.size(), false);
-    std::vector<bool> taken(g.all_nodes.size(), false);
+void verify_solution(const Instance &g, const std::vector<int> &solution) {
+    std::vector dominated(g.all_nodes.size(), false);
+    std::vector taken(g.all_nodes.size(), false);
     for (auto u : solution) {
         if (taken[u])
             throw std::logic_error(std::format("solution contains duplicates, one of which is vertex {}", u));
