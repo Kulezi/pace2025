@@ -42,13 +42,13 @@ struct SolverConfig {
         : reduction_rules(DSHunter::get_default_reduction_rules()),
           solver_type(SolverType::Default),
           presolver_type(PresolverType::Full),
-          decomposition_time_budget(120s),
+          decomposition_time_budget(10s),
           decomposer_path(),
           random_seed(0),
           good_enough_treewidth(14),
           max_treewidth(18),
-          max_memory_in_bytes(8UL << 30UL),
-          max_bag_branch_depth(6) {}
+          max_memory_in_bytes(16UL << 30UL),
+          max_bag_branch_depth(7) {}
 
     int millisElapsed() {
         return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - solve_start).count();

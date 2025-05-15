@@ -78,6 +78,10 @@ void Instance::parseADS(std::istream &in, int n_nodes, int header_edges, int d) 
             nodes.push_back(v);
             all_nodes[v].membership_status = static_cast<MembershipStatus>(m);
             all_nodes[v].domination_status = static_cast<DominationStatus>(d);
+            if (all_nodes[v].membership_status == MembershipStatus::DISREGARDED || all_nodes[v].domination_status == DominationStatus::DOMINATED) {
+                all_nodes[v].dominatees = {};
+                all_nodes[v].dominators = {};
+            }
             all_nodes[v].is_extra = static_cast<bool>(e);
         }
     }
@@ -165,6 +169,25 @@ void Instance::markDisregarded(int v) {
         remove(all_nodes[u].dominators, v);
     }
     node.dominatees = {};
+}
+
+// Remove node without caring whether it's going to be dominated.
+void Instance::ignore(int v) {
+    if (!hasNode(v))
+        return;
+
+    std::vector<int> to_take;
+    for (auto [u, status] : all_nodes[v].adj) {
+        // Edges like this can only be removed by calling take().
+        if (status == EdgeStatus::FORCED && !isTaken(v)) {
+            to_take.push_back(u);
+        }
+        removeDirectedEdge(u, v);
+    }
+
+    all_nodes[v] = Node();
+    remove(nodes, v);
+    for (auto u : to_take) take(u);
 }
 
 void Instance::forceEdge(int u, int v) {
@@ -355,8 +378,10 @@ void Instance::addDirectedEdge(int u, int v, EdgeStatus status) {
     insert(node.adj, Endpoint{ v, status });
     insert(node.n_open, v);
     insert(node.n_closed, v);
-    if (!isDominated(u)) insert(node.dominators, v);
-    if (!isDisregarded(u)) insert(node.dominatees, v);
+    if (!isDominated(u))
+        insert(node.dominators, v);
+    if (!isDisregarded(u))
+        insert(node.dominatees, v);
 }
 
 void Instance::removeDirectedEdge(int u, int v) {
@@ -377,8 +402,10 @@ void Instance::initAddDirectedEdge(int u, int v, EdgeStatus status) {
     node.adj.emplace_back(v, status);
     node.n_open.push_back(v);
     node.n_closed.push_back(v);
-    if (!isDominated(u)) node.dominators.push_back(v);
-    if (!isDisregarded(u)) node.dominatees.push_back(v);
+    if (!isDominated(u))
+        node.dominators.push_back(v);
+    if (!isDisregarded(u))
+        node.dominatees.push_back(v);
 }
 
 void Instance::sortAdjacencyLists() {
@@ -415,7 +442,7 @@ const Node &Instance::operator[](int v) const { return all_nodes[v]; }
 //      f is the edge status, 0 means unconstrained, 1 means forced.
 // comments starting with c can be only at the beginning of the file.
 
-void Instance::exportADS(std::ostream& output) {
+void Instance::exportADS(std::ostream &output) {
     output << "p ads " << nodeCount() << " " << edgeCount() << " " << ds.size() << "\n";
     for (auto v : ds) output << v << " ";
     output << "\n";
@@ -431,6 +458,5 @@ void Instance::exportADS(std::ostream& output) {
         }
     }
 }
-
 
 }  // namespace DSHunter

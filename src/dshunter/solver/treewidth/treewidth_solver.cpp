@@ -2,12 +2,14 @@
 
 #include <format>
 #include <memory>
+#include <utility>
 
 #include "../../utils.h"
 #include "td/exec_decomposer.h"
 #include "td/flow_cutter_decomposer.h"
 
 namespace {
+
 std::unique_ptr<DSHunter::Decomposer> getDecomposer(const DSHunter::SolverConfig *cfg) {
     if (cfg->decomposer_path.empty())
         return std::make_unique<DSHunter::FlowCutterDecomposer>(cfg);
@@ -28,6 +30,14 @@ constexpr int UNSET = -1, INF = 1'000'000'000;
 }  // namespace
 
 namespace DSHunter {
+
+ExtendedInstance::ExtendedInstance(const Instance &instance, DSHunter::TreeDecomposition td) : Instance(instance), td(std::move(td)) {}
+
+void ExtendedInstance::removeNode(int v) {
+    Instance::removeNode(v);
+    td.removeNode(v);
+}
+
 TreewidthSolver::TreewidthSolver(SolverConfig *cfg) : cfg(cfg), decomposer(getDecomposer(cfg)) {}
 
 // Returns true if instance was solved. Solution set is stored in given instance.
@@ -43,7 +53,8 @@ bool TreewidthSolver::solve(Instance &instance) {
     cfg->logLine("best found decomposition width: " + std::to_string(td.width));
     if (td.width > cfg->good_enough_treewidth) {
         cfg->logLine(std::format("decomposition width > {}, considering reducing it with bag-branching of depth at most {}", cfg->good_enough_treewidth, cfg->max_bag_branch_depth));
-        auto estimate = estimateBranching(instance, td);
+        auto e = ExtendedInstance(instance, td);
+        auto estimate = estimateBranching(e);
         if (estimate.depth_needed <= cfg->max_bag_branch_depth) {
             cfg->logLine(std::format("bag-branching of depth at most {} is enough, proceeding with bag-branching", cfg->max_bag_branch_depth));
         } else {
@@ -53,7 +64,7 @@ bool TreewidthSolver::solve(Instance &instance) {
 
         solved_leaves = 0;
         total_leaves = estimate.leaves;
-        return solveBranching(instance, td);
+        return solveBranching(e);
     }
 
     return solveDecomp(instance, td);
@@ -64,6 +75,7 @@ bool TreewidthSolver::solveDecomp(Instance &instance, TreeDecomposition raw_td) 
     td = NiceTreeDecomposition::nicify(g, raw_td);
     cfg->logLine(std::format("solving td({})", td.width()));
     if (getMemoryUsage(td) > cfg->max_memory_in_bytes) {
+        cfg->logLine(std::format("needed {} MB, aborting ", getMemoryUsage(td)));
         return false;
     }
 
@@ -76,7 +88,8 @@ bool TreewidthSolver::solveDecomp(Instance &instance, TreeDecomposition raw_td) 
     return true;
 }
 
-TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(Instance &instance, TreeDecomposition td, int depth) {
+std::pair<int, int> TreewidthSolver::getWidthAndSplitter(const ExtendedInstance &instance) const {
+    auto &td = instance.td;
     int biggest_bag = td.biggestBag();
     int join_tw = 0;
 
@@ -94,13 +107,6 @@ TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(Instance &
         for (auto v : td.bag[bag]) counts[v]++;
     }
 
-    if (join_tw <= cutoff)
-        return { depth, 1 };
-
-    if (depth == cfg->max_bag_branch_depth) {
-        return { INF, 1 };
-    }
-
     DS_ASSERT(!td.bag[biggest_bag].empty());
     int v = td.bag[biggest_bag][0];
     for (auto u : td.bag[biggest_bag]) {
@@ -108,100 +114,102 @@ TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(Instance &
             v = u;
     }
 
-    std::vector<int> best_ds;
+    return { join_tw, v };
+}
+
+TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(ExtendedInstance instance, int depth) {
+    auto [tw, v] = getWidthAndSplitter(instance);
+
+    if (tw <= cfg->good_enough_treewidth) {
+        return { depth, 1 };
+    }
+    if (depth == cfg->max_bag_branch_depth) {
+        return { INF, 1 };
+    }
 
     BranchingEstimate total_estimate{ 0, 0 };
-    for (auto taken : instance[v].dominators) {
-        auto new_instance = instance;
-        auto new_td = td;
-        new_instance.take(taken);
-        new_td.removeNode(taken);
 
-        if (taken != v) {
-            auto adj = g[v].adj;
-            for (auto [u, s] : adj) {
-                if (s == EdgeStatus::FORCED) {
-                    g.take(u);
-                    new_td.removeNode(u);
-                }
-            }
-            new_instance.removeNode(v);
-            new_td.removeNode(v);
-        }
-
-        auto estimate = estimateBranching(new_instance, new_td, depth + 1);
-        if (estimate.depth_needed >= INF)
-            return estimate;
-
+    auto branch = [&](const ExtendedInstance &new_instance) {
+        auto estimate = estimateBranching(new_instance, depth + 1);
         total_estimate.depth_needed = std::max(total_estimate.depth_needed, estimate.depth_needed);
         total_estimate.leaves += estimate.leaves;
+        if (estimate.depth_needed >= INF) {
+            return false;
+        }
+
+        return true;
+    };
+
+    if (instance.isDominated(v)) {
+        if (!instance.isDisregarded(v)) {
+            auto instance_take = instance;
+            instance_take.take(v);
+            if (!branch(instance_take))
+                return total_estimate;
+        }
+        auto instance_ignore = instance;
+        instance_ignore.ignore(v);
+        if (!branch(instance_ignore))
+            return total_estimate;
+    } else {
+        for (auto taken : instance[v].dominators) {
+            auto new_instance = instance;
+            new_instance.take(taken);
+            if (taken != v)
+                new_instance.ignore(v);
+            if (!branch(new_instance))
+                return total_estimate;
+        }
     }
 
     return total_estimate;
 }
 
-bool TreewidthSolver::solveBranching(Instance &instance, TreeDecomposition td) {
-    int biggest_bag = td.biggestBag();
-    int join_tw = 0;
+bool TreewidthSolver::solveBranching(ExtendedInstance instance) {
+    auto [tw, v] = getWidthAndSplitter(instance);
 
-    const int cutoff = cfg->good_enough_treewidth;
-    std::vector<int> important_bags;
-    for (int i = 0; i < td.size(); i++) {
-        if ((int)td.bag[i].size() > cutoff && td.adj[i].size() > 2) {
-            important_bags.push_back(i);
-            join_tw = std::max(join_tw, (int)td.bag[i].size());
-        }
-    }
-
-    std::vector<int> counts(instance.all_nodes.size(), 0);
-    for (auto bag : important_bags) {
-        for (auto v : td.bag[bag]) counts[v]++;
-    }
-
-    if (join_tw <= cutoff) {
+    if (tw <= cfg->good_enough_treewidth) {
         cfg->logLine(std::format("branch {}/{}", solved_leaves, total_leaves));
         solved_leaves++;
-        return solveDecomp(instance, td);
-    }
-
-    DS_ASSERT(!td.bag[biggest_bag].empty());
-    int v = td.bag[biggest_bag][0];
-    for (auto u : td.bag[biggest_bag]) {
-        if (counts[v] < counts[u] || (counts[v] == counts[u] && instance.deg(v) > instance.deg(u)))
-            v = u;
+        return solveDecomp(instance, instance.td);
     }
 
     std::vector<int> best_ds;
-    for (auto taken : instance[v].dominators) {
-        auto new_instance = instance;
-        auto new_td = td;
-        new_instance.take(taken);
-        new_td.removeNode(taken);
 
-        if (taken != v) {
-            auto adj = g[v].adj;
-            for (auto [u, s] : adj) {
-                if (s == EdgeStatus::FORCED) {
-                    g.take(u);
-                    new_td.removeNode(u);
-                }
-            }
-            new_instance.removeNode(v);
-            new_td.removeNode(v);
-        }
-
-        if (!solveBranching(new_instance, new_td)) {
-            best_ds = {};
-            break;
+    auto branch = [&](const ExtendedInstance &new_instance) {
+        if (!solveBranching(new_instance)) {
+            return false;
         }
 
         if (best_ds.empty() || best_ds.size() > new_instance.ds.size()) {
             best_ds = new_instance.ds;
         }
-    }
 
-    if (best_ds.empty())
-        return false;
+        return true;
+    };
+
+    if (instance.isDominated(v)) {
+        if (!instance.isDisregarded(v)) {
+            auto instance_take = instance;
+            instance_take.take(v);
+            if (!branch(instance_take))
+                return false;
+        }
+
+        auto instance_ignore = instance;
+        instance_ignore.ignore(v);
+        if (!branch(instance_ignore))
+            return false;
+    } else {
+        for (auto taken : instance[v].dominators) {
+            auto new_instance = instance;
+            new_instance.take(taken);
+            if (taken != v)
+                new_instance.ignore(v);
+            if (!branch(new_instance))
+                return false;
+        }
+    }
 
     instance.ds = best_ds;
     return true;

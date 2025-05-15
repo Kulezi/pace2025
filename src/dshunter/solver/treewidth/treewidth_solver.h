@@ -11,6 +11,17 @@
 #include "ternary.h"
 
 namespace DSHunter {
+
+struct ExtendedInstance : public DSHunter::Instance {
+    DSHunter::TreeDecomposition td;
+
+    ExtendedInstance(const Instance &instance, DSHunter::TreeDecomposition td);
+
+    void removeNode(int v) override;
+};
+
+
+
 struct TreewidthSolver {
     TreewidthSolver(SolverConfig *cfg);
     // Returns true if instance was solved,
@@ -33,11 +44,13 @@ struct TreewidthSolver {
     NiceTreeDecomposition td;
     bool solveDecomp(Instance &instance, TreeDecomposition td);
 
-    BranchingEstimate estimateBranching(Instance &instance, TreeDecomposition td, int depth = 0);
+    std::pair<int, int> getWidthAndSplitter(const ExtendedInstance &instance) const;
+
+    BranchingEstimate estimateBranching(ExtendedInstance instance,  int depth = 0);
 
     int solved_leaves;
     int total_leaves;
-    bool solveBranching(Instance &instance, TreeDecomposition td);
+    bool solveBranching(ExtendedInstance instance);
 
     // [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3] extended to handle forced
     // edges.

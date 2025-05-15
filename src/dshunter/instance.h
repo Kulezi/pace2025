@@ -87,6 +87,7 @@ struct Instance {
 
     bool isDisregarded(int v) const;
     void markDisregarded(int v);
+    void ignore(int v);
 
     // Returns the degree of given node.
     int deg(int v) const;
@@ -102,7 +103,7 @@ struct Instance {
 
     // Removes the node with given id.
     // Complexity: O(deg(v) + sum over deg(v) of neighbours)
-    void removeNode(int v);
+    virtual void removeNode(int v);
 
     // Removes nodes in the given list from the graph.
     // Complexity: O(sum of deg(v) over l ∪ N(l))

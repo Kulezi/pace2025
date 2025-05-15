@@ -35,10 +35,12 @@ std::vector<int> Solver::solve(Instance g) {
     auto components = g.split();
 
     cfg.logLine(std::format("reduced graph has {} components", components.size()));
-    for (auto component : components) {
+    for (size_t i = 0; i < components.size(); i++) {
         g.ds.clear();
-        g.nodes = component;
+        g.nodes = components[i];
+        cfg.logLine(std::format("solving component {}/{} with n={}, m={}", i+1, components.size(), g.nodeCount(), g.edgeCount()));
         auto component_ds = solveConnected(g);
+        cfg.logLine(std::format("solved component {}/{} with ds of size {} out of n={} nodes", i+1, components.size(), component_ds.size(), component_ds.size(), g.nodeCount()));
         ds.insert(ds.begin(), component_ds.begin(), component_ds.end());
     }
 

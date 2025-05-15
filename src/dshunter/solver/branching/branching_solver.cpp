@@ -96,7 +96,7 @@ void BranchingSolver::solve(Instance g, std::vector<int> &best_ds) {
     enter;
 
     reduce(g, reduction_rules, 1);
-    if (lowerBound(g) >= best_ds.size() || !isSolvable(g)) {
+    if (lowerBound(g) >= static_cast<int>(best_ds.size()) || !isSolvable(g)) {
         leave;
     }
 
@@ -129,15 +129,17 @@ void BranchingSolver::branch(Instance &g, std::vector<int> &best_ds) {
         return;
     }
 
-    if (!g.isDisregarded(v))
+    if (!g.isDisregarded(v)) {
         solve(take(g, v), best_ds);
-
-    g.markDisregarded(v);
+        g.markDisregarded(v);
+    }
 
     std::vector<int> to_take;
     for (auto [u, s] : g[v].adj)
-        if (s == EdgeStatus::FORCED)
+        if (s == EdgeStatus::FORCED) {
+            if (g.isDisregarded(u)) return;
             to_take.push_back(u);
+        }
 
     solve(take(g, to_take), best_ds);
 }
