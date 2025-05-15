@@ -46,7 +46,7 @@ std::vector<int> Solver::solve(Instance g) {
 
     std::ranges::sort(ds);
 
-    cfg.logLine("verifying solution");
+    cfg.logLine(std::format("verifying solution of size {}", ds.size()));
     verify_solution(initial_instance, ds);
     cfg.logLine(std::format("solution of size {} verified", ds.size()));
     return ds;
