@@ -20,7 +20,7 @@ int32_t main() {
         }
     }
 
-    shuffle(v.begin(), v.end(), rng);
+    ranges::shuffle(v, rng);
     v.resize(m);
     for (auto [a, b] : v) {
         if (R(0, 1))

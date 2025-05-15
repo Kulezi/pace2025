@@ -1,7 +1,6 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <string>
 
 #include "../dshunter.h"
 
@@ -63,4 +62,6 @@ int main() {
 
         std::cerr << "\r[OK] for all " << (1 << max_edges) << " graphs with n = " << n << "\n";
     }
+
+    return 0;
 }
