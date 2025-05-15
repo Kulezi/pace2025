@@ -1,8 +1,6 @@
 #include "branching_solver.h"
 
-#include <limits.h>
-
-#include <cstdint>
+#include <climits>
 #include <format>
 #include <vector>
 
@@ -24,8 +22,6 @@ uint64_t calls = 0;
 #define leave \
     --level;  \
     return
-
-constexpr int MAX_RULE_COMPLEXITY = 3;
 
 Instance take(Instance g, int v) {
     g.take(v);
@@ -69,22 +65,11 @@ int maxForcedDegreeNode(const Instance &g) {
 
     return best;
 }
-
-bool isSolvable(const Instance &g) {
-    for (auto v : g.nodes) {
-        if (!g.isDominated(v) && g[v].dominators.empty())
-            return false;
-    }
-
-    return true;
-}
-
 }  // namespace
 
 namespace DSHunter {
 
-BranchingSolver::BranchingSolver() : reduction_rules(get_default_reduction_rules()) {}
-BranchingSolver::BranchingSolver(std::vector<ReductionRule> rrules) : reduction_rules(rrules) {}
+BranchingSolver::BranchingSolver(SolverConfig *cfg) : cfg(cfg) {}
 
 std::vector<int> BranchingSolver::solve(const Instance &g) {
     std::vector<int> best_ds = greedyDominatingSet(g);
@@ -95,13 +80,13 @@ std::vector<int> BranchingSolver::solve(const Instance &g) {
 void BranchingSolver::solve(Instance g, std::vector<int> &best_ds) {
     enter;
 
-    reduce(g, reduction_rules, 1);
-    if (lowerBound(g) >= static_cast<int>(best_ds.size()) || !isSolvable(g)) {
+    reduce(g, reduction_rules, cfg->max_branching_reductions_complexity);
+    if (lowerBound(g) >= static_cast<int>(best_ds.size()) || !g.isSolvable()) {
         leave;
     }
 
     auto split = g.split();
-    for (auto cc : split) {
+    for (auto &cc : split) {
         g.nodes = cc;
         std::vector<int> ds = greedyDominatingSet(g);
         branch(g, ds);
@@ -114,7 +99,6 @@ void BranchingSolver::solve(Instance g, std::vector<int> &best_ds) {
     leave;
 }
 
-
 int BranchingSolver::selectNode(const Instance &g) {
     int v = maxForcedDegreeNode(g);
     if (v != -1)
@@ -125,7 +109,8 @@ int BranchingSolver::selectNode(const Instance &g) {
 void BranchingSolver::branch(Instance &g, std::vector<int> &best_ds) {
     int v = selectNode(g);
     if (v == -1) {
-        if (g.ds.size() < best_ds.size()) best_ds = g.ds;
+        if (g.ds.size() < best_ds.size())
+            best_ds = g.ds;
         return;
     }
 
@@ -137,7 +122,8 @@ void BranchingSolver::branch(Instance &g, std::vector<int> &best_ds) {
     std::vector<int> to_take;
     for (auto [u, s] : g[v].adj)
         if (s == EdgeStatus::FORCED) {
-            if (g.isDisregarded(u)) return;
+            if (g.isDisregarded(u))
+                return;
             to_take.push_back(u);
         }
 

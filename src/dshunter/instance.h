@@ -1,5 +1,6 @@
 #ifndef INSTANCE_H
 #define INSTANCE_H
+#include <algorithm>
 #include <sstream>
 #include <vector>
 namespace DSHunter {
@@ -133,6 +134,10 @@ struct Instance {
     // Splits the list of graph nodes into individual connected components.
     // Complexity: O(n + m)
     [[nodiscard]] std::vector<std::vector<int>> split() const;
+
+    bool isSolvable() {
+        return std::ranges::all_of(nodes, [this](int v) { return isDominated(v) || all_nodes[v].dominators.empty(); });
+    }
 
     const Node &operator[](int v) const;
     /*

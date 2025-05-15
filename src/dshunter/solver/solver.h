@@ -34,9 +34,10 @@ struct SolverConfig {
     int max_treewidth;
     size_t max_memory_in_bytes;
     int max_bag_branch_depth;
+    int max_branching_reductions_complexity;
     std::chrono::time_point<std::chrono::steady_clock> solve_start;
 
-    SolverConfig(std::vector<ReductionRule> rrules, SolverType st, PresolverType pt)
+    SolverConfig(std::vector<ReductionRule> rrules, const SolverType st, const PresolverType pt)
         : reduction_rules(std::move(rrules)),
           solver_type(st),
           presolver_type(pt),
@@ -45,7 +46,8 @@ struct SolverConfig {
           good_enough_treewidth(14),
           max_treewidth(18),
           max_memory_in_bytes(16UL << 30UL),
-          max_bag_branch_depth(7) {}
+          max_bag_branch_depth(7),
+          max_branching_reductions_complexity(2) {}
 
     SolverConfig() : SolverConfig(DSHunter::get_default_reduction_rules(), SolverType::Default, PresolverType::Full) {}
     [[nodiscard]] int64_t millisElapsed() const {

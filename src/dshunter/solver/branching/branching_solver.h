@@ -4,12 +4,13 @@
 
 #include "../../instance.h"
 #include "../../rrules/rrules.h"
+#include "../solver.h"
 namespace DSHunter {
 struct BranchingSolver {
     std::vector<ReductionRule> reduction_rules;
+    SolverConfig *cfg;
 
-    BranchingSolver();
-    BranchingSolver(std::vector<ReductionRule> rrules);
+    explicit BranchingSolver(SolverConfig *cfg);
     std::vector<int> solve(const Instance &g);
 
    private:
