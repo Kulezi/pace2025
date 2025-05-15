@@ -1,7 +1,5 @@
 #include "gurobi_solver.h"
 
-#include <memory>
-
 #include "../../utils.h"
 #include "gurobi_c++.h"
 namespace {
@@ -79,7 +77,7 @@ std::optional<std::vector<int>> GurobiSolver::solve() {
 
         return ds;
         ;
-    } catch (GRBException e) {
+    } catch (GRBException &e) {
         std::cerr << "c gurobi error code = " << e.getErrorCode() << std::endl;
         std::cerr << "c gurobi error message: " << e.getMessage() << std::endl;
     } catch (...) {
@@ -93,7 +91,7 @@ int GurobiSolver::lowerBound() {
     try {
         model.optimize();
         return static_cast<int>(model.get(GRB_DoubleAttr_ObjBound));
-    } catch (GRBException e) {
+    } catch (GRBException &e) {
         std::cerr << "c gurobi error code = " << e.getErrorCode() << std::endl;
         std::cerr << "c gurobi error message: " << e.getMessage() << std::endl;
     } catch (...) {
