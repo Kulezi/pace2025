@@ -38,22 +38,20 @@ void ExtendedInstance::removeNode(int v) {
     td.removeNode(v);
 }
 
-TreewidthSolver::TreewidthSolver(SolverConfig *cfg) : cfg(cfg), decomposer(getDecomposer(cfg)) {}
+TreewidthSolver::TreewidthSolver(SolverConfig *cfg) : cfg(cfg), decomposer(getDecomposer(cfg)), solved_leaves(0), total_leaves(0) {}
 
 // Returns true if instance was solved. Solution set is stored in given instance.
-// Returns false if it would lead to exceeding the memory limit.
 bool TreewidthSolver::solve(Instance &instance) {
-    auto o = decomposer->decompose(instance);
-    if (!o.has_value()) {
+    auto td = decomposer->decompose(instance);
+    if (!td.has_value()) {
         cfg->logLine("decomposition failed");
         return false;
     }
 
-    auto td = o.value();
-    cfg->logLine("best found decomposition width: " + std::to_string(td.width));
-    if (td.width > cfg->good_enough_treewidth) {
+    cfg->logLine("best found decomposition width: " + std::to_string(td->width));
+    if (td->width > cfg->good_enough_treewidth) {
         cfg->logLine(std::format("decomposition width > {}, considering reducing it with bag-branching of depth at most {}", cfg->good_enough_treewidth, cfg->max_bag_branch_depth));
-        auto e = ExtendedInstance(instance, td);
+        auto e = ExtendedInstance(instance, *td);
         auto estimate = estimateBranching(e);
         if (estimate.depth_needed <= cfg->max_bag_branch_depth) {
             cfg->logLine(std::format("bag-branching of depth at most {} is enough, proceeding with bag-branching", cfg->max_bag_branch_depth));
@@ -67,10 +65,10 @@ bool TreewidthSolver::solve(Instance &instance) {
         return solveBranching(e);
     }
 
-    return solveDecomp(instance, td);
+    return solveDecomp(instance, *td);
 }
 
-bool TreewidthSolver::solveDecomp(Instance &instance, TreeDecomposition raw_td) {
+bool TreewidthSolver::solveDecomp(Instance &instance, const TreeDecomposition &raw_td) {
     g = instance;
     td = NiceTreeDecomposition::nicify(g, raw_td);
     cfg->logLine(std::format("solving td({})", td.width()));
@@ -96,9 +94,9 @@ std::pair<int, int> TreewidthSolver::getWidthAndSplitter(const ExtendedInstance 
     const int cutoff = cfg->good_enough_treewidth;
     std::vector<int> important_bags;
     for (int i = 0; i < td.size(); i++) {
-        if ((int)td.bag[i].size() > cutoff && td.adj[i].size() > 2) {
+        if (static_cast<int>(td.bag[i].size()) > cutoff && td.adj[i].size() > 2) {
             important_bags.push_back(i);
-            join_tw = std::max(join_tw, (int)td.bag[i].size());
+            join_tw = std::max(join_tw, static_cast<int>(td.bag[i].size()));
         }
     }
 
@@ -117,7 +115,7 @@ std::pair<int, int> TreewidthSolver::getWidthAndSplitter(const ExtendedInstance 
     return { join_tw, v };
 }
 
-TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(ExtendedInstance instance, int depth) {
+TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(const ExtendedInstance& instance, int depth) {
     auto [tw, v] = getWidthAndSplitter(instance);
 
     if (tw <= cfg->good_enough_treewidth) {
@@ -215,14 +213,12 @@ bool TreewidthSolver::solveBranching(ExtendedInstance instance) {
     return true;
 }
 
-inline int TreewidthSolver::cost(int v) {
+inline int TreewidthSolver::cost(int v) const {
     if (g[v].is_extra || g.isDisregarded(v))
         return INF;
     return 1;
 }
 
-// [Parameterized Algorithms [7.3.2] - 10.1007/978-3-319-21275-3] extended to handle forced
-// edges.
 int TreewidthSolver::getC(int t, TernaryFun f) {
     const auto &node = td[t];
     DS_ASSERT(f < pow3[node.bag_size]);
@@ -279,7 +275,7 @@ int TreewidthSolver::getC(int t, TernaryFun f) {
         case NiceTreeDecomposition::NodeType::Forget: {
             int pos_v = node.pos_v;
             int cost_take = cost(node.v);
-            // Skip the branching if we already know the solution would be unoptimal.
+            // Skip the branching if we already know the solution would be nonoptimal.
             if (cost_take < INF) {
                 return c[t][f] = std::min(
                            cost_take + getC(node.l_child, insert(f, pos_v, Color::BLACK)),
@@ -289,9 +285,9 @@ int TreewidthSolver::getC(int t, TernaryFun f) {
             return c[t][f] = getC(node.l_child, insert(f, pos_v, Color::WHITE));
         }
         case NiceTreeDecomposition::NodeType::Join: {
-            size_t N = node.bag_size;
+            int N = node.bag_size;
             std::vector<int> zeroes;
-            for (size_t i = 0; i < N; ++i) {
+            for (int i = 0; i < N; ++i) {
                 if (at(f, i) == Color::WHITE)
                     zeroes.push_back(i);
             }
@@ -371,9 +367,9 @@ void TreewidthSolver::recoverDS(int t, TernaryFun f) {
             return;
         }
         case NiceTreeDecomposition::NodeType::Join: {
-            size_t N = node.bag_size;
+            int N = node.bag_size;
             std::vector<int> zeroes;
-            for (size_t i = 0; i < N; ++i) {
+            for (int i = 0; i < N; ++i) {
                 if (at(f, i) == Color::WHITE)
                     zeroes.push_back(i);
             }

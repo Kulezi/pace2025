@@ -23,7 +23,7 @@ struct ExtendedInstance : public DSHunter::Instance {
 
 
 struct TreewidthSolver {
-    TreewidthSolver(SolverConfig *cfg);
+    explicit TreewidthSolver(SolverConfig *cfg);
     // Returns true if instance was solved,
     // false if the width of found decompositions was too big to handle.
     bool solve(Instance &g);
@@ -39,14 +39,14 @@ struct TreewidthSolver {
 
     std::vector<std::vector<int>> c;
     Instance g;
-    inline int cost(int v);
+    inline int cost(int v) const;
 
     NiceTreeDecomposition td;
-    bool solveDecomp(Instance &instance, TreeDecomposition td);
+    bool solveDecomp(Instance &instance, const TreeDecomposition &td);
 
-    std::pair<int, int> getWidthAndSplitter(const ExtendedInstance &instance) const;
+    [[nodiscard]] std::pair<int, int> getWidthAndSplitter(const ExtendedInstance &instance) const;
 
-    BranchingEstimate estimateBranching(ExtendedInstance instance,  int depth = 0);
+    BranchingEstimate estimateBranching(const ExtendedInstance& instance,  int depth = 0);
 
     int solved_leaves;
     int total_leaves;
