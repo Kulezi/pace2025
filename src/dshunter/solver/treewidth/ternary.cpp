@@ -30,12 +30,12 @@ TernaryFun set(TernaryFun f, int x, Color c) {
     return f + (static_cast<int>(c) - static_cast<int>(at(f, x))) * pow3[x];
 }
 
-TernaryFun setUnset(TernaryFun f, size_t x, Color c) {
+TernaryFun setUnset(TernaryFun f, int x, Color c) {
     DS_ASSERT(x <= MAX_EXPONENT);
     return f + static_cast<int>(c) * pow3[x];
 }
 
-Color at(TernaryFun f, size_t x) {
+Color at(TernaryFun f, int x) {
     DS_ASSERT(x <= MAX_EXPONENT);
     return static_cast<Color>(f / pow3[x] % 3);
 }
