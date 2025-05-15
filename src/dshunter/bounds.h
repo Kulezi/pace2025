@@ -8,7 +8,7 @@ namespace DSHunter {
 // make this instance fully dominated.
 int lowerBound(const Instance &g);
 
-// Returns an approximation that is a upper bound on the number of additional vertices needed to
+// Returns an approximation that is an upper bound on the number of additional vertices needed to
 // make this instance fully dominated.
 int upperBound(const Instance &g);
 
