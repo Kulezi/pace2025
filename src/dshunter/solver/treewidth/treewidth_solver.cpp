@@ -111,13 +111,20 @@ TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(Instance &
     std::vector<int> best_ds;
 
     BranchingEstimate total_estimate{ 0, 0 };
-    for (auto taken : instance[v].n_closed) {
+    for (auto taken : instance[v].dominators) {
         auto new_instance = instance;
         auto new_td = td;
         new_instance.take(taken);
         new_td.removeNode(taken);
 
         if (taken != v) {
+            auto adj = g[v].adj;
+            for (auto [u, s] : adj) {
+                if (s == EdgeStatus::FORCED) {
+                    g.take(u);
+                    new_td.removeNode(u);
+                }
+            }
             new_instance.removeNode(v);
             new_td.removeNode(v);
         }
@@ -165,9 +172,7 @@ bool TreewidthSolver::solveBranching(Instance &instance, TreeDecomposition td) {
     }
 
     std::vector<int> best_ds;
-    for (auto taken : instance[v].n_closed) {
-        if (g.isDisregarded(taken))
-            continue;
+    for (auto taken : instance[v].dominators) {
         auto new_instance = instance;
         auto new_td = td;
         new_instance.take(taken);
