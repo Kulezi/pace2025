@@ -113,8 +113,8 @@ std::vector<T> remove(std::vector<T> a, const std::vector<T> &b) {
     return res;
 }
 
-// Returns a human-readable string representing given vector.
-std::string stringify(const std::vector<int> v);
+// Returns a human-readable string representing a given vector.
+std::string stringify(const std::vector<int> &v);
 
 // Returns true if a contains b.
 // Complexity: O(|A| + |B|).

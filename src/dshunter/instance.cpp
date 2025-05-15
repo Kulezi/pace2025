@@ -8,11 +8,11 @@
 namespace DSHunter {
 
 Node::Node() : domination_status(DominationStatus::DOMINATED), membership_status(MembershipStatus::DISREGARDED), is_extra(false) {}
+
 Node::Node(int v, bool is_extra) : n_closed({ v }), dominators({ v }), dominatees({ v }), domination_status(DominationStatus::UNDOMINATED), membership_status(MembershipStatus::UNDECIDED), is_extra(is_extra) {}
 
 Instance::Instance() = default;
 
-// Constructs a graph from the input stream assuming DIMACS-like .gr format.
 Instance::Instance(std::istream &in) {
     std::string line;
     int header_edges;
@@ -68,16 +68,16 @@ void Instance::parseADS(std::istream &in, int n_nodes, int header_edges, int d) 
             std::getline(in, line);
             std::stringstream tokens(line);
 
-            int v, d, m, e;
-            tokens >> v >> d >> m >> e;
+            int v, s_d, s_m, e;
+            tokens >> v >> s_d >> s_m >> e;
 
             while (static_cast<int>(all_nodes.size()) <= v) {
                 all_nodes.emplace_back(all_nodes.size(), false);
             }
 
             nodes.push_back(v);
-            all_nodes[v].membership_status = static_cast<MembershipStatus>(m);
-            all_nodes[v].domination_status = static_cast<DominationStatus>(d);
+            all_nodes[v].membership_status = static_cast<MembershipStatus>(s_m);
+            all_nodes[v].domination_status = static_cast<DominationStatus>(s_d);
             if (all_nodes[v].membership_status == MembershipStatus::DISREGARDED || all_nodes[v].domination_status == DominationStatus::DOMINATED) {
                 all_nodes[v].dominatees = {};
                 all_nodes[v].dominators = {};
@@ -122,10 +122,9 @@ void Instance::parseDS(std::istream &in, int n_nodes, int header_edges) {
                                std::to_string(read_edges));
 }
 
-// Returns the number of nodes in the graph.
-size_t Instance::nodeCount() const { return nodes.size(); }
-size_t Instance::disregardedNodeCount() const {
-    size_t cnt = 0;
+int Instance::nodeCount() const { return static_cast<int>(nodes.size()); }
+int Instance::disregardedNodeCount() const {
+    int cnt = 0;
     for (auto v : nodes)
         if (isDisregarded(v))
             cnt++;
@@ -171,7 +170,6 @@ void Instance::markDisregarded(int v) {
     node.dominatees = {};
 }
 
-// Remove node without caring whether it's going to be dominated.
 void Instance::ignore(int v) {
     if (!hasNode(v))
         return;
@@ -211,7 +209,6 @@ EdgeStatus Instance::getEdgeStatus(int u, int v) const {
     return it->status;
 }
 
-// Returns the degree of a given node.
 int Instance::deg(int v) const { return static_cast<int>(all_nodes[v].adj.size()); }
 
 int Instance::forcedDeg(int v) const {
@@ -222,8 +219,6 @@ int Instance::forcedDeg(int v) const {
     return res;
 }
 
-// Creates and returns the id of the created node.
-// Complexity: O(1)
 int Instance::addNode() {
     DS_TRACE(std::cerr << __func__ << std::endl);
     int v = static_cast<int>(all_nodes.size());
@@ -236,8 +231,6 @@ bool Instance::hasNode(int v) const {
     return static_cast<int>(all_nodes.size()) > v && !all_nodes[v].n_closed.empty();
 }
 
-// Removes the node with a given id.
-// Complexity: O(deg(v) + sum over deg(v) of neighbours)
 void Instance::removeNode(int v) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
     if (!hasNode(v))
@@ -252,33 +245,25 @@ void Instance::removeNode(int v) {
     remove(nodes, v);
 }
 
-// Removes nodes in the given list from the graph.
-// Complexity: O(sum of deg(v) over l ∪ N(l))
 void Instance::removeNodes(const std::vector<int> &l) {
     for (auto &v : l) removeNode(v);
 }
 
-// Adds an unconstrained edge between nodes with id's u and v.
-// Complexity: O(deg(v)), due to maintaining the adjacency list to be sorted.
 void Instance::addEdge(int u, int v, EdgeStatus status) {
     DS_TRACE(std::cerr << __func__ << dbg(u) << dbg(v) << std::endl);
-    addDirectedEdge(u, v, EdgeStatus::UNCONSTRAINED);
-    addDirectedEdge(v, u, EdgeStatus::UNCONSTRAINED);
+    addDirectedEdge(u, v);
+    addDirectedEdge(v, u);
     if (status == EdgeStatus::FORCED) {
         forceEdge(u, v);
     }
 }
 
-// Removes edge (v, w) from the graph.
-// Complexity: O(deg(v) + deg(w))
 void Instance::removeEdge(int u, int v) {
     DS_TRACE(std::cerr << __func__ << dbg(u) << dbg(v) << std::endl);
     removeDirectedEdge(u, v);
     removeDirectedEdge(v, u);
 }
 
-// Returns the number of edges in the graph.
-// Complexity: O(n)
 int Instance::edgeCount() const {
     int sum_deg = 0;
     for (auto i : nodes) sum_deg += deg(i);
@@ -291,16 +276,11 @@ int Instance::forcedEdgeCount() const {
     return sum_deg / 2;
 }
 
-// Returns true if and only if the undirected edge (u, v) is present in the graph.
-// Complexity: O(log(deg(u))) !
 bool Instance::hasEdge(int u, int v) const {
     auto &node = all_nodes[u];
     return std::ranges::binary_search(node.n_open, v);
 }
 
-// Inserts a given node to the dominating set, changing the status of
-// its neighbors to DOMINATED if they are not, the node is removed from the graph afterward.
-// Complexity: O(deg(v)) or O(sum of degrees of neighbours) in case of extra vertices.
 void Instance::take(int v) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
     DS_ASSERT(!isTaken(v));
@@ -328,8 +308,6 @@ void Instance::take(int v) {
     removeNode(v);
 }
 
-// Splits the list of graph nodes into individual connected components.
-// Complexity: O(n + m)
 std::vector<std::vector<int>> Instance::split() const {
     std::vector<int> component(all_nodes.size(), -1);
     int components = 0;
@@ -373,9 +351,9 @@ void Instance::setEdgeStatus(int u, int v, EdgeStatus status) {
     it_u->status = it_v->status = status;
 }
 
-void Instance::addDirectedEdge(int u, int v, EdgeStatus status) {
+void Instance::addDirectedEdge(int u, int v) {
     auto &node = all_nodes[u];
-    insert(node.adj, Endpoint{ v, status });
+    insert(node.adj, Endpoint{ v, EdgeStatus::UNCONSTRAINED });
     insert(node.n_open, v);
     insert(node.n_closed, v);
     if (!isDominated(u))
@@ -420,41 +398,19 @@ void Instance::sortAdjacencyLists() {
 
 const Node &Instance::operator[](int v) const { return all_nodes[v]; }
 
-// .ads format description:
-//  first line is 'p ads n m d' where:
-//      n is the number of remaining nodes
-//      m is the number of remaining edges
-//      d is the number of nodes already known to be in the optimal dominating set
-//      (those nodes are guaranteed to not be present in the graph)
-//  second line is v_1, v_2, ..., v_d, being the list of nodes already known to be in the optimal
-//  dominating set following it are n lines describing the nodes of the remaining graph in format 'v
-//  s_d s_m e', where:
-//      v is the node number in the original graph, note nodes may not be numbered from 1 to n.
-//      s_d is the nodes domination status, 0 means undominated, 1 means dominated
-//      s_m is the nodes solution membership status, 0 means maybe, 1 means no, 2 means yes.
-//      e describes whether the node is an node non-existent in the original graph added by
-//      reductions
-//          0 means original node,
-//          1 means extra node.
-// Last m lines describe the edges of the graph in format
-// 'u v f' where:
-//      u and v are the nodes being connected
-//      f is the edge status, 0 means unconstrained, 1 means forced.
-// comments starting with c can be only at the beginning of the file.
-
 void Instance::exportADS(std::ostream &output) {
     output << "p ads " << nodeCount() << " " << edgeCount() << " " << ds.size() << "\n";
     for (auto v : ds) output << v << " ";
     output << "\n";
 
     for (auto v : nodes) {
-        output << v << " " << (int)all_nodes[v].domination_status << " " << (int)all_nodes[v].membership_status << " " << all_nodes[v].is_extra << "\n";
+        output << v << " " << static_cast<int>(all_nodes[v].domination_status) << " " << static_cast<int>(all_nodes[v].membership_status) << " " << all_nodes[v].is_extra << "\n";
     }
 
     for (auto u : nodes) {
         for (auto [v, status] : all_nodes[u].adj) {
             if (u < v)
-                output << u << " " << v << " " << (int)status << "\n";
+                output << u << " " << v << " " << static_cast<int>(status) << "\n";
         }
     }
 }
