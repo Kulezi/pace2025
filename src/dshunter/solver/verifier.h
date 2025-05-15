@@ -4,7 +4,7 @@
 namespace DSHunter {
 
 // Checks whether the given solution is a valid dominating set of the given instance.
-// Throws a std::logic_error if it isn't.
-void verify_solution(Instance g, const std::vector<int> solution);
+// Throws std::logic_error if it isn't.
+void verify_solution(const Instance &g, const std::vector<int> &solution);
 }  // namespace DSHunter
 #endif  // DS_VERIFIER_H

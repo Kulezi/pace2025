@@ -44,7 +44,7 @@ std::vector<int> Solver::solve(Instance g) {
         ds.insert(ds.begin(), component_ds.begin(), component_ds.end());
     }
 
-    sort(ds.begin(), ds.end());
+    std::ranges::sort(ds);
 
     cfg.logLine("verifying solution");
     verify_solution(initial_instance, ds);
@@ -116,7 +116,7 @@ std::vector<int> Solver::solveConnected(Instance &g) {
         }
 
         default:
-            throw std::logic_error(std::format("invalid solver_type value of {} in SolverConfig", (int)cfg.solver_type));
+            throw std::logic_error(std::format("invalid solver_type value of {} in SolverConfig", static_cast<int>(cfg.solver_type)));
     }
 }
 
@@ -127,7 +127,7 @@ int presolve_complexity(PresolverType pt) {
         return 2;
     if (pt == PresolverType::None)
         return 0;
-    throw std::logic_error(std::format("encountered incorrect PresolverType ({})", (int)pt));
+    throw std::logic_error(std::format("encountered incorrect PresolverType ({})", static_cast<int>(pt)));
 }
 
 void Solver::presolve(Instance &g) {

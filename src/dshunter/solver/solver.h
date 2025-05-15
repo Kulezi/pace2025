@@ -1,10 +1,11 @@
 #ifndef DS_SOLVER_H
 #define DS_SOLVER_H
 #include <chrono>
+#include <iostream>
+#include <utility>
 
 #include "../instance.h"
 #include "../rrules/rrules.h"
-#include "../utils.h"
 namespace DSHunter {
 using namespace std::chrono_literals;
 enum class SolverType {
@@ -36,25 +37,22 @@ struct SolverConfig {
     std::chrono::time_point<std::chrono::steady_clock> solve_start;
 
     SolverConfig(std::vector<ReductionRule> rrules, SolverType st, PresolverType pt)
-        : reduction_rules(rrules), solver_type(st), presolver_type(pt) {}
-
-    SolverConfig()
-        : reduction_rules(DSHunter::get_default_reduction_rules()),
-          solver_type(SolverType::Default),
-          presolver_type(PresolverType::Full),
+        : reduction_rules(std::move(rrules)),
+          solver_type(st),
+          presolver_type(pt),
           decomposition_time_budget(10s),
-          decomposer_path(),
           random_seed(0),
           good_enough_treewidth(14),
           max_treewidth(18),
           max_memory_in_bytes(16UL << 30UL),
           max_bag_branch_depth(7) {}
 
-    int millisElapsed() {
+    SolverConfig() : SolverConfig(DSHunter::get_default_reduction_rules(), SolverType::Default, PresolverType::Full) {}
+    [[nodiscard]] int64_t millisElapsed() const {
         return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - solve_start).count();
     }
 
-    void logLine(std::string s) {
+    void logLine(const std::string &s) const {
         std::cerr << "c " << millisElapsed() << " " << s << std::endl; 
     }
 };
@@ -62,7 +60,7 @@ struct SolverConfig {
 struct Solver {
     SolverConfig cfg;
     Solver() : cfg(SolverConfig()) {}
-    Solver(SolverConfig sc) : cfg(sc) {}
+    explicit Solver(SolverConfig sc) : cfg(std::move(sc)) {}
 
     std::vector<int> solve(Instance g);
     void presolve(Instance &g);
