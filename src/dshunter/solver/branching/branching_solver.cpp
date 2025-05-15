@@ -1,7 +1,6 @@
 #include "branching_solver.h"
 
 #include <climits>
-#include <format>
 #include <vector>
 
 #include "../../bounds.h"
@@ -79,7 +78,6 @@ std::vector<int> BranchingSolver::solve(const Instance &g) {
 
 void BranchingSolver::solve(Instance g, std::vector<int> &best_ds) {
     enter;
-
     reduce(g, reduction_rules, cfg->max_branching_reductions_complexity);
     if (lowerBound(g) >= static_cast<int>(best_ds.size()) || !g.isSolvable()) {
         leave;
@@ -109,8 +107,9 @@ int BranchingSolver::selectNode(const Instance &g) {
 void BranchingSolver::branch(Instance &g, std::vector<int> &best_ds) {
     int v = selectNode(g);
     if (v == -1) {
-        if (g.ds.size() < best_ds.size())
+        if (g.ds.size() < best_ds.size()) {
             best_ds = g.ds;
+        }
         return;
     }
 

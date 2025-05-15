@@ -55,20 +55,21 @@ std::optional<std::vector<int>> TreewidthSolver::solve(const Instance &instance)
         auto [depth_needed, leaves] = estimateBranching(e);
         if (depth_needed <= cfg->max_bag_branch_depth) {
             cfg->logLine(std::format("bag-branching of depth at most {} is enough, proceeding with bag-branching", cfg->max_bag_branch_depth));
-        } else {
-            cfg->logLine(std::format("bag-branching of depth at most {} is not enough, aborting bag-branching", cfg->max_bag_branch_depth));
+            solved_leaves = 0;
+            total_leaves = leaves;
+            if (solveBranching(e))
+                return e.ds;
             return std::nullopt;
         }
-
-        solved_leaves = 0;
-        total_leaves = leaves;
-        if (solveBranching(e))
-            return e.ds;
-        else
-            return std::nullopt;
+        cfg->logLine(std::format("bag-branching of depth at most {} is not enough, aborting bag-branching", cfg->max_bag_branch_depth));
     }
 
-    return solveDecomp(instance, *td);
+    if (td->width <= cfg->max_treewidth) {
+        cfg->logLine(std::format("tw = {} <= {}, attempting direct treewidth dp solution", td->width, cfg->max_treewidth));
+        return solveDecomp(instance, *td);
+    }
+    cfg->logLine(std::format("tw = {} > {}, aborting treewidth dp solution", td->width, cfg->max_treewidth));
+    return std::nullopt;
 }
 
 std::optional<std::vector<int>> TreewidthSolver::solveDecomp(const Instance &instance, const TreeDecomposition &raw_td) {
