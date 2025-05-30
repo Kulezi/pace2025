@@ -2,9 +2,9 @@
 namespace DSHunter {
 
 bool singleDominatorRule(Instance& g) {
-    auto nodes = g.nodes;
+    const auto nodes = g.nodes;
     bool reduced = false;
-    for (auto v : nodes) {
+    for (const auto v : nodes) {
         if (g.hasNode(v) && !g.isDominated(v) && g[v].dominators.size() == 1) {
             g.take(g[v].dominators.front());
             reduced = true;

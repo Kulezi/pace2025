@@ -1,5 +1,4 @@
 #include "rrules.h"
-
 namespace DSHunter {
 bool ReductionRule::apply(Instance& g) const {
     DS_TRACE(std::cerr << "trying to apply " << name << " (n=" << g.nodeCount() << ", m="

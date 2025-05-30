@@ -7,14 +7,15 @@
 #include "dshunter/solver/treewidth/td/flow_cutter_decomposer.h"
 namespace {
 using namespace DSHunter;
-std::tuple<std::vector<int>, std::vector<int>, std::vector<int>> PEG(const Instance &g, const std::vector<int> &V) {
-    std::vector<int> P, E, G, N_closed;
-    for (auto v : V) {
+using std::vector;
+std::tuple<vector<int>, vector<int>, vector<int>> PEG(const Instance &g, const vector<int> &V) {
+    vector<int> P, E, G, N_closed;
+    for (const auto v : V) {
         N_closed = unite(N_closed, g[v].n_closed);
     }
 
     auto N_open = remove(N_closed, V);
-    auto isExit = [&](int u) {
+    auto isExit = [&](const int u) {
         for (auto v : g[u].n_open) {
             if (!std::ranges::binary_search(N_open, v))
                 return true;
@@ -38,11 +39,11 @@ std::tuple<std::vector<int>, std::vector<int>, std::vector<int>> PEG(const Insta
     return { P, E, G };
 }
 
-std::vector<std::vector<int>> getBags(const Instance &input_graph) {
+vector<vector<int>> getBags(const Instance &input_graph) {
     auto cfg = SolverConfig();
     cfg.decomposition_time_budget = std::chrono::seconds(1);
     FlowCutterDecomposer xd(&cfg);
-    auto td = xd.decompose(input_graph);
+    const auto td = xd.decompose(input_graph);
     if (!td.has_value())
         return {};
 
@@ -67,23 +68,23 @@ void minimize(int &x, const int y) {
 }
 
 // Returns statuses {dominated, taken} for all nodes from N assuming "hardest assignment" of the separator, i.e., not taking anything from it.
-std::pair<std::vector<bool>, std::vector<bool>> hardCase(const Instance &g, const std::vector<int> &N) {
-    std::vector d(g.all_nodes.size(), false), t(g.all_nodes.size(), false);
-    for (auto v : N) d[v] = g.isDominated(v);
+std::pair<vector<bool>, vector<bool>> hardCase(const Instance &g, const vector<int> &N) {
+    vector d(g.all_nodes.size(), false), t(g.all_nodes.size(), false);
+    for (const auto v : N) d[v] = g.isDominated(v);
     return { d, t };
 }
 
 // Returns statuses {dominated, taken} for all nodes from N assuming "easiest assignment" of the separator, i.e., taking everything from it,
 // or dominating it from the outside of N if taking is impossible.
-std::pair<std::vector<bool>, std::vector<bool>> easyCase(const DSHunter::Instance &g, const std::vector<int> &N, const std::vector<int> &E) {
+std::pair<vector<bool>, vector<bool>> easyCase(const Instance &g, const vector<int> &N, const vector<int> &E) {
     auto [d, t] = hardCase(g, N);
-    for (auto u : E) {
+    for (const auto u : E) {
         if (!g.isDisregarded(u)) {
             t[u] = true;
-            for (auto v : g[u].n_closed) d[v] = true;
+            for (const auto v : g[u].n_closed) d[v] = true;
         } else {
             bool can_be_dominated = false;
-            for (auto v : DSHunter::remove(g[u].n_open, N)) {
+            for (const auto v : DSHunter::remove(g[u].n_open, N)) {
                 if (!g.isDisregarded(v)) {
                     can_be_dominated = true;
                     break;
@@ -98,7 +99,7 @@ std::pair<std::vector<bool>, std::vector<bool>> easyCase(const DSHunter::Instanc
 }
 
 // Checks whether taking assignment m for set A doesn't break constraints already posed by g.
-bool isCompatible(const Instance &g, const std::vector<int> &A, const int m) {
+bool isCompatible(const Instance &g, const vector<int> &A, const int m) {
     for (auto i = 0; i < A.size(); ++i) {
         const int u = A[i];
         if (m >> i & 1 && g.isDisregarded(u))
@@ -114,7 +115,7 @@ bool isCompatible(const Instance &g, const std::vector<int> &A, const int m) {
 }
 
 // Returns the number of nodes taken in A if N is dominated by m_take, -1 otherwise.
-int solveMask(const Instance &g, const std::vector<int> &A, const std::vector<int> &N, const int m_take, std::vector<bool> dominated, std::vector<bool> taken) {
+int solveMask(const Instance &g, const vector<int> &A, const vector<int> &N, const int m_take, vector<bool> dominated, vector<bool> taken) {
     if (!isCompatible(g, A, m_take))
         return -1;
     int ds_size = 0;
@@ -143,7 +144,7 @@ int solveMask(const Instance &g, const std::vector<int> &A, const std::vector<in
     return ds_size;
 }
 
-bool trim(Instance &g, const std::vector<int> &A, const int x, const int y) {
+bool trim(Instance &g, const vector<int> &A, const int x, const int y) {
     bool did_something = false;
     for (int i = 0; i < A.size(); i++) {
         if (y >> i & 1) {
@@ -170,8 +171,7 @@ bool trim(Instance &g, const std::vector<int> &A, const int x, const int y) {
 };  // namespace
 
 namespace DSHunter {
-int R = 0;
-bool trimSubset(Instance &g, const std::vector<int> &V) {
+bool trimSubset(Instance &g, const vector<int> &V) {
     if (V.empty() || V.size() > 10)
         return false;
     for (auto v : V)
@@ -179,9 +179,9 @@ bool trimSubset(Instance &g, const std::vector<int> &V) {
             return false;
 
     auto [P, E, G] = PEG(g, V);
-    auto A_temp = unite(P, unite(G, V));
-    auto N = unite(A_temp, E);
-    std::vector<int> A;
+    const auto A_temp = unite(P, unite(G, V));
+    const auto N = unite(A_temp, E);
+    vector<int> A;
     for (auto a : A_temp)
         if (!g.isDisregarded(a))
             A.push_back(a);
@@ -193,8 +193,9 @@ bool trimSubset(Instance &g, const std::vector<int> &V) {
     auto [d_easy, t_easy] = easyCase(g, N, E);
 
     int sz = 1 << A.size();
+
     // {hard, easy}
-    std::vector<std::pair<int, int>> results(sz);
+    vector<std::pair<int, int>> results(sz);
     for (auto i = 0; i < sz; ++i) {
         results[i] = { solveMask(g, A, N, i, d_hard, t_hard),
                        solveMask(g, A, N, i, d_easy, t_easy) };
@@ -230,9 +231,9 @@ bool trimSubset(Instance &g, const std::vector<int> &V) {
     return false;
 }
 
-std::vector<int> expand(const Instance &g, const std::vector<int> &V) {
+vector<int> expand(const Instance &g, const vector<int> &V) {
     auto res = V;
-    for (auto v : V) res = unite(res, g[v].n_closed);
+    for (const auto v : V) res = unite(res, g[v].n_closed);
     return res;
 }
 
@@ -240,10 +241,9 @@ bool localBruteforceRule(Instance &g) {
     bool reduced = false;
 
     for (const auto bags = getBags(g); auto &bag : bags) {
-        int bs = static_cast<int>(bag.size());
-        if (bs <= 10) {
+        if (const int bs = static_cast<int>(bag.size()); bs <= 10) {
             for (int mask = 0; mask < (1 << bs); mask++) {
-                std::vector<int> V;
+                vector<int> V;
                 for (int j = 0; j < bs; j++) {
                     if (mask >> j & 1)
                         V.push_back(bag[j]);
@@ -256,10 +256,10 @@ bool localBruteforceRule(Instance &g) {
         }
     }
 
-    auto nodes = g.nodes;
-    for (auto u : nodes) {
+    const auto nodes = g.nodes;
+    for (const auto u : nodes) {
         if (g.hasNode(u)) {
-            std::vector<int> one = { u };
+            vector one = { u };
             auto two = expand(g, one);
             auto three = expand(g, two);
             auto four = expand(g, three);
