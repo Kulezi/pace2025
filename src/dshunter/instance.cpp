@@ -6,21 +6,24 @@
 #include "utils.h"
 
 namespace DSHunter {
+using std::logic_error;
+using std::string, std::getline, std::stringstream, std::istream, std::to_string, std::ranges::sort, std::ranges::binary_search;
+using std::vector;
 
 Node::Node() : domination_status(DominationStatus::DOMINATED), membership_status(MembershipStatus::DISREGARDED), is_extra(false) {}
 
-Node::Node(int v, bool is_extra) : n_closed({ v }), dominators({ v }), dominatees({ v }), domination_status(DominationStatus::UNDOMINATED), membership_status(MembershipStatus::UNDECIDED), is_extra(is_extra) {}
+Node::Node(int v, const bool is_extra) : n_closed({ v }), dominators({ v }), dominatees({ v }), domination_status(DominationStatus::UNDOMINATED), membership_status(MembershipStatus::UNDECIDED), is_extra(is_extra) {}
 
 Instance::Instance() = default;
 
-Instance::Instance(std::istream &in) {
-    std::string line;
+Instance::Instance(istream &in) {
+    string line;
     int header_edges;
 
-    std::string problem;
-    while (std::getline(in, line)) {
-        std::stringstream tokens(line);
-        std::string s;
+    string problem;
+    while (getline(in, line)) {
+        stringstream tokens(line);
+        string s;
         tokens >> s;
         if (s[0] == 'c')
             continue;
@@ -51,22 +54,22 @@ Instance::Instance(std::istream &in) {
     sortAdjacencyLists();
 }
 
-void Instance::parseADS(std::istream &in, int n_nodes, int header_edges, int d) {
+void Instance::parseADS(istream &in, int n_nodes, int header_edges, int d) {
     // Read dominating set elements.
     {
-        std::string line;
-        std::getline(in, line);
-        std::stringstream tokens(line);
-        ds = std::vector<int>(d);
+        string line;
+        getline(in, line);
+        stringstream tokens(line);
+        ds = vector<int>(d);
         for (auto &v : ds) tokens >> v;
     }
 
     // Read node descriptions.
     {
         for (int i = 1; i <= n_nodes; i++) {
-            std::string line;
-            std::getline(in, line);
-            std::stringstream tokens(line);
+            string line;
+            getline(in, line);
+            stringstream tokens(line);
 
             int v, s_d, s_m, e;
             tokens >> v >> s_d >> s_m >> e;
@@ -87,27 +90,27 @@ void Instance::parseADS(std::istream &in, int n_nodes, int header_edges, int d) 
     }
 
     for (int i = 1; i <= header_edges; i++) {
-        std::string line;
-        std::getline(in, line);
-        std::stringstream tokens(line);
+        string line;
+        getline(in, line);
+        stringstream tokens(line);
 
-        std::string s;
+        string s;
         int a, b, f;
         tokens >> a >> b >> f;
         initAddEdge(a, b, f ? EdgeStatus::FORCED : EdgeStatus::UNCONSTRAINED);
     }
 }
 
-void Instance::parseDS(std::istream &in, int n_nodes, int header_edges) {
+void Instance::parseDS(istream &in, const int n_nodes, const int header_edges) {
     int read_edges = 0;
-    std::string line;
-    while (std::getline(in, line)) {
-        std::stringstream tokens(line);
-        std::string s;
+    string line;
+    while (getline(in, line)) {
+        stringstream tokens(line);
+        string s;
         tokens >> s;
         if (s[0] == 'c')
             continue;
-        int a = stoi(s);
+        const int a = stoi(s);
         int b = 0;
         tokens >> b;
         DS_ASSERT(a > 0 && a <= n_nodes);
@@ -118,48 +121,48 @@ void Instance::parseDS(std::istream &in, int n_nodes, int header_edges) {
     }
 
     if (header_edges != read_edges)
-        throw std::logic_error("expected " + std::to_string(header_edges) + " edges, found " +
-                               std::to_string(read_edges));
+        throw logic_error("expected " + to_string(header_edges) + " edges, found " +
+                          to_string(read_edges));
 }
 
 int Instance::nodeCount() const { return static_cast<int>(nodes.size()); }
 int Instance::disregardedNodeCount() const {
     int cnt = 0;
-    for (auto v : nodes)
+    for (const auto v : nodes)
         if (isDisregarded(v))
             cnt++;
     return cnt;
 }
 
-bool Instance::isDominated(int v) const {
+bool Instance::isDominated(const int v) const {
     return all_nodes[v].domination_status == DominationStatus::DOMINATED;
 }
 
-void Instance::markDominated(int v) {
+void Instance::markDominated(const int v) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
     auto &node = all_nodes[v];
     node.domination_status = DominationStatus::DOMINATED;
-    for (auto u : node.dominators) {
+    for (const auto u : node.dominators) {
         remove(all_nodes[u].dominatees, v);
     }
     node.dominators = {};
 }
 
-bool Instance::isTaken(int v) const {
+bool Instance::isTaken(const int v) const {
     return all_nodes[v].membership_status == MembershipStatus::TAKEN;
 }
 
-void Instance::markTaken(int v) {
+void Instance::markTaken(const int v) {
     DS_ASSERT(!isTaken(v));
     markDominated(v);
     all_nodes[v].membership_status = MembershipStatus::TAKEN;
 }
 
-bool Instance::isDisregarded(int v) const {
+bool Instance::isDisregarded(const int v) const {
     return all_nodes[v].membership_status == MembershipStatus::DISREGARDED;
 }
 
-void Instance::markDisregarded(int v) {
+void Instance::markDisregarded(const int v) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
     DS_ASSERT(!isDisregarded(v));
     auto &node = all_nodes[v];
@@ -170,11 +173,11 @@ void Instance::markDisregarded(int v) {
     node.dominatees = {};
 }
 
-void Instance::ignore(int v) {
+void Instance::ignore(const int v) {
     if (!hasNode(v))
         return;
 
-    std::vector<int> to_take;
+    vector<int> to_take;
     for (auto [u, status] : all_nodes[v].adj) {
         // Edges like this can only be removed by calling take().
         if (status == EdgeStatus::FORCED && !isTaken(v)) {
@@ -185,10 +188,10 @@ void Instance::ignore(int v) {
 
     all_nodes[v] = Node();
     remove(nodes, v);
-    for (auto u : to_take) take(u);
+    for (const auto u : to_take) take(u);
 }
 
-void Instance::forceEdge(int u, int v) {
+void Instance::forceEdge(const int u, const int v) {
     DS_TRACE(std::cerr << __func__ << dbg(u) << dbg(v) << std::endl);
     DS_ASSERT(hasEdge(u, v));
     DS_ASSERT(getEdgeStatus(u, v) != EdgeStatus::FORCED);
@@ -198,20 +201,20 @@ void Instance::forceEdge(int u, int v) {
 
     // All vertices that see both endpoints of this edge must be dominated by one of them,
     // so we can mark them as dominated.
-    for (auto w : intersect(all_nodes[u].dominatees, all_nodes[v].dominatees)) {
+    for (const auto w : intersect(all_nodes[u].dominatees, all_nodes[v].dominatees)) {
         markDominated(w);
     }
 }
 
-EdgeStatus Instance::getEdgeStatus(int u, int v) const {
+EdgeStatus Instance::getEdgeStatus(const int u, const int v) const {
     auto it = lower_bound(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{ v, EdgeStatus::ANY });
     DS_ASSERT(it != all_nodes[u].adj.end());
     return it->status;
 }
 
-int Instance::deg(int v) const { return static_cast<int>(all_nodes[v].adj.size()); }
+int Instance::deg(const int v) const { return static_cast<int>(all_nodes[v].adj.size()); }
 
-int Instance::forcedDeg(int v) const {
+int Instance::forcedDeg(const int v) const {
     int res = 0;
     for (auto e : all_nodes[v].adj)
         if (e.status == EdgeStatus::FORCED)
@@ -227,11 +230,11 @@ int Instance::addNode() {
     return v;
 }
 
-bool Instance::hasNode(int v) const {
+bool Instance::hasNode(const int v) const {
     return static_cast<int>(all_nodes.size()) > v && !all_nodes[v].n_closed.empty();
 }
 
-void Instance::removeNode(int v) {
+void Instance::removeNode(const int v) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
     if (!hasNode(v))
         return;
@@ -245,11 +248,11 @@ void Instance::removeNode(int v) {
     remove(nodes, v);
 }
 
-void Instance::removeNodes(const std::vector<int> &l) {
+void Instance::removeNodes(const vector<int> &l) {
     for (auto &v : l) removeNode(v);
 }
 
-void Instance::addEdge(int u, int v, EdgeStatus status) {
+void Instance::addEdge(const int u, const int v, const EdgeStatus status) {
     DS_TRACE(std::cerr << __func__ << dbg(u) << dbg(v) << std::endl);
     addDirectedEdge(u, v);
     addDirectedEdge(v, u);
@@ -258,7 +261,7 @@ void Instance::addEdge(int u, int v, EdgeStatus status) {
     }
 }
 
-void Instance::removeEdge(int u, int v) {
+void Instance::removeEdge(const int u, const int v) {
     DS_TRACE(std::cerr << __func__ << dbg(u) << dbg(v) << std::endl);
     removeDirectedEdge(u, v);
     removeDirectedEdge(v, u);
@@ -266,22 +269,22 @@ void Instance::removeEdge(int u, int v) {
 
 int Instance::edgeCount() const {
     int sum_deg = 0;
-    for (auto i : nodes) sum_deg += deg(i);
+    for (const auto i : nodes) sum_deg += deg(i);
     return sum_deg / 2;
 }
 
 int Instance::forcedEdgeCount() const {
     int sum_deg = 0;
-    for (auto i : nodes) sum_deg += forcedDeg(i);
+    for (const auto i : nodes) sum_deg += forcedDeg(i);
     return sum_deg / 2;
 }
 
-bool Instance::hasEdge(int u, int v) const {
+bool Instance::hasEdge(const int u, const int v) const {
     auto &node = all_nodes[u];
-    return std::ranges::binary_search(node.n_open, v);
+    return binary_search(node.n_open, v);
 }
 
-void Instance::take(int v) {
+void Instance::take(const int v) {
     DS_TRACE(std::cerr << __func__ << dbg(v) << std::endl);
     DS_ASSERT(!isTaken(v));
     DS_ASSERT(!isDisregarded(v));
@@ -289,8 +292,7 @@ void Instance::take(int v) {
     auto &node = all_nodes[v];
     if (node.is_extra) {
         // Copy as we will invalidate our iterator if we operate on the original vector.
-        auto n_open = node.n_open;
-        for (auto u : n_open) {
+        for (const auto n_open = node.n_open; const auto u : n_open) {
             DS_ASSERT(!isTaken(u));
             take(u);
         }
@@ -300,16 +302,15 @@ void Instance::take(int v) {
     node.membership_status = MembershipStatus::TAKEN;
 
     ds.push_back(v);
-    auto dominatees = node.dominatees;
-    for (auto u : dominatees) {
+    for (const auto dominatees = node.dominatees; const auto u : dominatees) {
         markDominated(u);
     }
 
     removeNode(v);
 }
 
-std::vector<std::vector<int>> Instance::split() const {
-    std::vector component(all_nodes.size(), -1);
+vector<vector<int>> Instance::split() const {
+    vector component(all_nodes.size(), -1);
     int components = 0;
 
     // Assign nodes to connected components using breadth-first search.
@@ -320,7 +321,7 @@ std::vector<std::vector<int>> Instance::split() const {
             std::queue<int> q;
             q.push(v);
             while (!q.empty()) {
-                int w = q.front();
+                const int w = q.front();
                 q.pop();
 
                 for (auto u : all_nodes[w].n_open) {
@@ -335,23 +336,23 @@ std::vector<std::vector<int>> Instance::split() const {
         }
     }
 
-    std::vector result(components, std::vector<int>());
+    vector result(components, vector<int>());
     for (auto v : nodes) {
         result[component[v]].push_back(v);
     }
     return result;
 }
 
-void Instance::setEdgeStatus(int u, int v, EdgeStatus status) {
-    auto it_u = lower_bound(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{ v, EdgeStatus::ANY });
+void Instance::setEdgeStatus(const int u, const int v, const EdgeStatus status) {
+    const auto it_u = lower_bound(all_nodes[u].adj.begin(), all_nodes[u].adj.end(), Endpoint{ v, EdgeStatus::ANY });
     DS_ASSERT(it_u != all_nodes[u].adj.end());
-    auto it_v = lower_bound(all_nodes[v].adj.begin(), all_nodes[v].adj.end(), Endpoint{ u, EdgeStatus::ANY });
+    const auto it_v = lower_bound(all_nodes[v].adj.begin(), all_nodes[v].adj.end(), Endpoint{ u, EdgeStatus::ANY });
     DS_ASSERT(it_v != all_nodes[v].adj.end());
 
     it_u->status = it_v->status = status;
 }
 
-void Instance::addDirectedEdge(int u, int v) {
+void Instance::addDirectedEdge(const int u, const int v) {
     auto &node = all_nodes[u];
     insert(node.adj, Endpoint{ v, EdgeStatus::UNCONSTRAINED });
     insert(node.n_open, v);
@@ -362,7 +363,7 @@ void Instance::addDirectedEdge(int u, int v) {
         insert(node.dominatees, v);
 }
 
-void Instance::removeDirectedEdge(int u, int v) {
+void Instance::removeDirectedEdge(const int u, const int v) {
     auto &node = all_nodes[u];
     remove(node.adj, Endpoint{ v, EdgeStatus::ANY });
     remove(node.n_open, v);
@@ -371,12 +372,12 @@ void Instance::removeDirectedEdge(int u, int v) {
     remove(node.dominatees, v);
 }
 
-void Instance::initAddEdge(int u, int v, EdgeStatus status) {
+void Instance::initAddEdge(const int u, const int v, const EdgeStatus status) {
     initAddDirectedEdge(u, v, status);
     initAddDirectedEdge(v, u, status);
 }
 
-void Instance::initAddDirectedEdge(int u, int v, EdgeStatus status) {
+void Instance::initAddDirectedEdge(const int u, int const v, const EdgeStatus status) {
     auto &node = all_nodes[u];
     node.adj.emplace_back(v, status);
     node.n_open.push_back(v);
@@ -389,27 +390,27 @@ void Instance::initAddDirectedEdge(int u, int v, EdgeStatus status) {
 
 void Instance::sortAdjacencyLists() {
     for (auto &node : all_nodes) {
-        sort(node.adj.begin(), node.adj.end());
-        std::ranges::sort(node.n_open);
-        std::ranges::sort(node.n_closed);
-        std::ranges::sort(node.dominators);
-        std::ranges::sort(node.dominatees);
+        std::sort(node.adj.begin(), node.adj.end());
+        sort(node.n_open);
+        sort(node.n_closed);
+        sort(node.dominators);
+        sort(node.dominatees);
     }
 }
 
-const Node &Instance::operator[](int v) const { return all_nodes[v]; }
+const Node &Instance::operator[](const int v) const { return all_nodes[v]; }
 
 void Instance::exportADS(std::ostream &output) {
     output << "p ads " << nodeCount() << " " << edgeCount() << " " << ds.size() << "\n";
-    for (auto v : ds) output << v << " ";
+    for (const auto v : ds) output << v << " ";
     output << "\n";
 
-    for (auto v : nodes) {
+    for (const auto v : nodes) {
         output << v << " " << static_cast<int>(all_nodes[v].domination_status) << " " << static_cast<int>(all_nodes[v].membership_status) << " " << all_nodes[v].is_extra << "\n";
     }
 
-    for (auto u : nodes) {
-        for (auto [v, status] : all_nodes[u].adj) {
+    for (const auto u : nodes) {
+        for (const auto [v, status] : all_nodes[u].adj) {
             if (u < v)
                 output << u << " " << v << " " << static_cast<int>(status) << "\n";
         }
