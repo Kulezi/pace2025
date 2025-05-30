@@ -3,8 +3,8 @@ namespace {
 using DSHunter::intersect, DSHunter::contains, DSHunter::unite, DSHunter::remove, DSHunter::Instance;
 using std::vector;
 
-bool hasUndominatedNode(Instance& g, const vector<int>& nodes) {
-    return std::ranges::any_of(nodes, std::not_fn(g.isDominated));
+bool hasUndominatedNode(const Instance& g, const vector<int>& nodes) {
+    return std::ranges::any_of(nodes, [&](const int v) { return g.isDominated(v); });
 }
 
 // Checks whether node u is an exit vertex with respect to node v.
@@ -17,7 +17,7 @@ bool isExit(const Instance& g, const int u, const int v) {
 
 // Returns a sorted list of u's neighbors that have a neighbor outside the neighborhood of u.
 // Complexity: O(deg(u)^2)
-vector<int> exitNeighbourhood(Instance& g, int u) {
+vector<int> exitNeighbourhood(const Instance& g, const int u) {
     vector<int> N_exit;
     for (auto v : g[u].n_open) {
         if (isExit(g, v, u))
