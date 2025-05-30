@@ -65,6 +65,12 @@ bool removeDisregardedRule(Instance& g);
 
 bool singleDominatorRule(Instance& g);
 
+bool localRule(Instance &g);
+
+bool localBruteforceRule(Instance &g);
+
+extern ReductionRule LocalRule;
+
 extern ReductionRule AlberMainRule1;
 extern ReductionRule AlberMainRule2;
 extern ReductionRule AlberSimpleRule1;
@@ -80,6 +86,7 @@ extern ReductionRule SingleDominatorRule;
 extern ReductionRule DominatedNeighbourhoodMarkingRule;
 
 extern ReductionRule SameDominatorsRule;
+extern ReductionRule LocalBruteforceRule;
 
 const std::vector<ReductionRule> get_default_reduction_rules();
 }  // namespace DSHunter
