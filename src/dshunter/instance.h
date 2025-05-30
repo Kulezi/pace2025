@@ -1,7 +1,8 @@
 #ifndef INSTANCE_H
 #define INSTANCE_H
-#include <sstream>
 #include <vector>
+
+#include "utils.h"
 
 namespace DSHunter {
 
@@ -64,8 +65,6 @@ struct Instance {
 
     std::vector<int> ds;
 
-    std::vector<std::vector<int>> sets_to_hit;
-
     // Constructs an empty graph.
     Instance();
 
@@ -118,9 +117,9 @@ struct Instance {
     // Complexity: O(deg(v))
     void addEdge(int u, int v, EdgeStatus status = EdgeStatus::UNCONSTRAINED);
 
-    // Removes edge (v, w) from the graph.
-    // Complexity: O(deg(v) + deg(w))
-    void removeEdge(int v, int w);
+    // Removes edge (u, v) from the graph.
+    // Complexity: O(deg(u) + deg(v))
+    void removeEdge(int u, int v);
 
     void forceEdge(int u, int v);
     [[nodiscard]] EdgeStatus getEdgeStatus(int u, int v) const;
@@ -135,14 +134,7 @@ struct Instance {
     // Complexity: O(n + m)
     [[nodiscard]] std::vector<std::vector<int>> split() const;
 
-    bool isSolvable() const {
-        for (auto v : nodes) {
-            if (!isDominated(v) && all_nodes[v].dominators.empty()) {
-                return false;
-            }
-        }
-        return true;
-    }
+    [[nodiscard]] bool isSolvable() const;
 
     const Node &operator[](int v) const;
     /*

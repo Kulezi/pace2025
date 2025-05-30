@@ -2,6 +2,8 @@
 
 #include <queue>
 #include <set>
+#include <sstream>
+#include <ranges>
 
 #include "utils.h"
 
@@ -341,6 +343,12 @@ vector<vector<int>> Instance::split() const {
         result[component[v]].push_back(v);
     }
     return result;
+}
+
+bool Instance::isSolvable() const {
+    return std::ranges::none_of(nodes, [&](int v) {
+        return !isDominated(v) && all_nodes[v].dominators.empty();
+    });
 }
 
 void Instance::setEdgeStatus(const int u, const int v, const EdgeStatus status) {
