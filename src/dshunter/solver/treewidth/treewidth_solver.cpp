@@ -77,7 +77,7 @@ std::optional<std::vector<int>> TreewidthSolver::solveDecomp(const Instance &ins
     td = NiceTreeDecomposition::nicify(g, raw_td);
     cfg->logLine(std::format("solving td({})", td.width()));
     if (getMemoryUsage(td) > cfg->max_memory_in_bytes) {
-        cfg->logLine(std::format("needed {} MB, aborting ", getMemoryUsage(td)));
+        cfg->logLine(std::format("needed {} MB, aborting ", getMemoryUsage(td) / 1024 / 1024));
         return std::nullopt;
     }
 
