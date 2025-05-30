@@ -1,31 +1,24 @@
 #include "../rrules.h"
 namespace {
-using DSHunter::intersect, DSHunter::contains, DSHunter::unite, DSHunter::remove;
+using DSHunter::intersect, DSHunter::contains, DSHunter::unite, DSHunter::remove, DSHunter::Instance;
+using std::vector;
 
-bool hasUndominatedNode(DSHunter::Instance& g, std::vector<int> nodes) {
-    for (auto v : nodes)
-        if (!g.isDominated(v))
-            return true;
-    return false;
+bool hasUndominatedNode(Instance& g, const vector<int>& nodes) {
+    return std::ranges::any_of(nodes, std::not_fn(g.isDominated));
 }
 
 // Checks whether node u is an exit vertex with respect to node v.
 // Complexity: O(min(deg(u), deg(v)))
-bool isExit(const DSHunter::Instance& g, int u, int v) {
-    for (auto [w, status] : g[u].adj) {
-        // This will execute at most O(deg(v)) times, since g.hasEdge(v, w) can be true only
-        // for deg(v) different vertices w.
-        if (w != v && (!g.hasEdge(v, w) || status == DSHunter::EdgeStatus::FORCED))
-            return true;
-    }
-
-    return false;
+bool isExit(const Instance& g, const int u, const int v) {
+    return std::ranges::any_of(g[u].adj, [&](const DSHunter::Endpoint e) {
+        return e.to != v && (!g.hasEdge(v, e.to) || e.status == DSHunter::EdgeStatus::FORCED);
+    });
 }
 
-// Returns a sorted list of neighbours of u that have a neighour outside of the neighbourhood of u.
+// Returns a sorted list of u's neighbors that have a neighbor outside the neighborhood of u.
 // Complexity: O(deg(u)^2)
-std::vector<int> exitNeighbourhood(DSHunter::Instance& g, int u) {
-    std::vector<int> N_exit;
+vector<int> exitNeighbourhood(Instance& g, int u) {
+    vector<int> N_exit;
     for (auto v : g[u].n_open) {
         if (isExit(g, v, u))
             N_exit.push_back(v);
@@ -36,14 +29,14 @@ std::vector<int> exitNeighbourhood(DSHunter::Instance& g, int u) {
 }  // namespace
 namespace DSHunter {
 bool alberMainRule1(Instance& g) {
-    auto nodes = g.nodes;
+    const auto nodes = g.nodes;
     bool reduced = false;
 
-    for (auto u : nodes) {
+    for (const auto u : nodes) {
         if (!g.hasNode(u) || g.isDisregarded(u))
             continue;
 
-        std::vector<int> N_exit = exitNeighbourhood(g, u), N_guard, N_prison;
+        vector<int> N_exit = exitNeighbourhood(g, u), N_guard, N_prison;
 
         for (auto v : remove(g[u].n_open, N_exit)) {
             if (!intersect(g[v].n_open, N_exit).empty())
@@ -57,8 +50,8 @@ bool alberMainRule1(Instance& g) {
                                << dbgv(N_guard) << dbgv(N_exit) << std::endl);
             g.take(u);
 
-            for (auto v : N_prison) g.removeNode(v);
-            for (auto v : N_guard) g.removeNode(v);
+            g.removeNodes(N_prison);
+            g.removeNodes(N_guard);
             reduced = true;
         }
     }
