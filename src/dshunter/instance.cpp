@@ -12,9 +12,9 @@ using std::logic_error;
 using std::string, std::getline, std::stringstream, std::istream, std::to_string, std::ranges::sort, std::ranges::binary_search;
 using std::vector;
 
-Node::Node() : domination_status(DominationStatus::DOMINATED), membership_status(MembershipStatus::DISREGARDED), is_extra(false) {}
+Node::Node() : domination_status(DominationStatus::DOMINATED), membership_status(MembershipStatus::DISREGARDED) {}
 
-Node::Node(int v, const bool is_extra) : n_closed({ v }), dominators({ v }), dominatees({ v }), domination_status(DominationStatus::UNDOMINATED), membership_status(MembershipStatus::UNDECIDED), is_extra(is_extra) {}
+Node::Node(int v, const bool is_extra) : n_closed({ v }), dominators({ v }), dominatees({ v }), domination_status(DominationStatus::UNDOMINATED), membership_status(MembershipStatus::UNDECIDED) {}
 
 Instance::Instance() = default;
 
@@ -73,8 +73,8 @@ void Instance::parseADS(istream &in, int n_nodes, int header_edges, int d) {
             getline(in, line);
             stringstream tokens(line);
 
-            int v, s_d, s_m, e;
-            tokens >> v >> s_d >> s_m >> e;
+            int v, s_d, s_m;
+            tokens >> v >> s_d >> s_m;
 
             while (static_cast<int>(all_nodes.size()) <= v) {
                 all_nodes.emplace_back(all_nodes.size(), false);
@@ -87,7 +87,6 @@ void Instance::parseADS(istream &in, int n_nodes, int header_edges, int d) {
                 all_nodes[v].dominatees = {};
                 all_nodes[v].dominators = {};
             }
-            all_nodes[v].is_extra = static_cast<bool>(e);
         }
     }
 
@@ -292,15 +291,6 @@ void Instance::take(const int v) {
     DS_ASSERT(!isDisregarded(v));
 
     auto &node = all_nodes[v];
-    if (node.is_extra) {
-        // Copy as we will invalidate our iterator if we operate on the original vector.
-        for (const auto n_open = node.n_open; const auto u : n_open) {
-            DS_ASSERT(!isTaken(u));
-            take(u);
-        }
-
-        return;
-    }
     node.membership_status = MembershipStatus::TAKEN;
 
     ds.push_back(v);
@@ -414,7 +404,7 @@ void Instance::exportADS(std::ostream &output) {
     output << "\n";
 
     for (const auto v : nodes) {
-        output << v << " " << static_cast<int>(all_nodes[v].domination_status) << " " << static_cast<int>(all_nodes[v].membership_status) << " " << all_nodes[v].is_extra << "\n";
+        output << v << " " << static_cast<int>(all_nodes[v].domination_status) << " " << static_cast<int>(all_nodes[v].membership_status) << "\n";
     }
 
     for (const auto u : nodes) {

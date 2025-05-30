@@ -21,6 +21,9 @@ bool applyCase1_1(Instance& g, const int v, const int w, const vector<int>& N_pr
         const int z1 = g.addNode();
         const int z2 = g.addNode();
         const int z3 = g.addNode();
+        g.markDisregarded(z1);
+        g.markDisregarded(z2);
+        g.markDisregarded(z3);
 
         g.addEdge(v, z1);
         g.addEdge(v, z2);
