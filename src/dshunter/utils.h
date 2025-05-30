@@ -14,6 +14,8 @@
 #endif
 
 #ifdef DS_TRACING_MODE
+#include <iostream>
+#include <format>
 #define DS_TRACE(x) x
 #else
 #define DS_TRACE(x)

@@ -222,7 +222,7 @@ bool TreewidthSolver::solveBranching(ExtendedInstance &instance) {
 }
 
 inline int TreewidthSolver::cost(int v) const {
-    if (g[v].is_extra || g.isDisregarded(v))
+    if (g.isDisregarded(v))
         return INF;
     return 1;
 }

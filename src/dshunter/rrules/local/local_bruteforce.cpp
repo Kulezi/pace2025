@@ -149,14 +149,16 @@ bool trim(Instance &g, const vector<int> &A, const int x, const int y) {
     for (int i = 0; i < A.size(); i++) {
         if (y >> i & 1) {
             int u = A[i];
-            if ((x >> i & 1) && g.hasNode(u)) {
+            if (g.hasNode(u) && (x >> i & 1)) {
                 did_something = true;
                 g.take(A[i]);
             } else if (g.hasNode(u) && !g.isDisregarded(u)) {
                 g.markDisregarded(u);
                 did_something = true;
-                for (auto [v, s] : g[u].adj) {
-                    if (s == EdgeStatus::FORCED) {
+                const auto adj = g[u].adj;
+                for (auto [v, s] : adj) {
+                    if (g.hasNode(v) && s == EdgeStatus::FORCED) {
+
                         DS_ASSERT(!g.isDisregarded(v));
                         g.take(v);
                     }
@@ -177,6 +179,7 @@ bool trimSubset(Instance &g, const vector<int> &V) {
     for (auto v : V)
         if (!g.hasNode(v))
             return false;
+    std::cerr << __func__ << std::endl;
 
     auto [P, E, G] = PEG(g, V);
     const auto A_temp = unite(P, unite(G, V));
@@ -215,6 +218,7 @@ bool trimSubset(Instance &g, const vector<int> &V) {
         }
 
         if (mx_easy <= mi_easy && mx_hard <= mi_hard && mx_hard >= 0 && y > 0 && trim(g, A, x, y)) {
+            std::cerr << dbgv(A) << dbg(x) << dbg(y) << dbgv(N) << dbgv(E) << std::endl;
             return true;
         }
 
