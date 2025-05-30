@@ -1,10 +1,10 @@
 #include "../rrules.h"
 namespace DSHunter {
 bool alberSimpleRule2(Instance& g) {
-    auto nodes = g.nodes;
+    const auto nodes = g.nodes;
     bool reduced = false;
     
-    for (auto v : nodes) {
+    for (const auto v : nodes) {
         if (g.hasNode(v) && g.isDominated(v)) {
             if (g.deg(v) == 0) {
                 DS_TRACE(std::cerr << "applying " << __func__ << " (remove) " << dbg(v) << std::endl);
@@ -17,9 +17,9 @@ bool alberSimpleRule2(Instance& g) {
                 if (g.isDisregarded(w) && !g.isDominated(w))
                     continue;
 
-                // The edge is forced so it's optimal to take the end that possibly could have
-                // larger degree. If the other end of the edge also would be a candidate for
-                // this reduction, apply it only to the vertex with smaller label.
+                // The edge is forced, so it's optimal to take the end that possibly could have
+                // a larger degree. If the other end of the edge also is a candidate for
+                // this reduction, apply it only to the vertex with a smaller label.
                 if (status == EdgeStatus::FORCED && (g.isDisregarded(v) || !(g.deg(w) == 1 && v > w))) {
                     DS_TRACE(std::cerr << "applying " << __func__ << " (take) " << dbg(v) << std::endl);
                     g.take(w);

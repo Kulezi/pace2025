@@ -6,14 +6,15 @@ bool forceEdgeRule(Instance& g) {
     auto nodes = g.nodes;
     bool reduced = false;
     for (auto v : nodes) {
-        if (!std::binary_search(nodes.begin(), nodes.end(), v)) continue;
-        if (g.deg(v) == 2 && !g.isDominated(v)) {
-            auto e1 = g[v].adj[0];
-            auto e2 = g[v].adj[1];
-            
-            if (g.isDisregarded(e1.to) && g.isDisregarded(e2.to))
+        if (!std::ranges::binary_search(nodes, v))
             continue;
-            
+        if (g.deg(v) == 2 && !g.isDominated(v)) {
+            const auto e1 = g[v].adj[0];
+            const auto e2 = g[v].adj[1];
+
+            if (g.isDisregarded(e1.to) && g.isDisregarded(e2.to))
+                continue;
+
             if (g.hasEdge(e1.to, e2.to)) {
                 if (e1.status == EdgeStatus::UNCONSTRAINED && e2.status == EdgeStatus::UNCONSTRAINED) {
                     DS_TRACE(std::cerr << __func__ << "(1)" << dbg(v) << std::endl);

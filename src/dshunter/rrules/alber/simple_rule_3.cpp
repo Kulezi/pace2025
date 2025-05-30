@@ -1,8 +1,8 @@
 #include "../rrules.h"
 namespace {
 
-bool haveCommonNonDisregardedNeighbour(const DSHunter::Instance& g, int u, int v_1, int v_2) {
-    for (auto w : g[v_1].n_open) {
+bool haveCommonNonDisregardedNeighbour(const DSHunter::Instance& g, const int u, const int v_1, const int v_2) {
+    for (const auto w : g[v_1].n_open) {
         if (w == u || g.isDisregarded(w))
             continue;
         if (g.hasEdge(w, v_2))
@@ -16,10 +16,10 @@ bool haveCommonNonDisregardedNeighbour(const DSHunter::Instance& g, int u, int v
 namespace DSHunter {
 
 bool alberSimpleRule3(Instance& g) {
-    auto nodes = g.nodes;
+    const auto nodes = g.nodes;
     bool reduced = false;
 
-    for (auto v : nodes) {
+    for (const auto v : nodes) {
         if (g.hasNode(v) && g.isDominated(v) && g.deg(v) == 2) {
             auto [u_1, s_1] = g[v].adj.front();
             auto [u_2, s_2] = g[v].adj[1];
@@ -28,7 +28,7 @@ bool alberSimpleRule3(Instance& g) {
             if (s_1 == EdgeStatus::FORCED && s_2 == EdgeStatus::FORCED)
                 continue;
 
-            bool should_remove = !g.isDominated(u_1) && !g.isDominated(u_2) &&
+            const bool should_remove = !g.isDominated(u_1) && !g.isDominated(u_2) &&
                                  (g.hasEdge(u_1, u_2) || haveCommonNonDisregardedNeighbour(g, v, u_1, u_2));
 
             if (should_remove) {

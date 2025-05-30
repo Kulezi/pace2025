@@ -1,12 +1,10 @@
 #include "../rrules.h"
 namespace {
 
-bool hasRedEdge(DSHunter::Instance& g, int u, int excluded) {
-    for (auto [w, s] : g[u].adj) {
-        if (w != excluded && s == DSHunter::EdgeStatus::FORCED)
-            return true;
-    }
-    return false;
+bool hasRedEdge(DSHunter::Instance& g, const int u, const int excluded) {
+    return std::ranges::any_of(g[u].adj, [&](const DSHunter::Endpoint e) {
+        return e.to != excluded && e.status == DSHunter::EdgeStatus::FORCED;
+    });
 }
 
 }  // namespace
@@ -15,7 +13,7 @@ namespace DSHunter {
 
 bool disregardRule(Instance& g) {
     bool marked = false;
-    for (auto u : g.nodes) {
+    for (const auto u : g.nodes) {
         for (auto [v, s] : g[u].adj) {
             if (g[v].membership_status != MembershipStatus::DISREGARDED &&
                 g[u].membership_status == MembershipStatus::UNDECIDED &&
