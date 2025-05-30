@@ -368,6 +368,7 @@ void Instance::removeDirectedEdge(int u, int v) {
     remove(node.n_open, v);
     remove(node.n_closed, v);
     remove(node.dominators, v);
+    remove(node.dominatees, v);
 }
 
 void Instance::initAddEdge(int u, int v, EdgeStatus status) {
