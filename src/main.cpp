@@ -5,6 +5,8 @@
 #include <iostream>
 #include <memory>
 #include <map>
+#include <vector>
+#include <algorithm>
 
 #include "dshunter/dshunter.h"
 #include "dshunter/solver/treewidth/treewidth_solver.h"
@@ -161,8 +163,7 @@ void solveAndOutput(DSHunter::SolverConfig& config, std::istream& input, std::os
         solver.presolve(g);
         DSHunter::TreewidthSolver ts(&config);
         auto decomposition = ts.decomposer->decompose(g).value();
-        auto treewidth = decomposition.width;
-        output << treewidth << std::endl;
+        output << decomposition.width << '\n';
         return;
     }
 
@@ -172,13 +173,14 @@ void solveAndOutput(DSHunter::SolverConfig& config, std::istream& input, std::os
         auto td = ts.decomposer->decompose(g).value();
 
         int width = td.width;
-        std::vector<int> counts(width + 1);
-        for (int i = 0; i < td.size(); i++)
-            ++counts[td.bag[i].size()];
+        std::vector<int> counts(width + 1, 0);
+        for (const auto& bag : td.bag) {
+            ++counts[bag.size()];
+        }
 
-        std::cout << width << "\n";
-        for (int i = 0; i <= width; i++) {
-            std::cout << i << " " << counts[i] << "\n";
+        output << width << '\n';
+        for (size_t i = 0; i <= width; ++i) {
+            output << i << ' ' << counts[i] << '\n';
         }
         return;
     }
@@ -192,7 +194,7 @@ void solveAndOutput(DSHunter::SolverConfig& config, std::istream& input, std::os
 
     auto ds = solver.solve(g);
 
-    output << ds.size() << "\n";
+    output << ds.size() << '\n';
     if (mode == SOLUTION) {
         for (auto v : ds) {
             output << v << "\n";
