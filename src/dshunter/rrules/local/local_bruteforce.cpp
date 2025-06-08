@@ -179,7 +179,6 @@ bool trimSubset(Instance &g, const vector<int> &V) {
     for (auto v : V)
         if (!g.hasNode(v))
             return false;
-    std::cerr << __func__ << std::endl;
 
     auto [P, E, G] = PEG(g, V);
     const auto A_temp = unite(P, unite(G, V));
@@ -218,7 +217,6 @@ bool trimSubset(Instance &g, const vector<int> &V) {
         }
 
         if (mx_easy <= mi_easy && mx_hard <= mi_hard && mx_hard >= 0 && y > 0 && trim(g, A, x, y)) {
-            std::cerr << dbgv(A) << dbg(x) << dbg(y) << dbgv(N) << dbgv(E) << std::endl;
             return true;
         }
 
