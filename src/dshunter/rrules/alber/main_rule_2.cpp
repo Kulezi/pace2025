@@ -70,7 +70,7 @@ bool applyCase1_3(Instance& g, const int w, const vector<int>& N_prison, const v
     return true;
 }
 
-bool applyCase2(Instance& g, int v, int w, const vector<int>& N_vw_without, const vector<int>& N_prison, const vector<int>& N_guard) {
+auto applyCase2(Instance& g, const int v, const int w, const vector<int>& N_vw_without, const vector<int>& N_prison, const vector<int>& N_guard) -> bool {
     DS_TRACE(std::cerr << "applying " << __func__ << dbg(v) << dbg(w) << dbgv(N_prison)
                        << dbgv(N_guard) << std::endl);
     // w might get removed when taking v, so we need to set statuses before taking v and w.
@@ -205,7 +205,7 @@ bool alberMainRule2(Instance& g) {
     bool reduced = false;
 
     // Allocate the array once for use in breadth-first search.
-    vector<int> dis(g.all_nodes.size(), BFS_INF);
+    vector dis(g.all_nodes.size(), BFS_INF);
 
     // Avoid rewriting the distances by considering zero to be INF - 4 * (# checked nodes),
     // since we only look at distances up to 3.

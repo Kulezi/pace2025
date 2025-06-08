@@ -1,6 +1,7 @@
 #ifndef RRULES_H
 #define RRULES_H
 #include <functional>
+#include <utility>
 
 #include "../instance.h"
 #include "../utils.h"
@@ -15,8 +16,8 @@ struct ReductionRule {
     int complexity_dense, complexity_sparse;
     int application_count, success_count;
     ReductionRule(std::string name, std::function<bool(Instance&)> f, int complexity_dense, int complexity_sparse)
-        : name(name),
-          f(f),
+        : name(std::move(name)),
+          f(std::move(f)),
           complexity_dense(complexity_dense),
           complexity_sparse(complexity_sparse),
           application_count(0),

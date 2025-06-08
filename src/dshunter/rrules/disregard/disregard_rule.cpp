@@ -1,7 +1,7 @@
 #include "../rrules.h"
 namespace {
 
-bool hasRedEdge(DSHunter::Instance& g, const int u, const int excluded) {
+bool hasRedEdge(const DSHunter::Instance& g, const int u, const int excluded) {
     return std::ranges::any_of(g[u].adj, [&](const DSHunter::Endpoint e) {
         return e.to != excluded && e.status == DSHunter::EdgeStatus::FORCED;
     });

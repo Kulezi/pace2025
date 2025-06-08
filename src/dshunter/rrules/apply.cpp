@@ -6,7 +6,7 @@ bool ReductionRule::apply(Instance& g) const {
 
     bool applied = f(g);
 
-    DS_TRACE(if (applied) std::cerr << "succesfully applied " << name << " (n=" << g.nodeCount()
+    DS_TRACE(if (applied) std::cerr << "successfully applied " << name << " (n=" << g.nodeCount()
                                     << ", m=" << g.edgeCount() << ", f=" << g.forcedEdgeCount()
                                     << ")" << std::endl;
              else std::cerr << "failed to apply " << name << std::endl;);
