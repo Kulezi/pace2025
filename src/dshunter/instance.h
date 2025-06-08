@@ -95,6 +95,9 @@ struct Instance {
     // Complexity: O(1)
     int addNode();
 
+    // Contracts the node v into node u (u gets removed from the graph).
+    void contract(int u, int v);
+
     [[nodiscard]] bool hasNode(int v) const;
 
     // Removes the node with the given id from the graph.

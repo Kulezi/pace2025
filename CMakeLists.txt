@@ -86,6 +86,7 @@ set(HEADER_IMPLEMENTATIONS
         src/dshunter/solver/gurobi/gurobi_solver.cpp
 
         src/dshunter/solver/heuristic/greedy.cpp
+        src/dshunter/rrules/local/contract.cpp
 )
 
 # Create a library for shared components

@@ -65,9 +65,9 @@ bool removeDisregardedRule(Instance& g);
 
 bool singleDominatorRule(Instance& g);
 
-bool localRule(Instance &g);
-
 bool localBruteforceRule(Instance &g);
+
+bool contractRule(Instance &g);
 
 extern ReductionRule LocalRule;
 
@@ -87,6 +87,7 @@ extern ReductionRule DominatedNeighbourhoodMarkingRule;
 
 extern ReductionRule SameDominatorsRule;
 extern ReductionRule LocalBruteforceRule;
+extern ReductionRule ContractRule;
 
 const std::vector<ReductionRule> get_default_reduction_rules();
 }  // namespace DSHunter

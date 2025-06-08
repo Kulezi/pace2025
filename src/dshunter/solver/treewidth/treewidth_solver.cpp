@@ -155,6 +155,9 @@ TreewidthSolver::BranchingEstimate TreewidthSolver::estimateBranching(const Exte
     } else {
         for (auto taken : instance[v].dominators) {
             auto new_instance = instance;
+            std::cerr << dbg(v) << dbgv(instance[v].dominators) dbgv(instance[v].dominatees) << std::endl;
+            std::cerr << dbg(taken) << dbgv(instance[taken].dominators) dbgv(instance[taken].dominatees) << std::endl;
+            DS_ASSERT(!new_instance.isDisregarded(taken));
             new_instance.take(taken);
             if (taken != v)
                 new_instance.ignore(v);

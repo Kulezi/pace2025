@@ -20,7 +20,8 @@ const std::vector<ReductionRule> get_default_reduction_rules() {
         AlberMainRule1,
         AlberMainRule2,
 
-        LocalBruteforceRule
+        ContractRule,
+        // LocalBruteforceRule,
     };
     return rules;
 }

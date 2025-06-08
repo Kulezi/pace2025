@@ -41,7 +41,7 @@ struct SolverConfig {
         : reduction_rules(std::move(rrules)),
           solver_type(st),
           presolver_type(pt),
-          decomposition_time_budget(300s),
+          decomposition_time_budget(10s),
           random_seed(0),
           good_enough_treewidth(14),
           max_treewidth(18),
