@@ -12,8 +12,8 @@ std::vector<int> BruteforceSolver::solve(Instance g) {
     std::vector<int> best_ds;
 
     for (int mask = 0; mask < (1 << n); mask++) {
-        std::vector<bool> dominated(g.all_nodes.size(), false);
-        std::vector<bool> taken(g.all_nodes.size(), false);
+        std::vector dominated(g.all_nodes.size(), false);
+        std::vector taken(g.all_nodes.size(), false);
 
         for (size_t i = 0; i < g.all_nodes.size(); i++) {
             dominated[i] = g[i].domination_status == DominationStatus::DOMINATED;

@@ -5,7 +5,7 @@
 namespace DSHunter {
 
 struct VCSolver {
-    std::vector<int> solve(Instance &g);
+    static std::vector<int> solve(Instance &g);
 };
 }  // namespace DSHunter
 #endif

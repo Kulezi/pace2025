@@ -83,7 +83,7 @@ std::vector<int> Solver::solveConnected(Instance &g) {
 
         case SolverType::Bruteforce: {
             cfg.logLine("running bruteforce solver");
-            return BruteforceSolver().solve(g);
+            return BruteforceSolver::solve(g);
         }
 
         case SolverType::Branching: {
@@ -100,8 +100,7 @@ std::vector<int> Solver::solveConnected(Instance &g) {
                     "inapplicable");
             }
 
-            VCSolver vs;
-            return vs.solve(g);
+            return VCSolver::solve(g);
         }
 
         case SolverType::Gurobi: {

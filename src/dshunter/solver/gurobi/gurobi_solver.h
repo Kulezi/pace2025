@@ -1,6 +1,5 @@
 #ifndef DS_GUROBI_SOLVER_H
 #define DS_GUROBI_SOLVER_H
-#include <memory>
 #include <optional>
 
 #include "../../instance.h"
@@ -9,7 +8,7 @@
 namespace DSHunter {
 
 struct GurobiSolver {
-    GurobiSolver(const Instance &g);
+    explicit GurobiSolver(const Instance &g);
 
     std::optional<std::vector<int>> solve();
     int lowerBound();

@@ -31,7 +31,7 @@ constexpr int UNSET = -1, INF = 1'000'000'000;
 
 namespace DSHunter {
 
-ExtendedInstance::ExtendedInstance(const Instance &instance, DSHunter::TreeDecomposition td) : Instance(instance), td(std::move(td)) {}
+ExtendedInstance::ExtendedInstance(const Instance &instance, TreeDecomposition td) : Instance(instance), td(std::move(td)) {}
 
 void ExtendedInstance::removeNode(int v) {
     Instance::removeNode(v);
@@ -81,7 +81,7 @@ std::optional<std::vector<int>> TreewidthSolver::solveDecomp(const Instance &ins
         return std::nullopt;
     }
 
-    c = std::vector<std::vector<int>>(td.n_nodes(), std::vector<int>());
+    c = std::vector(td.n_nodes(), std::vector<int>());
 
     getC(td.root, 0);
     recoverDS(td.root, 0);
@@ -103,7 +103,7 @@ std::pair<int, int> TreewidthSolver::getWidthAndSplitter(const ExtendedInstance 
         }
     }
 
-    std::vector<int> counts(instance.all_nodes.size(), 0);
+    std::vector counts(instance.all_nodes.size(), 0);
     for (auto bag : important_bags) {
         for (auto v : td.bag[bag]) counts[v]++;
     }
@@ -246,9 +246,7 @@ int TreewidthSolver::getC(int t, TernaryFun f) {
             // This vertex could already be dominated by some reduction rule.
             if (f_v == Color::WHITE && !g.isDominated(node.v))
                 return c[t][f] = INF;
-            else {
-                return c[t][f] = getC(node.l_child, cut(f, pos));
-            }
+            return c[t][f] = getC(node.l_child, cut(f, pos));
         }
         case NiceTreeDecomposition::NodeType::IntroduceEdge: {
             int pos_u = node.pos_to;
@@ -265,20 +263,17 @@ int TreewidthSolver::getC(int t, TernaryFun f) {
                 // dominating set.
                 if (f_u == Color::BLACK && f_v == Color::WHITE)
                     return c[t][f] = getC(node.l_child, setUnset(f, pos_v, Color::GRAY));
-                else if (f_u == Color::WHITE && f_v == Color::BLACK)
+                if (f_u == Color::WHITE && f_v == Color::BLACK)
                     return c[t][f] = getC(node.l_child, setUnset(f, pos_u, Color::GRAY));
-                else if (f_u == Color::BLACK || f_v == Color::BLACK)
+                if (f_u == Color::BLACK || f_v == Color::BLACK)
                     return c[t][f] = getC(node.l_child, f);
-                else
-                    return c[t][f] = INF;
-            } else {
-                if (f_u == Color::BLACK && f_v == Color::WHITE)
-                    return c[t][f] = getC(node.l_child, setUnset(f, pos_v, Color::GRAY));
-                else if (f_u == Color::WHITE && f_v == Color::BLACK)
-                    return c[t][f] = getC(node.l_child, setUnset(f, pos_u, Color::GRAY));
-                else
-                    return c[t][f] = getC(node.l_child, f);
+                return c[t][f] = INF;
             }
+            if (f_u == Color::BLACK && f_v == Color::WHITE)
+                return c[t][f] = getC(node.l_child, setUnset(f, pos_v, Color::GRAY));
+            if (f_u == Color::WHITE && f_v == Color::BLACK)
+                return c[t][f] = getC(node.l_child, setUnset(f, pos_u, Color::GRAY));
+            return c[t][f] = getC(node.l_child, f);
         }
         case NiceTreeDecomposition::NodeType::Forget: {
             int pos_v = node.pos_v;

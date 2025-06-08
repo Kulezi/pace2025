@@ -14,18 +14,18 @@ std::vector<int> greedyDominatingSet(const Instance &g) {
             if (!g.isDominated(v))
                 ud[u]++;
         for (auto [_, s] : g[u].adj)
-            if (s == DSHunter::EdgeStatus::FORCED)
+            if (s == EdgeStatus::FORCED)
                 ufd[u]++;
 
         if (ufd[u] > 0 || ud[u] > 0)
             pq.emplace(ufd[u], ud[u], u);
     }
 
-    std::vector<bool> dominated(g.all_nodes.size(), false);
-    std::vector<bool> taken(g.all_nodes.size(), false);
+    std::vector dominated(g.all_nodes.size(), false);
+    std::vector taken(g.all_nodes.size(), false);
     for (size_t i = 0; i < g.all_nodes.size(); i++) {
-        dominated[i] = g[i].domination_status == DSHunter::DominationStatus::DOMINATED;
-        taken[i] = g[i].membership_status == DSHunter::MembershipStatus::TAKEN;
+        dominated[i] = g[i].domination_status == DominationStatus::DOMINATED;
+        taken[i] = g[i].membership_status == MembershipStatus::TAKEN;
     }
 
     auto dominate = [&](int u) {

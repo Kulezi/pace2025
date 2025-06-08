@@ -9,7 +9,7 @@ struct BruteforceSolver {
     std::vector<ReductionRule> reduction_rules;
 
     // The minimum found dominating set is stored inside the instance.
-    std::vector<int> solve(Instance g);
+    static std::vector<int> solve(Instance g);
 };
 }  // namespace DSHunter
 #endif  // DS_BRUTEFORCE_SOLVER_H

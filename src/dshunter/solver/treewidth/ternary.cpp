@@ -6,10 +6,10 @@ namespace DSHunter {
 TernaryFun cut(TernaryFun f, int x) {
     DS_ASSERT(x <= MAX_EXPONENT);
     // Value of the first x-1 trits.
-    TernaryFun pref = f % pow3[x];
+    const TernaryFun pref = f % pow3[x];
 
     // Value of trits x+1, x+2, ...
-    TernaryFun suf = (f / pow3[x + 1]) * pow3[x];
+    const TernaryFun suf = (f / pow3[x + 1]) * pow3[x];
 
     return pref + suf;
 }
@@ -17,9 +17,9 @@ TernaryFun cut(TernaryFun f, int x) {
 TernaryFun insert(TernaryFun f, int x, Color c) {
     DS_ASSERT(x <= MAX_EXPONENT);
     // Value of the first x-1 trits.
-    TernaryFun pref = f % pow3[x];
+    const TernaryFun pref = f % pow3[x];
     // Every trit outside prefix gets shifted right.
-    TernaryFun suf = (f - pref) * 3;
+    const TernaryFun suf = (f - pref) * 3;
 
     // Lastly, we add the value of inserted trit.
     return pref + suf + static_cast<int>(c) * pow3[x];
@@ -40,7 +40,7 @@ Color at(TernaryFun f, int x) {
     return static_cast<Color>(f / pow3[x] % 3);
 }
 
-char val(Color c) {
+char val(const Color c) {
     if (c == Color::WHITE)
         return '0';
     if (c == Color::GRAY)
