@@ -34,7 +34,7 @@ struct Endpoint {
 
 struct Node {
     Node();
-    explicit Node(int v, bool is_extra = true);
+    explicit Node(int v);
 
     // List of adjacent nodes sorted by increasing node id.
     // Order is maintained to make set union/intersection possible in O(|A| + |B|).

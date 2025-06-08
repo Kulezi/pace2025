@@ -14,7 +14,7 @@ using std::vector;
 
 Node::Node() : domination_status(DominationStatus::DOMINATED), membership_status(MembershipStatus::DISREGARDED) {}
 
-Node::Node(int v, const bool is_extra) : n_closed({ v }), dominators({ v }), dominatees({ v }), domination_status(DominationStatus::UNDOMINATED), membership_status(MembershipStatus::UNDECIDED) {}
+Node::Node(int v) : n_closed({ v }), dominators({ v }), dominatees({ v }), domination_status(DominationStatus::UNDOMINATED), membership_status(MembershipStatus::UNDECIDED) {}
 
 Instance::Instance() = default;
 
@@ -44,7 +44,7 @@ Instance::Instance(istream &in) {
             } else {
                 for (int i = 1; i <= n_nodes; ++i) {
                     nodes.push_back(i);
-                    all_nodes.emplace_back(i, false);
+                    all_nodes.emplace_back(i);
                 }
                 parseDS(in, n_nodes, header_edges);
             }
@@ -76,8 +76,9 @@ void Instance::parseADS(istream &in, int n_nodes, int header_edges, int d) {
             int v, s_d, s_m;
             tokens >> v >> s_d >> s_m;
 
+            // Insert dummy nodes so index lookup works properly.
             while (static_cast<int>(all_nodes.size()) <= v) {
-                all_nodes.emplace_back(all_nodes.size(), false);
+                all_nodes.emplace_back(all_nodes.size());
             }
 
             nodes.push_back(v);
