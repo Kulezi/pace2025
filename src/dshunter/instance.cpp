@@ -1,9 +1,9 @@
 #include "instance.h"
 
 #include <queue>
+#include <ranges>
 #include <set>
 #include <sstream>
-#include <ranges>
 
 #include "utils.h"
 
@@ -355,9 +355,9 @@ void Instance::addDirectedEdge(const int u, const int v) {
     insert(node.adj, Endpoint{ v, EdgeStatus::UNCONSTRAINED });
     insert(node.n_open, v);
     insert(node.n_closed, v);
-    if (!isDominated(u))
+    if (!isDominated(u) && !isDisregarded(v))
         insert(node.dominators, v);
-    if (!isDisregarded(u))
+    if (!isDisregarded(u) && !isDominated(v))
         insert(node.dominatees, v);
 }
 
@@ -380,9 +380,9 @@ void Instance::initAddDirectedEdge(const int u, int const v, const EdgeStatus st
     node.adj.emplace_back(v, status);
     node.n_open.push_back(v);
     node.n_closed.push_back(v);
-    if (!isDominated(u))
+    if (!isDominated(u) && !isDisregarded(v))
         node.dominators.push_back(v);
-    if (!isDisregarded(u))
+    if (!isDisregarded(u) && !isDominated(v))
         node.dominatees.push_back(v);
 }
 
