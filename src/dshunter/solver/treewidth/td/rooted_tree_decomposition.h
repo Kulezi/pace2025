@@ -2,6 +2,8 @@
 #define DS_ROOTED_TREE_DECOMPOSITION_H
 
 #include "tree_decomposition.h"
+
+#include <utility>
 namespace DSHunter {
 
 struct RootedTreeDecomposition {
@@ -18,9 +20,9 @@ struct RootedTreeDecomposition {
         std::vector<int> bag;
         std::vector<int> children;
 
-        DecompositionNode() : id(UNASSIGNED), parent_id(UNASSIGNED), bag(), children() {}
-        DecompositionNode(int id, int parent_id, std::vector<int> bag, std::vector<int> children)
-            : id(id), parent_id(parent_id), bag(bag), children(children) {}
+        DecompositionNode() : id(UNASSIGNED), parent_id(UNASSIGNED) {}
+        DecompositionNode(int id, int parent_id, std::vector<int> bag, const std::vector<int> &children)
+            : id(id), parent_id(parent_id), bag(std::move(bag)), children(children) {}
     };
 
     int root;
@@ -29,7 +31,7 @@ struct RootedTreeDecomposition {
     DecompositionNode &operator[](int v);
     const DecompositionNode &operator[](int v) const;
 
-    RootedTreeDecomposition(const DSHunter::TreeDecomposition &td);
+    explicit RootedTreeDecomposition(const TreeDecomposition &td);
 
     RootedTreeDecomposition() = default;
 
@@ -45,12 +47,12 @@ struct RootedTreeDecomposition {
     // Inserts an empty bag above the root and below all the leaves.
     void forceEmptyRootAndLeaves();
 
-    int size();
-    void print();
+    int size() const;
+    void print() const;
 
    private:
     void makeNodes(int u, const TreeDecomposition &td, int parent);
-    int makeDecompositionNode(int parent_id, std::vector<int> bag, std::vector<int> children);
+    int makeDecompositionNode(int parent_id, const std::vector<int>& bag, const std::vector<int>& children);
     void equalizeJoinChildren_(int node_id);
     void binarizeJoins_(int node_id);
     void insertEmptyBagsUnderLeaves(int node_id);

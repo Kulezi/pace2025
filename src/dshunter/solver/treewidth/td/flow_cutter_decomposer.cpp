@@ -7,14 +7,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
-#include <unistd.h>
 
 #include <chrono>
-#include <iostream>
 #include <limits>
 #include <map>
 #include <queue>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -28,12 +25,9 @@
 #include "ext/flow-cutter-pace17/src/id_multi_func.h"
 #include "ext/flow-cutter-pace17/src/list_graph.h"
 #include "ext/flow-cutter-pace17/src/min_max.h"
-#include "ext/flow-cutter-pace17/src/multi_arc.h"
-#include "ext/flow-cutter-pace17/src/node_flow_cutter.h"
 #include "ext/flow-cutter-pace17/src/preorder.h"
 #include "ext/flow-cutter-pace17/src/separator.h"
 #include "ext/flow-cutter-pace17/src/sort_arc.h"
-#include "ext/flow-cutter-pace17/src/tree_decomposition.h"
 #include "ext/flow-cutter-pace17/src/union_find.h"
 
 using namespace std;
@@ -44,7 +38,7 @@ struct TransferGraph {
     vector<int> reverse_mapping;
     ListGraph g;
 
-    TransferGraph(DSHunter::Instance inputGraph) : mapping(), reverse_mapping() {
+    explicit TransferGraph(const DSHunter::Instance& inputGraph) {
         int nodeCount = inputGraph.nodeCount();
         int arcCount = inputGraph.edgeCount();
         g = ListGraph(nodeCount, 2 * arcCount);

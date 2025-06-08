@@ -11,13 +11,13 @@ const RootedTreeDecomposition::DecompositionNode &RootedTreeDecomposition::opera
     return decomp[v];
 }
 
-RootedTreeDecomposition::RootedTreeDecomposition(const DSHunter::TreeDecomposition &td)
+RootedTreeDecomposition::RootedTreeDecomposition(const TreeDecomposition &td)
     : root(0), width(td.width), decomp(td.size()) {
     if (td.size() > 0) {
         makeNodes(root, td, NONE);
-        DS_ASSERT([&]() {
+        DS_ASSERT([&] {
             // Check if depth first search filled all nodes.
-            for (auto &node : decomp) {
+            for (const auto &node : decomp) {
                 if (node.id == UNASSIGNED)
                     return false;
                 if (node.parent_id == UNASSIGNED)
@@ -33,7 +33,7 @@ RootedTreeDecomposition::RootedTreeDecomposition(const DSHunter::TreeDecompositi
 
 void RootedTreeDecomposition::sortBags() {
     for (auto &node : decomp) {
-        sort(node.bag.begin(), node.bag.end());
+        std::ranges::sort(node.bag);
     }
 }
 
@@ -55,9 +55,9 @@ void RootedTreeDecomposition::forceEmptyRootAndLeaves() {
     root = new_root;
 }
 
-int RootedTreeDecomposition::size() { return decomp.size(); }
+int RootedTreeDecomposition::size() const { return decomp.size(); }
 
-void RootedTreeDecomposition::print() {
+void RootedTreeDecomposition::print() const {
     std::cerr << "decomposition of width " << width << " and size " << size() << std::endl;
     for (size_t i = 0; i < decomp.size(); i++) {
         std::cerr << i << ", bag = " << dbgv(decomp[i].bag)
@@ -82,9 +82,9 @@ void RootedTreeDecomposition::makeNodes(int u, const TreeDecomposition &td, int 
 }
 
 // Returns the index of the newly created node in decomp.
-int RootedTreeDecomposition::makeDecompositionNode(int parent_id, std::vector<int> bag, std::vector<int> children) {
+int RootedTreeDecomposition::makeDecompositionNode(int parent_id, const std::vector<int>& bag, const std::vector<int>& children) {
     int id = decomp.size();
-    decomp.push_back(DecompositionNode{ id, parent_id, bag, children });
+    decomp.emplace_back( id, parent_id, bag, children );
     return id;
 }
 
@@ -92,7 +92,7 @@ void RootedTreeDecomposition::equalizeJoinChildren_(int node_id) {
     for (auto &child : decomp[node_id].children) {
         equalizeJoinChildren_(child);
 
-        // Insert a node with bag equal to to the join node between itself and the child.
+        // Insert a node with bag equal to the join node between itself and the child.
         auto intermediate_node = makeDecompositionNode(node_id, decomp[node_id].bag, { child });
         decomp[child].parent_id = intermediate_node;
         child = intermediate_node;

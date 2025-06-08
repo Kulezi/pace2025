@@ -22,7 +22,7 @@ NiceTreeDecomposition NiceTreeDecomposition::nicify(Instance g, TreeDecompositio
 
 NiceTreeDecomposition::NiceTreeDecomposition(Instance g,
                                              const RootedTreeDecomposition& rooted_decomposition)
-    : g(g), decomp() {
+    : g(g) {
     root = makeDecompositionNodeFromRootedDecomposition(rooted_decomposition,
                                                         rooted_decomposition.root)
                .first;
@@ -50,18 +50,18 @@ void NiceTreeDecomposition::print() {
 int NiceTreeDecomposition::createNode(NodeType type, std::vector<int> bag, int v, int to, int lChild, int rChild) {
     int pos_v = -1;
     if (v != -1) {
-        pos_v = std::lower_bound(bag.begin(), bag.end(), v) - bag.begin();
+        pos_v = std::ranges::lower_bound(bag, v) - bag.begin();
     }
 
     int pos_to = -1;
     if (v != -1) {
-        pos_to = std::lower_bound(bag.begin(), bag.end(), to) - bag.begin();
+        pos_to = std::ranges::lower_bound(bag, to) - bag.begin();
     }
 
     decomp.push_back(Node{
-        .id = (int)decomp.size(),
+        .id = static_cast<int>(decomp.size()),
         .type = type,
-        .bag_size = (int)bag.size(),
+        .bag_size = static_cast<int>(bag.size()),
         .v = v,
         .to = to,
         .l_child = lChild,
@@ -126,7 +126,7 @@ std::pair<int, std::vector<int>> NiceTreeDecomposition::makeDecompositionNodeFro
     int children_count = rtd_node.children.size();
 
     if (children_count == 0) {
-        return { createNode(NiceTreeDecomposition::NodeType::Leaf), {} };
+        return { createNode(NodeType::Leaf), {} };
     }
 
     else if (children_count == 2) {
@@ -135,7 +135,7 @@ std::pair<int, std::vector<int>> NiceTreeDecomposition::makeDecompositionNodeFro
 
         auto [l, l_bag] = makeDecompositionNodeFromRootedDecomposition(rtd, rtd[rtd_node_id].children[0]);
         auto [r, r_bag] = makeDecompositionNodeFromRootedDecomposition(rtd, rtd[rtd_node_id].children[1]);
-        return { createNode(NiceTreeDecomposition::NodeType::Join, rtd_node.bag, NONE, NONE, l, r), l_bag };
+        return { createNode(NodeType::Join, rtd_node.bag, NONE, NONE, l, r), l_bag };
     } else {
         DS_ASSERT(children_count == 1);
 
@@ -147,7 +147,7 @@ std::pair<int, std::vector<int>> NiceTreeDecomposition::makeDecompositionNodeFro
     }
 }
 
-int NiceTreeDecomposition::makeIntroduceForgetSequenceFrom(std::vector<int> head_bag,
+int NiceTreeDecomposition::makeIntroduceForgetSequenceFrom(const std::vector<int>& head_bag,
                                                            std::vector<int> tail_bag,
                                                            int tail_id) {
     auto intersection = intersect(head_bag, tail_bag);
@@ -160,7 +160,7 @@ int NiceTreeDecomposition::makeIntroduceForgetSequenceFrom(std::vector<int> head
         to_forget.pop_back();
         remove(tail_bag, forgotten);
         tail_id =
-            createNode(NiceTreeDecomposition::NodeType::Forget, tail_bag, forgotten, NONE, tail_id);
+            createNode(NodeType::Forget, tail_bag, forgotten, NONE, tail_id);
     }
 
     DS_ASSERT(tail_bag == intersection);
@@ -173,11 +173,11 @@ int NiceTreeDecomposition::makeIntroduceForgetSequenceFrom(std::vector<int> head
         auto neighbours_in_bag = intersect(g[introduced].n_open, tail_bag);
 
         insert(tail_bag, introduced);
-        tail_id = createNode(NiceTreeDecomposition::NodeType::IntroduceVertex, tail_bag, introduced, NONE, tail_id);
+        tail_id = createNode(NodeType::IntroduceVertex, tail_bag, introduced, NONE, tail_id);
 
         // Then introduce each edge within the bag.
         for (auto to : neighbours_in_bag) {
-            tail_id = createNode(NiceTreeDecomposition::NodeType::IntroduceEdge, tail_bag, introduced, to, tail_id);
+            tail_id = createNode(NodeType::IntroduceEdge, tail_bag, introduced, to, tail_id);
         }
     }
 

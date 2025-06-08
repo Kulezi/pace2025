@@ -7,9 +7,10 @@
 
 namespace DSHunter {
 struct Decomposer {
+    virtual ~Decomposer() = default;
     const SolverConfig* cfg;
 
-    Decomposer(const SolverConfig* cfg);
+    explicit Decomposer(const SolverConfig* cfg);
 
     // Finds a tree decomposition with approximately low treewidth.
     // Returns the first decomposition that will have treewidth under treewidth_threshold.

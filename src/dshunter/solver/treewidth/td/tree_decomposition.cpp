@@ -30,7 +30,7 @@ int TreeDecomposition::biggestBag() const {
 }
 void TreeDecomposition::removeNode(int v) {
     for (int i = 0; i < size(); i++) {
-        auto pos = std::find(bag[i].begin(), bag[i].end(), v);
+        auto pos = std::ranges::find(bag[i], v);
         if (pos != bag[i].end())
             bag[i].erase(pos);
     }

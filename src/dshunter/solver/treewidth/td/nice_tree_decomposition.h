@@ -64,7 +64,7 @@ struct NiceTreeDecomposition {
     std::pair<int, std::vector<int>> makeDecompositionNodeFromRootedDecomposition(const RootedTreeDecomposition& rtd,
                                                                              int rtd_node_id);
 
-    int makeIntroduceForgetSequenceFrom(std::vector<int> head_bag, std::vector<int> tail_bag, int tail_id);
+    int makeIntroduceForgetSequenceFrom(const std::vector<int>& head_bag, std::vector<int> tail_bag, int tail_id);
 };
 
 }  // namespace DSHunter

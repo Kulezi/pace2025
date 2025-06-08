@@ -15,10 +15,10 @@ struct TreeDecomposition {
     std::vector<std::vector<int>> bag;
     std::vector<std::vector<int>> adj;
 
-    int size() const;
+    [[nodiscard]] int size() const;
     void print() const;
 
-    int biggestBag() const;
+    [[nodiscard]] int biggestBag() const;
     void removeNode(int v);
 
     void addEdge(int a, int b);
