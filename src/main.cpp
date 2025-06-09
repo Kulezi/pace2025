@@ -4,9 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <map>
 #include <vector>
-#include <algorithm>
 
 #include "dshunter/dshunter.h"
 #include "dshunter/solver/treewidth/treewidth_solver.h"

@@ -14,7 +14,6 @@ enum class SolverType {
     Bruteforce,
     ReduceToVertexCover,
     Default,
-    Gurobi
 };
 
 enum class PresolverType {
