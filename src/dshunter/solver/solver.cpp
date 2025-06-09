@@ -4,7 +4,6 @@
 #include "../rrules/rrules.h"
 #include "branching/branching_solver.h"
 #include "bruteforce/bruteforce_solver.h"
-#include "gurobi/gurobi_solver.h"
 #include "treewidth/treewidth_solver.h"
 #include "vc/vc_solver.h"
 #include "verifier.h"
@@ -101,16 +100,6 @@ std::vector<int> Solver::solveConnected(Instance &g) {
             }
 
             return VCSolver::solve(g);
-        }
-
-        case SolverType::Gurobi: {
-            cfg.logLine("running gurobi solver");
-
-            auto sol = GurobiSolver(g).solve();
-            if (!sol.has_value()) {
-                throw std::logic_error("gurobi didn't find a solution in time");
-            }
-            return sol.value();
         }
 
         default:

@@ -15,20 +15,7 @@ add_subdirectory(${PACE_2019_DIR} EXCLUDE_FROM_ALL)
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/src/ext/flow-cutter-pace17)
-include_directories(${CMAKE_SOURCE_DIR}/src/ext/gurobi1201/linux64/include)
 include_directories(${CMAKE_SOURCE_DIR}/src/ext/pace-2019/lib)
-
-# Set Gurobi library paths
-set(GUROBI_DIR "${CMAKE_SOURCE_DIR}/src/ext/gurobi1201/linux64")
-set(GUROBI_CXX_LIB "${GUROBI_DIR}/lib/libgurobi_c++.a")
-set(GUROBI_SHARED_LIB "${GUROBI_DIR}/lib/libgurobi120.so")
-
-# Create imported targets for Gurobi
-add_library(gurobi_c++ STATIC IMPORTED)
-set_target_properties(gurobi_c++ PROPERTIES IMPORTED_LOCATION ${GUROBI_CXX_LIB})
-
-add_library(gurobi_shared SHARED IMPORTED)
-set_target_properties(gurobi_shared PROPERTIES IMPORTED_LOCATION ${GUROBI_SHARED_LIB})
 
 # Set the executable suffix to .out
 set(CMAKE_EXECUTABLE_SUFFIX ".out")
@@ -83,8 +70,6 @@ set(HEADER_IMPLEMENTATIONS
 
         src/dshunter/solver/vc/vc_solver.cpp
 
-        src/dshunter/solver/gurobi/gurobi_solver.cpp
-
         src/dshunter/solver/heuristic/greedy.cpp
 )
 
@@ -104,8 +89,6 @@ target_compile_definitions(core PRIVATE
 target_link_libraries(core PUBLIC
         flow_cutter
         pace2019-vc
-        gurobi_c++
-        gurobi_shared
 )
 
 # List of source files for each executable

@@ -5,7 +5,6 @@ This is an exact solver for the [Dominating Set](https://pacechallenge.org/2025/
 Dependencies:
 - g++ version supporting C++23
 - CMake 3.10
-- Gurobi
 - FlowCutter (PACE 2017)
 - WeGotYouCovered (PACE 2019)
 

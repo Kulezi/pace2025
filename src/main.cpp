@@ -16,7 +16,7 @@ void printHelp() {
         << "Usage:\n"
         << "  dshunter [--input_file <graph.gr/graph.ads>]\n"
         << "           [--output_file <file.ds>]\n"
-        << "           [--solver <bruteforce/branching/treewidth_dp/mip/vc/gurobi>]\n"
+        << "           [--solver <bruteforce/branching/treewidth_dp/vc>]\n"
         << "           [--decomposer] <decomposer executable>\n"
         << "           [--mode] <presolve/ds_size/treewidth>\n"
         << "           [--presolve <full/cheap/none>]\n"
@@ -26,8 +26,7 @@ void printHelp() {
         << "Options:\n"
         << "  --input_file    Read instance from specified file (default: stdin)\n"
         << "  --output_file   Write solution to specified file (default: stdout)\n"
-        << "  --solver        Choose solving method: bruteforce, branching, treewidth_dp, "
-           "mip, vc, gurobi\n"
+        << "  --solver        Choose solving method: bruteforce, branching, treewidth_dp, vc\n"
         << "  --decomposer    Use external executable to get tree decompositions\n"
         << "  --mode          Picks one of the non-default output modes for the solver\n"
         << "  --presolve      Choose presolver: full, cheap, none\n"
@@ -90,8 +89,6 @@ void parseArguments(int argc, char* argv[], std::string& input_file, std::string
                     config.solver_type = DSHunter::SolverType::TreewidthDP;
                 else if (std::string(optarg) == "vc")
                     config.solver_type = DSHunter::SolverType::ReduceToVertexCover;
-                else if (std::string(optarg) == "gurobi")
-                    config.solver_type = DSHunter::SolverType::Gurobi;
                 else
                     throw std::logic_error(std::string(optarg) + " is not a valid --solver value");
                 break;
