@@ -1,6 +1,5 @@
 #include "treewidth_solver.h"
 
-#include <format>
 #include <memory>
 #include <utility>
 
@@ -44,40 +43,40 @@ TreewidthSolver::TreewidthSolver(SolverConfig *cfg) : cfg(cfg), decomposer(getDe
 std::optional<std::vector<int>> TreewidthSolver::solve(const Instance &instance) {
     auto td = decomposer->decompose(instance);
     if (!td.has_value()) {
-        cfg->logLine("decomposition failed");
+        // cfg->logLine("decomposition failed");
         return std::nullopt;
     }
 
-    cfg->logLine("best found decomposition width: " + std::to_string(td->width));
+    // cfg->logLine("best found decomposition width: " + std::to_string(td->width));
     if (td->width > cfg->good_enough_treewidth) {
-        cfg->logLine(std::format("decomposition width > {}, considering reducing it with bag-branching of depth at most {}", cfg->good_enough_treewidth, cfg->max_bag_branch_depth));
+        // cfg->logLine(std::format("decomposition width > {}, considering reducing it with bag-branching of depth at most {}", cfg->good_enough_treewidth, cfg->max_bag_branch_depth));
         auto e = ExtendedInstance(instance, *td);
         auto [depth_needed, leaves] = estimateBranching(e);
         if (depth_needed <= cfg->max_bag_branch_depth) {
-            cfg->logLine(std::format("bag-branching of depth at most {} is enough, proceeding with bag-branching", cfg->max_bag_branch_depth));
+            // cfg->logLine(std::format("bag-branching of depth at most {} is enough, proceeding with bag-branching", cfg->max_bag_branch_depth));
             solved_leaves = 0;
             total_leaves = leaves;
             if (solveBranching(e))
                 return e.ds;
             return std::nullopt;
         }
-        cfg->logLine(std::format("bag-branching of depth at most {} is not enough, aborting bag-branching", cfg->max_bag_branch_depth));
+        // cfg->logLine(std::format("bag-branching of depth at most {} is not enough, aborting bag-branching", cfg->max_bag_branch_depth));
     }
 
     if (td->width <= cfg->max_treewidth) {
-        cfg->logLine(std::format("tw = {} <= {}, attempting direct treewidth dp solution", td->width, cfg->max_treewidth));
+        // cfg->logLine(std::format("tw = {} <= {}, attempting direct treewidth dp solution", td->width, cfg->max_treewidth));
         return solveDecomp(instance, *td);
     }
-    cfg->logLine(std::format("tw = {} > {}, aborting treewidth dp solution", td->width, cfg->max_treewidth));
+    // cfg->logLine(std::format("tw = {} > {}, aborting treewidth dp solution", td->width, cfg->max_treewidth));
     return std::nullopt;
 }
 
 std::optional<std::vector<int>> TreewidthSolver::solveDecomp(const Instance &instance, const TreeDecomposition &raw_td) {
     g = instance;
     td = NiceTreeDecomposition::nicify(g, raw_td);
-    cfg->logLine(std::format("solving td({})", td.width()));
+    // cfg->logLine(std::format("solving td({})", td.width()));
     if (getMemoryUsage(td) > cfg->max_memory_in_bytes) {
-        cfg->logLine(std::format("needed {} MB, aborting ", getMemoryUsage(td) / 1024 / 1024));
+        // cfg->logLine(std::format("needed {} MB, aborting ", getMemoryUsage(td) / 1024 / 1024));
         return std::nullopt;
     }
 
@@ -85,7 +84,7 @@ std::optional<std::vector<int>> TreewidthSolver::solveDecomp(const Instance &ins
 
     getC(td.root, 0);
     recoverDS(td.root, 0);
-    cfg->logLine(std::format("found solution of size {}", g.ds.size()));
+    // cfg->logLine(std::format("found solution of size {}", g.ds.size()));
     return g.ds;
 }
 
@@ -170,7 +169,7 @@ bool TreewidthSolver::solveBranching(ExtendedInstance &instance) {
     auto [tw, v] = getWidthAndSplitter(instance);
 
     if (tw <= cfg->good_enough_treewidth) {
-        cfg->logLine(std::format("branch {}/{}", solved_leaves, total_leaves));
+        // cfg->logLine(std::format("branch {}/{}", solved_leaves, total_leaves));
         solved_leaves++;
         auto ds = solveDecomp(instance, instance.td);
         if (ds.has_value()) {
