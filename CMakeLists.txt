@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(DSHunter)
 
 # Set C++ standard and common flags
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "-Wall -g -O3 -fPIC -Wno-sign-compare")
 
 # Find required packages

@@ -16,6 +16,7 @@ jobs:
     - name: install dependencies
       run: |
         ./scripts/install_dependencies.sh
+        pip3 install tqdm
     - name: build
       run: |
         cmake -DCMAKE_BUILD_TYPE=Testing -B build
