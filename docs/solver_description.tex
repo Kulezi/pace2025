@@ -78,11 +78,11 @@ Kernelized instance is then solved by either a Vertex Cover solver, dynamic prog
 \section{Overview}
 \label{sec:overview}
 
-DSHunter is an exact solver for finding a minimum dominating set of a graph.  DSHunter was developed for the 9th Parameterized Algorithms and Computational Experiments challenge (PACE 2025).
+DSHunter is an exact solver for finding a minimum dominating set of a graph. DSHunter was developed for the 9th Parameterized Algorithms and Computational Experiments challenge (PACE 2025).
 The core idea behind the solver is first preprocessing the given instance into a generalized Annotated Dominating Set (ADS) problem instance.
-In some cases the kernel yields an instance that is equivalent to Vertex Cover, and in those cases the solver calls an external Vertex Cover Solver \textcolor{red}{[REFERENCE]}.
+In some cases the kernel yields an instance that is equivalent to Vertex Cover, and in those cases the solver calls an external \textcolor{red}{Vertex Cover solver WeGotYouCovered\cite{DBLP:conf/siamcsc/HespeL0S20} from PACE 2019}.
 In other cases where the kernel admits small treewidth the solver finds the minimum dominating set directly by dynamic programming on a tree decomposition.
-The tree decomposition is found using a heuristic tree decomposition generator  FlowCutter \textcolor{red}{[REFERENCE]} from PACE 2017.
+The tree decomposition is found using a heuristic tree decomposition generator  FlowCutter\cite{DBLP:conf/alenex/HamannS16} from PACE 2017.
 In all other cases the solver resorts to a Branch\&Reduce algorithm.
 
 
@@ -121,6 +121,7 @@ Note that a Dominating Set problem instance $G$ can be expressed as an Annotated
 
 \section{Presolving}
 The solver starts by applying several reduction rules in a loop in the following order until all fail to apply. If a reduction rule succeeds, the loop starts from the beginning.
+Rules \ref{rule:singledominator} and \ref{rule:samedominators} are based on work by Xiong and Xiao\cite{DBLP:conf/ijcai/Xiong024}.
 \subsection{Removal of vertices seeing both ends of a forced edge}
 If there exists a vertex $v$ such that there exists a forced edge $(v, w) \in N(v)$, set $d(v) = \texttt{true}$ as it is guaranteed to be dominated by either $v$ or $w$, since one of them must belong to the optimal solution set.
 This rule is an exception since it is not a part of the loop, but is applied the moment an edge is being forced, e.g. $f(e)$ changes from \texttt{false} to \texttt{true}.
@@ -133,25 +134,28 @@ If there exists an undominated vertex $u$ of degree 2 with neighbors $v$ and $w$
     \item if $(v, w) \notin E(G)$ and both $v$ and $w$ are dominated, remove $u$ from $G$ from add an edge $(v, w)$ to $G$ and force it.
 \end{itemize}
 
-It is easy to verify that this reduction is correct.
-
 \subsection{Disregard rule}
 If there exists $(u, v) \in E(G)$ such that $m(v) = \texttt{false}$, $m(u) = \texttt{false}$, $C(v) \subseteq C(u)$ and there is no forced edge $(u, w) \in E(G)$ s.t $v \neq w$
 then disregard vertex $u$, since in an optimal solution we can always replace it with vertex $v$.
 
 \subsection{Remove Disregarded Rule}
+If there exists a disregarded, dominated vertex $u$, for all forced edges $(u, v)$ take $v$ and then remove $u$ from $G$. 
 
 \subsection{Single Dominator Rule}
+\label{rule:singledominator}
+If there exists an undominated vertex $v$ such that $D(v) = \{u\}$, take $u$.
 
 \subsection{Same Dominators Rule}
+\label{rule:samedominators}
+
+If there exists a pair of undominated vertices $u$, $v$ such that $D(v) \subseteq D(u)$, mark $v$ as dominated.
 
 \subsection{Alber rules}
 
-We have extended the rules described by Alber \textcolor{red}{[REFERENCE ALBER]} to apply to the ADS problem by careful analysis how
+We have extended the rules described by Alber et al.\cite{DBLP:journals/anor/AlberBN06}, to apply to the ADS problem by careful analysis how
 they should handle disregarded vertices and forced edges. We did that for \emph{Simple Rules 1, 2, 3 and 4}, as well as for \emph{Main rules 1 and 2} from the referenced work.
 \subsubsection{Simple Rule 1}
 If there exists an unforced edge that both its endpoints are either dominated or disregarded, remove it from the graph.
-
 If there exists $(u, v) \in E(G)$ s.t. $u$ is not disregarded and $v$ is not, take vertex $u$ into the solution set.
 
 
@@ -181,19 +185,57 @@ If there exists a dominated vertex $v$ of degree 3 with undominated neighbors $u
 If there exists a non-disregarded vertex $u$ such that $N_{prison}(\{u\}) \neq \emptyset$ then take $u$, and remove $N_{prison}(\{u\})$ and $N_{guard}{(\{u\})}$ from G.
 
 \subsubsection{Main Rule 2}
+Let $P =  N_{prison}(\{v, w\}) \cap \{v \in V(G) \mid d(v) = \texttt{true}\}$. If there exists a pair of non-disregarded vertices $v$, $w$ such that $P \neq \emptyset$ cannot be dominated by a single vertex from $N_{prison}(\{v, w\}) \cup N_{guard}(\{v, w\})$ then
+\begin{enumerate}
+\item If $P$ can be dominated by both just $v$ and just $w$, and there are no forced edges incident to $v$ and $w$, then:
+    Let $R = N_{prison}(\{v, w\})$ and $N_{guard}(\{v, w\}) \cap N(v) \cap N(w)$,
+    \begin{itemize}
+        \item if $(v, w) \in E(G)$, then force edge $(v, w)$.
+        \item else if $|R| > 3$ add three new undominated disregarded vertices $z_1$, $z_2$, $z_3$ and non-forced edges $(v, z_i)$, $(w, z_i)$ for $i \in \{1, 2, 3\}$ to $G$.
+    \end{itemize} 
+    If one of the above conditions were true, remove the vertex set $R$ from $G$. 
+\item If $P$ can be dominated by just $v$ but not $w$, and there are no red edges incident to $w$ then take $w$ and remove $N_{prison}(\{v, w\})$ and $N_{guard}(\{v, w\}) \cap N(v)$ from $G$.
+\item  If $P$ can neither be dominated by just $v$ or just $w$, take both $v$ and $w$ and remove $N_{prison}(\{v, w\}) \cup N_{guard}(\{v, w\})$ from $G$.
 
-
-The rest of the rules reduce the size of the graph in cases where the structure of a neighborhood of a single vertex or a pair of them exposes some optimal partial solutions.
-
+\end{enumerate}
 
 \subsection{Local bruteforce rule}
+If there exists $X \subseteq V(G)$ and $T_A \subseteq A = N[X] \setminus N_{exit}(X)$, such that for all possible choices of a proper solution set $T_B \subseteq V[G] \setminus A$ for $I[V(G) \setminus N[X]]$,
+and $T_A$ is a smallest subset of $A$ such that $T_A \cup T_B$ is a proper solution of $I$,
+take all vertices from $T_A$ and disregard all vertices  from $ A \setminus T_A$. 
+
+This rule can be applied in time $\mathcal{O}(|G| \cdot 4^{|A|})$ for a given $X$.
+
+In our solver we limit our choice of sets $X$ to all subsets of the bags of a heurisitcally found tree decomposition with size at most 10, and the sets of all vertices at a distance at most $r$ for $r \in \{0, 1, 2, 3\}$, for which  $|X|, |A| \leq 10$.
 
 \section{Solving the kernel}
-\subsection{Vertex cover}
-\subsection{Dynamic programming on a tree decomposition}
-\textcolor{red}{[REFERENCE PLATYPUS]}
+After preprocessing is done the solver attempts to solve each of the graph connected components independently using the following methods in order.
+\begin{enumerate} 
+    \item If the kernelized instance has only forced edges, then it is a Vertex Cover instance, solve it using an external Vertex Cover solver.
+    \item If the kernel admits a tree decomposition of a small enough width to fit in the memory limit within 5 minutes of running an external decomposer, solve using dynamic programming on the found decomposition.
+    The solver also attempts to reduce the instance by branching on the vertices belonging to the largest bags of the decomposition.
+    \item If all previous methods fail, perform an exhaustive Branch\&Reduce search for the optimal solution.
+\end{enumerate}
+
+\subsection{Tree decomposition dynamic programming}
+Our implementation of tree decomposition dynamic programming for Dominating Set is a direct implementation of the algorithm described in the book Parameterized Algorithms\cite{DBLP:books/sp/CyganFKLMPPS15}, 
+extended to work for ADS. 
+
+The modifications are:
+\begin{itemize}
+    \item We count the vertex in its \textbf{Forget} node instead of its \textbf{Introduce vertex} node .
+    \item A vertex is counted with a weight of $+\infty$ if it is disregarded.
+    \item In the \textbf{Introduce Edge}, we return $+\infty$ for the case where no endpoint of this edge is taken into the solution.
+\end{itemize}
+
+
 \subsection{Branch\&Reduce}
-\textcolor{red}{[REFERENCE PLATYPUS]}
+Our branching algorithm works by branching first on the vertices with maximum number of incident forced edges. 
+If there are no such vertices, the solver branches on the vertex with minimum degree in the graph.
+After each decision made by branching the same reductions as in the presolver are applied.
+When the graph becomes disconnected as a result of branching the solver solves each component independently using branching.
+
+We use a the size maximal $3$-scattered set of $G$ as a lower bound to discard branches that are guaranteed to produce unoptimal solutions. 
 
 %%
 %% Bibliography
@@ -201,7 +243,7 @@ The rest of the rules reduce the size of the graph in cases where the structure 
 
 %% Please use bibtex, 
 
-\bibliography{lipics-v2021-sample-article}
+\bibliography{solver_description}
 
 \appendix
 
