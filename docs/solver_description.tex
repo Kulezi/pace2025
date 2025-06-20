@@ -46,9 +46,9 @@
 
 \acknowledgements{I want to thank prof. Marcin Pilipczuk for guidance and insightful ideas that went into developing this solver.}%optional
 
-%\nolinenumbers %uncomment to disable line numbering
+\nolinenumbers %uncomment to disable line numbering
 
-
+% \usepackage{todonotes}
 
 %Editor-only macros:: begin (do not touch as author)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \EventEditors{John Q. Open and Joan R. Access}
@@ -80,9 +80,9 @@ Kernelized instance is then solved by either a Vertex Cover solver, dynamic prog
 
 DSHunter is an exact solver for finding a minimum dominating set of a graph. DSHunter was developed for the 9th Parameterized Algorithms and Computational Experiments challenge (PACE 2025).
 The core idea behind the solver is first preprocessing the given instance into a generalized Annotated Dominating Set (ADS) problem instance.
-In some cases the kernel yields an instance that is equivalent to Vertex Cover, and in those cases the solver calls an external \textcolor{red}{Vertex Cover solver WeGotYouCovered\cite{DBLP:conf/siamcsc/HespeL0S20} from PACE 2019}.
+In some cases the kernel yields an instance that is equivalent to Vertex Cover, and in those cases the solver calls an external \textcolor{red}{Vertex Cover solver WeGotYouCovered~\cite{DBLP:conf/siamcsc/HespeL0S20} from PACE 2019}.
 In other cases where the kernel admits small treewidth the solver finds the minimum dominating set directly by dynamic programming on a tree decomposition.
-The tree decomposition is found using a heuristic tree decomposition generator  FlowCutter\cite{DBLP:conf/alenex/HamannS16} from PACE 2017.
+The tree decomposition is found using a heuristic tree decomposition generator  FlowCutter~\cite{DBLP:conf/alenex/HamannS16} from PACE 2017.
 In all other cases the solver resorts to a Branch\&Reduce algorithm.
 
 
@@ -93,49 +93,58 @@ The set $N(v)$ denotes the open neighborhood of a vertex $v$ and $N[v] = N(v) \c
 The set $N[X] = \bigcup_{v \in X} N[v]$ denotes the closed neighborhood of a vertex set $X$.
 The set $N(X) = N[X] \setminus X$ denotes the open neighborhood of a vertex set $X$.
 
-An Annotated Dominating Set problem instance $I$ is tuple $(G, d, m, f, S)$, where:
+An Annotated Dominating Set problem instance $I$ is tuple $(G, d, m, f)$, where:
 \begin{itemize}
     \item $d: V(G) \to \{\texttt{true}, \texttt{false}\}$, we say that a vertex $v$ is dominated iff $d(v) = \texttt{true}$, such vertices do not need to be dominated by the solution set.
     \item $m: V(G) \to \{\texttt{true}, \texttt{false}\}$, we say that a vertex $v$ is disregarded iff $m(v) = \texttt{true}$, such vertices cannot belong to the solution set.
     \item $f: E(G) \to \{\texttt{true}, \texttt{false}\}$, we say that an edge $e$ is forced iff $f(v) = \texttt{true}$, at least one endpoint of such an edge must belong to the solution set.
-    \item $S$ is a set containing a partial solution containing the vertices of the original Dominating Set problem instance that are already known to belong to the optimal solution set.
-    Such vertices are not present in $G$, i.e. $S \cap G(V) = \emptyset$.
+    % \item $S$ is a set containing a partial solution containing the vertices of the original Dominating Set problem instance that are already known to belong to the optimal solution set.
+    % Such vertices are not present in $G$, i.e. $S \cap V(G) = \emptyset$.
 \end{itemize}
-
+That is, a set $X$ is a feasible solution if
+\begin{alphaenumerate}
+\item every vertex $v$ with $d(v) = \texttt{false}$ is in $N[X]$, 
+\item every vertex $x \in X$ satisfies $m(v) = \texttt{false}$, 
+\item every edge $uv \in E(G)$ with $f(uv) = \texttt{true}$ satisfies
+$\{u,v\} \cap X \neq \emptyset$.
+\end{alphaenumerate}
 By saying we force an edge $e$ we mean setting $f(e) = \texttt{true}$.
 
-By saying we take a vertex $v$ we mean setting $d(u) = \texttt{true}$ for all $u \in N[v]$, then removing $v$ from $G$, and adding $v$ to $S$.
+By saying we take a vertex $v$ we mean setting $d(u) = \texttt{true}$ for all $u \in N[v]$, then removing $v$ from $G$, and adding $v$ to the solution set $S$.
 
 By $C(v)$ we denote the set $\{u \in N[v] \mid d(v) = \texttt{false}\}$ or $C(v) = \emptyset$ in the case when $v$ is disregarded, i.e. the set of undominated vertices vertex $v$ can dominate (cover). We call those vertices dominatees of $v$.
 
 By $D(v)$ we denote the set $\{u \in N[v] \mid m(v) = \texttt{false}\}$ or $D(v) = \emptyset$ in the case when $v$ is dominated, i.e. the set of vertices that can dominate $v$. We call those vertices dominators of $v$.
 
-By $N_{exit}(X)$ we denote the set $\{w \in N(X) \mid N(w) \setminus N[X] \neq \emptyset \vee \exists_{(v, w) \in G[N(X)]} f((v, w)) = \texttt{true}\}$.
+By $N_{exit}(X)$ we denote the set $$\{w \in N(X) \mid N(w) \setminus N[X] \neq \emptyset \vee \exists_{vw \in E(G[N(X)])} f(vw) = \texttt{true}\}$$
 
-By $N_{guard}(X)$ we denote the set $\{ w \in N(X) \setminus N_{exit}(X)\mid N(w) \cap N_{exit}(X) \neq \emptyset\}$.
+By $N_{guard}(X)$ we denote the set $$\{ w \in N(X) \setminus N_{exit}(X)\mid N(w) \cap N_{exit}(X) \neq \emptyset\}$$
 
-By $N_{prison}(X)$ we denote the set $N[X] \setminus (N_{exit}(X) \cup N_{guard}(X))$.
+By $N_{prison}(X)$ we denote the set $$N[X] \setminus (N_{exit}(X) \cup N_{guard}(X))$$
 
+By $\overline{N_{prison}}(X)$ we denote the set $$N_{prison}(X) \cap \{u \in V(G) \mid d(u) = \texttt{false}\}$$
 
 Note that a Dominating Set problem instance $G$ can be expressed as an Annotated Dominating Set instance $I = (G, d, m, f, \emptyset)$, where $d$, $m$ and $f$ return \texttt{false} for all arguments.
 
 \section{Presolving}
 The solver starts by applying several reduction rules in a loop in the following order until all fail to apply. If a reduction rule succeeds, the loop starts from the beginning.
-Rules \ref{rule:singledominator} and \ref{rule:samedominators} are based on work by Xiong and Xiao\cite{DBLP:conf/ijcai/Xiong024}.
+Rules \ref{rule:singledominator} and \ref{rule:samedominators} are based on work by Xiong and Xiao~\cite{DBLP:conf/ijcai/Xiong024}.
+Together with the instance the presolver maintains a set $S$ of vertices removed by reduction rules known to belong to the optimal solution.
 \subsection{Removal of vertices seeing both ends of a forced edge}
-If there exists a vertex $v$ such that there exists a forced edge $(v, w) \in N(v)$, set $d(v) = \texttt{true}$ as it is guaranteed to be dominated by either $v$ or $w$, since one of them must belong to the optimal solution set.
+If there exists a vertex $v$ such that there exists a forced edge $vw$, set $d(v) = \texttt{true}$ as it is guaranteed to be dominated by either $v$ or $w$, since one of them must belong to the optimal solution set.
 This rule is an exception since it is not a part of the loop, but is applied the moment an edge is being forced, e.g. $f(e)$ changes from \texttt{false} to \texttt{true}.
 
 \subsection{ForceEdgeRule}
 If there exists an undominated vertex $u$ of degree 2 with neighbors $v$ and $w$, such that $v$ or $w$ is not disregarded:
 \begin{itemize}
-    \item if $(v, w) \in E(G)$ and $f((u, v)) = f((u, w)) = \texttt{false}$ then remove $u$ from $G$ and force edge $(v, w)$.
-    \item if $(v, w) \in E(G)$ and exactly one of the edges $(u, v)$, $(u, w)$ is forced and its non-$u$ endpoint is not disregarded, take this endpoint into $S$.
-    \item if $(v, w) \notin E(G)$ and both $v$ and $w$ are dominated, remove $u$ from $G$ from add an edge $(v, w)$ to $G$ and force it.
+    \item if $vw \in E(G)$ and $f(uv) = f(uw) = \texttt{false}$ then remove $u$ from $G$ and force edge $vw$.
+    \item if $vw \in E(G)$ and exactly one of the edges $uv$, $uw$ is forced and its non-$u$ endpoint is not disregarded, take this endpoint into $S$.
+    \item if $vw \notin E(G)$ and both $v$ and $w$ are dominated, remove $u$ from $G$ from add an edge $vw$ to $G$ and force it.
 \end{itemize}
 
 \subsection{Disregard rule}
-If there exists $(u, v) \in E(G)$ such that $m(v) = \texttt{false}$, $m(u) = \texttt{false}$, $C(v) \subseteq C(u)$ and there is no forced edge $(u, w) \in E(G)$ s.t $v \neq w$
+If there exists $uv \in E(G)$ such that $m(v) = \texttt{false}$, $m(u) = \texttt{false}$, $C(u) \subseteq C(v)$
+and there is no forced edge $uw \in E(G)$ s.t $v \neq w$
 then disregard vertex $u$, since in an optimal solution we can always replace it with vertex $v$.
 
 \subsection{Remove Disregarded Rule}
@@ -148,15 +157,16 @@ If there exists an undominated vertex $v$ such that $D(v) = \{u\}$, take $u$.
 \subsection{Same Dominators Rule}
 \label{rule:samedominators}
 
-If there exists a pair of undominated vertices $u$, $v$ such that $D(v) \subseteq D(u)$, mark $v$ as dominated.
+If there exists a pair of undominated vertices $u$, $v$ such that $D(v) \subseteq D(u)$, mark $u$ as dominated.
 
-\subsection{Alber rules}
+\subsection{Alber et al. rules}
 
-We have extended the rules described by Alber et al.\cite{DBLP:journals/anor/AlberBN06}, to apply to the ADS problem by careful analysis how
+We have extended the rules described by Alber et al.~\cite{DBLP:journals/anor/AlberBN06}, to apply to the ADS problem by careful analysis how
 they should handle disregarded vertices and forced edges. We did that for \emph{Simple Rules 1, 2, 3 and 4}, as well as for \emph{Main rules 1 and 2} from the referenced work.
 \subsubsection{Simple Rule 1}
 If there exists an unforced edge that both its endpoints are either dominated or disregarded, remove it from the graph.
-If there exists $(u, v) \in E(G)$ s.t. $u$ is not disregarded and $v$ is not, take vertex $u$ into the solution set.
+
+If there exists a forced edge $uv \in E(G)$ s.t. $u$ is not disregarded and $v$ is disregarded, take vertex $u$ into the solution set.
 
 
 \subsubsection{Simple Rule 2}
@@ -165,43 +175,45 @@ If there exists an isolated dominated vertex $v$, remove it from the graph.
 This rule was also meant apply to dominated vertices of degree 1, however due to an oversight we only apply it to isolated edges, for which it is optimal to take just one of the endpoints.
 
 \subsubsection{Simple Rule 3}
-If there exists a dominated vertex $v$ of degree 2 with undominated neighbors $u_1$ and $u_2$, s.t. $(u_1, u_2) \in E(G)$ or $u_1$ and $u_2$ share a common, non-disregarded neighbor then:
+If there exists a dominated vertex $v$ of degree 2 with undominated neighbors $u_1$ and $u_2$, s.t. $u_1 u_2 \in E(G)$ or $u_1$ and $u_2$ share a common, non-disregarded neighbor then:
 \begin{itemize}
-    \item If the edge $(v, u_1)$ is forced and the edge $(v, u_2)$ is not, take $u_1$.
-    % \item If the edge $(v, u_2)$ is forced and the edge $(v, u_1)$ is not, take $u_2$.
-    \item If both of the edges $(v, u_1)$, $(v, u_2)$ are unforced, remove $v$ from $G$.
+    \item If the edge $v u_1$ is forced and the edge $v u_2$ is not, take $u_1$.
+    \item If both of the edges $v u_1$, $v u_2$ are unforced, remove $v$ from $G$.
 \end{itemize}
 
-Note that it is never the case that $(u_1, u_2) \in E(G)$ and both $u_1$ and $u_2$ are disregarded as Simple Rule 1 is applied before Simple Rule 3.
+Note that it is never the case that $u_1 u_2 \in E(G)$ and both $u_1$ and $u_2$ are disregarded as \emph{Simple Rule 1} is applied before \emph{Simple Rule 3}.
 
 \subsubsection{Simple Rule 4}
-If there exists a dominated vertex $v$ of degree 3 with undominated neighbors $u_1$, $u_2$ and $u_3$ s.t. $(u_1, u_2), (u_1, u_3) \in E(G)$ then
+If there exists a dominated vertex $v$ of degree 3 with undominated neighbors $u_1$, $u_2$ and $u_3$ s.t. $u_1 u_2, u_1 u_3 \in E(G)$ then
 \begin{itemize}
-    \item If the vertex $u_1$ is not disregarded and the edges $(v, u_2)$, $(v, u_3)$ are unforced, remove $v$ from $G$, also if the edge $(v, u_1)$ was forced take $u_1$.
+    \item If the vertex $u_1$ is not disregarded and the edges $v u_2$, $v u_3$ are unforced, remove $v$ from $G$, also if the edge $v u_1$ was forced take $u_1$.
 \end{itemize}
 
 
 \subsubsection{Main Rule 1}
-If there exists a non-disregarded vertex $u$ such that $N_{prison}(\{u\}) \neq \emptyset$ then take $u$, and remove $N_{prison}(\{u\})$ and $N_{guard}{(\{u\})}$ from G.
+If there exists a non-disregarded vertex $u$ such that $\overline{N_{prison}}(\{u\}) \neq \emptyset$ then take $u$, and remove $N_{prison}(\{u\})$ and $N_{guard}{(\{u\})}$ from G.
 
 \subsubsection{Main Rule 2}
-Let $P =  N_{prison}(\{v, w\}) \cap \{v \in V(G) \mid d(v) = \texttt{true}\}$. If there exists a pair of non-disregarded vertices $v$, $w$ such that $P \neq \emptyset$ cannot be dominated by a single vertex from $N_{prison}(\{v, w\}) \cup N_{guard}(\{v, w\})$ then
+If there exists a pair of non-disregarded vertices $v$, $w$ such that $\overline{N_{prison}}(\{v, w\}) \neq \emptyset$ and cannot be dominated by a single vertex from $N_{prison}(\{v, w\}) \cup N_{guard}(\{v, w\})$ then
 \begin{enumerate}
-\item If $P$ can be dominated by both just $v$ and just $w$, and there are no forced edges incident to $v$ and $w$, then:
-    Let $R = N_{prison}(\{v, w\})$ and $N_{guard}(\{v, w\}) \cap N(v) \cap N(w)$,
+\item If $\overline{N_{prison}}(\{v, w\})$ can be dominated by both just $v$ and just $w$,
+ and there are no forced edges incident to $v$ and $w$, then:
+
+
+    Let $R = N_{prison}(\{v, w\}) \cup (N_{guard}(\{v, w\}) \cap N(v) \cap N(w))$.
     \begin{itemize}
-        \item if $(v, w) \in E(G)$, then force edge $(v, w)$.
-        \item else if $|R| > 3$ add three new undominated disregarded vertices $z_1$, $z_2$, $z_3$ and non-forced edges $(v, z_i)$, $(w, z_i)$ for $i \in \{1, 2, 3\}$ to $G$.
+        \item If $v w \in E(G)$, then force edge $v w$.
+        \item If $v w \notin E(G)$ and $|R| > 3$ add three new undominated disregarded vertices $z_1$, $z_2$, $z_3$ and non-forced edges $v z_i$, $w z_i$ for $i \in \{1, 2, 3\}$ to $G$.
     \end{itemize} 
     If one of the above conditions were true, remove the vertex set $R$ from $G$. 
-\item If $P$ can be dominated by just $v$ but not $w$, and there are no red edges incident to $w$ then take $w$ and remove $N_{prison}(\{v, w\})$ and $N_{guard}(\{v, w\}) \cap N(v)$ from $G$.
-\item  If $P$ can neither be dominated by just $v$ or just $w$, take both $v$ and $w$ and remove $N_{prison}(\{v, w\}) \cup N_{guard}(\{v, w\})$ from $G$.
+\item If $\overline{N_{prison}}(\{v, w\})$ can be dominated by just $v$ but not $w$, and there are no forced edges incident to $w$ then take $w$ and remove $N_{prison}(\{v, w\})$ and $N_{guard}(\{v, w\}) \cap N(v)$ from $G$.
+\item  If $\overline{N_{prison}}(\{v, w\})$ can neither be dominated by just $v$ or just $w$, take both $v$ and $w$ and remove $N_{prison}(\{v, w\}) \cup N_{guard}(\{v, w\})$ from $G$.
 
 \end{enumerate}
 
 \subsection{Local bruteforce rule}
-If there exists $X \subseteq V(G)$ and $T_A \subseteq A = N[X] \setminus N_{exit}(X)$, such that for all possible choices of a proper solution set $T_B \subseteq V[G] \setminus A$ for $I[V(G) \setminus N[X]]$,
-and $T_A$ is a smallest subset of $A$ such that $T_A \cup T_B$ is a proper solution of $I$,
+If there exists $X \subseteq V(G)$ and $T_A \subseteq A = N[X] \setminus \{w \in N(X) \mid N (w) \setminus N [X] \neq \emptyset \}$, such that for all possible choices of a proper solution set $T_B \subseteq V[G] \setminus A$ for $I[V(G) \setminus N[X]]$
+set $T_A$ is a smallest subset of $A$ such that $T_A \cup T_B$ is a proper solution of $I$,
 take all vertices from $T_A$ and disregard all vertices  from $ A \setminus T_A$. 
 
 This rule can be applied in time $\mathcal{O}(|G| \cdot 4^{|A|})$ for a given $X$.
@@ -218,7 +230,7 @@ After preprocessing is done the solver attempts to solve each of the graph conne
 \end{enumerate}
 
 \subsection{Tree decomposition dynamic programming}
-Our implementation of tree decomposition dynamic programming for Dominating Set is a direct implementation of the algorithm described in the book Parameterized Algorithms\cite{DBLP:books/sp/CyganFKLMPPS15}, 
+Our implementation of tree decomposition dynamic programming for Dominating Set is a direct implementation of the algorithm described in the book Parameterized Algorithms~\cite{DBLP:books/sp/CyganFKLMPPS15}, 
 extended to work for ADS. 
 
 The modifications are:
