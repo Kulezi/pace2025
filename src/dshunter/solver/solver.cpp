@@ -13,8 +13,6 @@ std::vector<int> Solver::solve(Instance g) {
     cfg.solve_start = std::chrono::steady_clock::now();
     auto initial_instance = g;
 
-    int n_old = g.nodeCount();
-    int m_old = g.edgeCount();
     // cfg.logLine("starting presolve");
     presolve(g);
 

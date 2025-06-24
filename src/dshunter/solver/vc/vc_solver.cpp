@@ -6,7 +6,7 @@
 #include <iostream>
 
 #include "../../utils.h"
-#include "vc_lib.h"
+#include "solve_mwc.h"
 
 namespace DSHunter {
 std::vector<int> VCSolver::solve(Instance &g) {
@@ -28,13 +28,12 @@ std::vector<int> VCSolver::solve(Instance &g) {
         }
     }
 
-    std::vector<bool> MIS = getVC(graph);
+    std::vector<int> VC = PACE2019::VC(graph);
 
-    for (size_t i = 0; i < MIS.size(); i++) {
-        if (!MIS[i]) {
+    for (auto i : VC) {
             g.ds.push_back(g.nodes[i]);
-        }
     }
+
     return g.ds;
 }
 }  // namespace DSHunter

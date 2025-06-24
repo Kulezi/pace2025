@@ -9,13 +9,13 @@ set(CMAKE_CXX_FLAGS "-Wall -g -O3 -fPIC -Wno-sign-compare")
 find_package(Threads REQUIRED)
 
 # Add the pace-2019 library as a subdirectory
-set(PACE_2019_DIR src/ext/pace-2019)
-add_subdirectory(${PACE_2019_DIR} EXCLUDE_FROM_ALL)
+set(PEATY_DIR src/ext/peaty)
+add_subdirectory(${PEATY_DIR} EXCLUDE_FROM_ALL)
 
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_SOURCE_DIR}/src/ext/flow-cutter-pace17)
-include_directories(${CMAKE_SOURCE_DIR}/src/ext/pace-2019/lib)
+include_directories(${CMAKE_SOURCE_DIR}/src/ext/peaty)
 
 # Set the executable suffix to .out
 set(CMAKE_EXECUTABLE_SUFFIX ".out")
@@ -27,6 +27,18 @@ add_library(flow_cutter STATIC
         src/ext/flow-cutter-pace17/src/list_graph.cpp
         src/ext/flow-cutter-pace17/src/pace.cpp
         src/ext/flow-cutter-pace17/src/tree_decomposition.cpp
+)
+
+# Define the external library (suppress warnings explicitly)
+add_library(peaty STATIC
+        src/ext/peaty/colourer.cpp
+        src/ext/peaty/graph_colour_solver.cpp
+        src/ext/peaty/graph.cpp
+        src/ext/peaty/root_node_processing.cpp
+        src/ext/peaty/sequential_solver.cpp
+        src/ext/peaty/solve_mwc.cpp
+        src/ext/peaty/sparse_graph.cpp
+        src/ext/peaty/util.cpp
 )
 
 # List of implementation files for header files
@@ -88,7 +100,7 @@ target_compile_definitions(core PRIVATE
 # Link against necessary libraries (order is important)
 target_link_libraries(core PUBLIC
         flow_cutter
-        pace2019-vc
+        peaty
 )
 
 # List of source files for each executable

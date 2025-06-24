@@ -80,9 +80,9 @@ Kernelized instance is then solved by either a Vertex Cover solver, dynamic prog
 
 DSHunter is an exact solver for finding a minimum dominating set of a graph. DSHunter was developed for the 9th Parameterized Algorithms and Computational Experiments challenge (PACE 2025).
 The core idea behind the solver is first preprocessing the given instance into a generalized Annotated Dominating Set (ADS) problem instance.
-In some cases the kernel yields an instance that is equivalent to Vertex Cover, and in those cases the solver calls an external \textcolor{red}{Vertex Cover solver WeGotYouCovered~\cite{DBLP:conf/siamcsc/HespeL0S20} from PACE 2019}.
+In some cases the kernel yields an instance that is equivalent to Vertex Cover, and in those cases the solver calls an external Vertex Cover solver Peaty~\cite{james_trimble_2019_3082356} from PACE 2019~\cite{DBLP:conf/iwpec/DzulfikarFH19}.
 In other cases where the kernel admits small treewidth the solver finds the minimum dominating set directly by dynamic programming on a tree decomposition.
-The tree decomposition is found using a heuristic tree decomposition generator  FlowCutter~\cite{DBLP:conf/alenex/HamannS16} from PACE 2017.
+The tree decomposition is found using a heuristic tree decomposition generator  FlowCutter~\cite{DBLP:conf/alenex/HamannS16} from PACE 2017~\cite{DBLP:conf/iwpec/DellKTW17}.
 In all other cases the solver resorts to a Branch\&Reduce algorithm.
 
 

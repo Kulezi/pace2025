@@ -7,7 +7,7 @@ Dependencies:
 - g++ version supporting C++20
 - CMake 3.10
 - [FlowCutter (PACE 2017)](https://github.com/Kulezi/flow-cutter-pace17/tree/6cae71e55858faccc59931bae0debda56a6c226b)
-- [WeGotYouCovered (PACE 2019)](https://github.com/Kulezi/pace-2019/tree/cf78969036edc436bb2aead362dcb03377482a45)
+- [Peaty (PACE 2019)](https://github.com/Kulezi/peaty/)
 
 ### Building
 Running following commands will produce an executable `main.out` in the `release/` directory.
