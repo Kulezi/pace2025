@@ -25,7 +25,8 @@ std::vector<int> Solver::solve(Instance g) {
          << "presolution_disregarded_count " << g.disregardedNodeCount() << std::endl
          << "presolution_forced_edge_count " << g.forcedEdgeCount() << std::endl
          << "presolution_lower_bound " << lowerBound(g) << std::endl
-         << "presolution_upper_bound " << upperBound(g) << std::endl;
+         << "presolution_upper_bound " << upperBound(g) << std::endl
+         << "presolution_cc_count " << g.split().size() << std::endl;
 
     for (auto rule : cfg.reduction_rules) {
         std::cout << rule.name << "_tries " << rule.application_count << std::endl
@@ -52,6 +53,9 @@ std::vector<int> Solver::solve(Instance g) {
     auto ddecomp = tss.decomposer->decompose(g).value();
     std::cout << "presolution_tw " << ddecomp.width << std::endl;
 
+
+    // Don't bother solving.
+    return {};
     std::vector<int> ds = g.ds;
     auto components = g.split();
     // cfg.logLine(std::format("reduced graph has {} components", components.size()));
