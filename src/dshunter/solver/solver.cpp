@@ -48,6 +48,10 @@ std::vector<int> Solver::solve(Instance g) {
         return g.ds;
     }
 
+    DSHunter::TreewidthSolver tss(&cfg);
+    auto ddecomp = tss.decomposer->decompose(g).value();
+    std::cout << "presolution_tw " << ddecomp.width << std::endl;
+
     std::vector<int> ds = g.ds;
     auto components = g.split();
     // cfg.logLine(std::format("reduced graph has {} components", components.size()));
@@ -69,12 +73,14 @@ std::vector<int> Solver::solve(Instance g) {
     return ds;
 }
 
+
 std::vector<int> Solver::solveConnected(Instance &g) {
     switch (cfg.solver_type) {
         case SolverType::Default: {
             if (g.forcedEdgeCount() == g.edgeCount()) {
                 cfg.logLine("running vc solver");
                 VCSolver vs;
+                std::cout << "cc_solved_by vc" << std::endl;
                 return vs.solve(g);
             }
 
@@ -82,11 +88,15 @@ std::vector<int> Solver::solveConnected(Instance &g) {
             auto ds = TreewidthSolver(&cfg).solve(g);
             if (ds.has_value()) {
                 cfg.logLine("treewidth solver success");
+                std::cout << "cc_solved_by treewidth" << std::endl;
                 return *ds;
             }
 
             cfg.logLine("treewidth solver failed, falling back to branching solver");
-            return BranchingSolver(&cfg).solve(g);
+
+            auto sol = BranchingSolver(&cfg).solve(g);
+            std::cout << "cc_solved_by branching" << std::endl;
+            return sol;
         }
 
         case SolverType::TreewidthDP: {
