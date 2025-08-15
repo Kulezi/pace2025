@@ -32,6 +32,6 @@ bool alberSimpleRule2(Instance& g) {
     return reduced;
 }
 
-ReductionRule AlberSimpleRule2("AlberSimpleRule2 (dominated leaf removal)", alberSimpleRule2, 2, 1);
+ReductionRule AlberSimpleRule2("AlberSimpleRule2", alberSimpleRule2, 2, 1);
 
 }  // namespace DSHunter

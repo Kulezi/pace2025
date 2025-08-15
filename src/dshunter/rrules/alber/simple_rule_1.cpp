@@ -34,6 +34,6 @@ bool alberSimpleRule1(Instance& g) {
     return !to_remove.empty() || !to_take.empty();
 }
 
-ReductionRule AlberSimpleRule1("AlberSimpleRule1 (dominated edge removal)", alberSimpleRule1, 2, 1);
+ReductionRule AlberSimpleRule1("AlberSimpleRule1", alberSimpleRule1, 2, 1);
 
 }  // namespace DSHunter

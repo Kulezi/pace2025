@@ -50,6 +50,6 @@ bool alberSimpleRule3(Instance& g) {
     return reduced;
 }
 
-ReductionRule AlberSimpleRule3("AlberSimpleRule3 (dominated degree 2 vertex removal)", alberSimpleRule3, 2, 1);
+ReductionRule AlberSimpleRule3("AlberSimpleRule3", alberSimpleRule3, 2, 1);
 
 }  // namespace DSHunter
