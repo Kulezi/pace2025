@@ -12,20 +12,20 @@ namespace DSHunter {
 std::vector<int> Solver::solve(Instance g) {
     cfg.solve_start = std::chrono::steady_clock::now();
     auto initial_instance = g;
-    cout << "initial_node_count " << g.nodeCount() << endl
-         << "initial_edge_count " << g.edgeCount() << endl
-         << "initial_component_count " << g.split().size() << endl;
+    std::cout << "initial_node_count " << g.nodeCount() << std::endl
+         << "initial_edge_count " << g.edgeCount() << std::endl
+         << "initial_component_count " << g.split().size() << std::endl;
 
     // cfg.logLine("starting presolve");
     presolve(g);
 
-    cout << "optimal_members_found " << g.ds.size() << endl
-         << "presolution_node_count " << g.nodeCount() << endl
-         << "presolution_edge_count " << g.edgeCount() <<  endl
-         << "presolution_disregarded_count " << g.disregardedNodeCount() << endl
-         << "presolution_forced_edge_count " << g.forcedEdgeCount() << endl
-         << "presolution_lower_bound " << lowerBound(g) << endl
-         << "presolution_upper_bound " << upperBound(g) << endl;
+    std::cout << "optimal_members_found " << g.ds.size() << std::endl
+         << "presolution_node_count " << g.nodeCount() << std::endl
+         << "presolution_edge_count " << g.edgeCount() <<  std::endl
+         << "presolution_disregarded_count " << g.disregardedNodeCount() << std::endl
+         << "presolution_forced_edge_count " << g.forcedEdgeCount() << std::endl
+         << "presolution_lower_bound " << lowerBound(g) << std::endl
+         << "presolution_upper_bound " << upperBound(g) << std::endl;
 
     // cfg.logLine(std::format("presolve done, found {} optimal set members", g.ds.size()));
     // cfg.logLine(std::format("reduced n from {} to {}", n_old, g.nodeCount()));

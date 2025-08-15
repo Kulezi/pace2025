@@ -15,14 +15,19 @@ struct ReductionRule {
     // complexity = c if the worst case complexity of applying the rule is O(|G|^c).
     int complexity_dense, complexity_sparse;
     int application_count, success_count;
+    int delta_n, delta_m, delta_d, delta_f;
     ReductionRule(std::string name, std::function<bool(Instance&)> f, int complexity_dense, int complexity_sparse)
         : name(std::move(name)),
           f(std::move(f)),
           complexity_dense(complexity_dense),
           complexity_sparse(complexity_sparse),
           application_count(0),
-          success_count(0) {
-    }
+          success_count(0),
+          delta_n(0),
+          delta_m(0),
+          delta_d(0),
+          delta_f(0) {
+     }
 
     bool apply(Instance& g) const;
 };
