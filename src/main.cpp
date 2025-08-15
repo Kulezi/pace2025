@@ -187,14 +187,11 @@ void solveAndOutput(DSHunter::SolverConfig& config, std::istream& input, std::os
         return;
     }
 
+    
     auto ds = solver.solve(g);
 
-    output << ds.size() << '\n';
-    if (mode == SOLUTION) {
-        for (auto v : ds) {
-            output << v << "\n";
-        }
-    }
+    // In the benchmark we care only about ds size.
+    output << "solution_size " << ds.size() << '\n';
 }
 }  // namespace
 int main(int argc, char* argv[]) {
