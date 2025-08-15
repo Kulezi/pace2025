@@ -27,6 +27,15 @@ std::vector<int> Solver::solve(Instance g) {
          << "presolution_lower_bound " << lowerBound(g) << std::endl
          << "presolution_upper_bound " << upperBound(g) << std::endl;
 
+    for (auto rule : cfg.reduction_rules) {
+        std::cout << rule.name << "_tries " << rule.application_count << std::endl
+                  << rule.name << "_successes " << rule.success_count << std::endl
+                  << rule.name << "_delta_n " << rule.delta_n << std::endl
+                  << rule.name << "_delta_m " << rule.delta_m << std::endl
+                  << rule.name << "_delta_d " << rule.delta_d << std::endl
+                  << rule.name << "_delta_f " << rule.delta_f << std::endl;
+    }
+
     // cfg.logLine(std::format("presolve done, found {} optimal set members", g.ds.size()));
     // cfg.logLine(std::format("reduced n from {} to {}", n_old, g.nodeCount()));
     // cfg.logLine(std::format("disregarded node count {}", ([&]() { int res = 0; for (auto v : g.nodes) if (g.isDisregarded(v)) res++; return res; })()));
