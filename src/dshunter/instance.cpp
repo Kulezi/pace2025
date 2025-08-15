@@ -12,9 +12,9 @@ using std::logic_error;
 using std::string, std::getline, std::stringstream, std::istream, std::to_string, std::ranges::sort, std::ranges::binary_search;
 using std::vector;
 
-Node::Node() : domination_status(DominationStatus::DOMINATED), membership_status(MembershipStatus::DISREGARDED) {}
+Node::Node() : fd(0), domination_status(DominationStatus::DOMINATED), membership_status(MembershipStatus::DISREGARDED) {}
 
-Node::Node(int v) : n_closed({ v }), dominators({ v }), dominatees({ v }), domination_status(DominationStatus::UNDOMINATED), membership_status(MembershipStatus::UNDECIDED) {}
+Node::Node(int v) : fd(0), n_closed({ v }), dominators({ v }), dominatees({ v }), domination_status(DominationStatus::UNDOMINATED), membership_status(MembershipStatus::UNDECIDED) {}
 
 Instance::Instance() = default;
 
@@ -217,11 +217,7 @@ EdgeStatus Instance::getEdgeStatus(const int u, const int v) const {
 int Instance::deg(const int v) const { return static_cast<int>(all_nodes[v].adj.size()); }
 
 int Instance::forcedDeg(const int v) const {
-    int res = 0;
-    for (auto e : all_nodes[v].adj)
-        if (e.status == EdgeStatus::FORCED)
-            res++;
-    return res;
+    return all_nodes[v].fd;
 }
 
 int Instance::addNode() {
@@ -347,7 +343,10 @@ void Instance::setEdgeStatus(const int u, const int v, const EdgeStatus status) 
     DS_ASSERT(it_u != all_nodes[u].adj.end());
     const auto it_v = lower_bound(all_nodes[v].adj.begin(), all_nodes[v].adj.end(), Endpoint{ u, EdgeStatus::ANY });
     DS_ASSERT(it_v != all_nodes[v].adj.end());
-
+    if (it_u->status != EdgeStatus::FORCED && status == EdgeStatus::FORCED) {
+        all_nodes[u].fd++;
+        all_nodes[v].fd++;
+    }
     it_u->status = it_v->status = status;
 }
 
@@ -364,7 +363,10 @@ void Instance::addDirectedEdge(const int u, const int v) {
 
 void Instance::removeDirectedEdge(const int u, const int v) {
     auto &node = all_nodes[u];
-    remove(node.adj, Endpoint{ v, EdgeStatus::ANY });
+    auto f = *lower_bound(node.adj.begin(), node.adj.end(), Endpoint { v, EdgeStatus::ANY });
+    if (f.status == EdgeStatus::FORCED) node.fd--;
+
+    remove(node.adj, f);
     remove(node.n_open, v);
     remove(node.n_closed, v);
     remove(node.dominators, v);
@@ -378,6 +380,7 @@ void Instance::initAddEdge(const int u, const int v, const EdgeStatus status) {
 
 void Instance::initAddDirectedEdge(const int u, int const v, const EdgeStatus status) {
     auto &node = all_nodes[u];
+    if (status == EdgeStatus::FORCED) node.fd++;
     node.adj.emplace_back(v, status);
     node.n_open.push_back(v);
     node.n_closed.push_back(v);

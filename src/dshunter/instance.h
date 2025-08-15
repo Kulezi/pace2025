@@ -38,6 +38,7 @@ struct Node {
 
     // List of adjacent nodes sorted by increasing node id.
     // Order is maintained to make set union/intersection possible in O(|A| + |B|).
+    int fd; // forced deg.
     std::vector<Endpoint> adj;
     std::vector<int> n_open;
     std::vector<int> n_closed;
