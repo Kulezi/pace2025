@@ -21,15 +21,21 @@ _start:
             d_old = g.disregardedNodeCount(),
             f_old = g.forcedEdgeCount();
 
+        int u_old = 0;
+        for (auto u : g.nodes) {
+            if (g.isDominated(u)) u_old++;
+        }
+
+
         bool reduced = rule.apply(g);
         ++rule.application_count;
 
         if (reduced) {
             ++rule.success_count;
-            rule.delta_n += n_old - g.nodeCount();
-            rule.delta_m += m_old - g.edgeCount();
-            rule.delta_d += d_old - g.disregardedNodeCount();
             rule.delta_f += f_old - g.forcedEdgeCount();
+            int u_new = 0;
+            for (auto u : g.nodes) if (g.isDominated(u)) u_new++;
+            rule.delta_u += u_old - u_new;
             goto _start;
         }
     }

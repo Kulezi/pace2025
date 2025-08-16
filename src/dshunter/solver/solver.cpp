@@ -12,47 +12,20 @@ namespace DSHunter {
 std::vector<int> Solver::solve(Instance g) {
     cfg.solve_start = std::chrono::steady_clock::now();
     auto initial_instance = g;
-    std::cout << "initial_node_count " << g.nodeCount() << std::endl
-         << "initial_edge_count " << g.edgeCount() << std::endl
-         << "initial_component_count " << g.split().size() << std::endl;
 
-    // cfg.logLine("starting presolve");
     presolve(g);
-
-    std::cout << "optimal_members_found " << g.ds.size() << std::endl
-         << "presolution_node_count " << g.nodeCount() << std::endl
-         << "presolution_edge_count " << g.edgeCount() <<  std::endl
-         << "presolution_disregarded_count " << g.disregardedNodeCount() << std::endl
-         << "presolution_forced_edge_count " << g.forcedEdgeCount() << std::endl
-         << "presolution_lower_bound " << lowerBound(g) << std::endl
-         << "presolution_upper_bound " << upperBound(g) << std::endl
-         << "presolution_cc_count " << g.split().size() << std::endl;
-
+    
+    int sum_u = 0;
+    for (auto u : g.nodes) if (g.isDominated(u)) sum_u++;
+    std::cout << "sol_presolution_u " << sum_u << std::endl;
     for (auto rule : cfg.reduction_rules) {
-        std::cout << rule.name << "_tries " << rule.application_count << std::endl
-                  << rule.name << "_successes " << rule.success_count << std::endl
-                  << rule.name << "_delta_n " << rule.delta_n << std::endl
-                  << rule.name << "_delta_m " << rule.delta_m << std::endl
-                  << rule.name << "_delta_d " << rule.delta_d << std::endl
-                  << rule.name << "_delta_f " << rule.delta_f << std::endl;
+        std::cout << rule.name << "_delta_u " << rule.delta_u << std::endl;
     }
-
-    // cfg.logLine(std::format("presolve done, found {} optimal set members", g.ds.size()));
-    // cfg.logLine(std::format("reduced n from {} to {}", n_old, g.nodeCount()));
-    // cfg.logLine(std::format("disregarded node count {}", ([&]() { int res = 0; for (auto v : g.nodes) if (g.isDisregarded(v)) res++; return res; })()));
-    // cfg.logLine(std::format("reduced m from {} to {}", m_old, g.edgeCount()));
-    // cfg.logLine(std::format("forced edge count {}", g.forcedEdgeCount()));
-    // cfg.logLine(std::format("{} <= |D| <= {}", lowerBound(g), upperBound(g)));
 
     if (g.nodes.empty()) {
         verify_solution(initial_instance, g.ds);
         return g.ds;
     }
-
-    DSHunter::TreewidthSolver tss(&cfg);
-    auto ddecomp = tss.decomposer->decompose(g).value();
-    std::cout << "presolution_tw " << ddecomp.width << std::endl;
-
 
     // Don't bother solving.
     return {};
