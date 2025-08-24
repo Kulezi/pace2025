@@ -24,6 +24,9 @@ bool alberSimpleRule2(Instance& g) {
                     DS_TRACE(std::cerr << "applying " << __func__ << " (take) " << dbg(v) << std::endl);
                     g.take(w);
                     reduced = true;
+                } else if (status == EdgeStatus::UNCONSTRAINED) {
+                    g.removeNode(v);
+                    reduced = true;
                 }
             }
         }
