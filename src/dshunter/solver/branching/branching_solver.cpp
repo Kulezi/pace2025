@@ -39,10 +39,11 @@ int undominatedDegree(const Instance &g, int v) {
     return static_cast<int>(g[v].dominatees.size());
 }
 
-int maxUndominatedDegreeNode(const Instance &g) {
-    int best_deg = 0, best = -1;
+int minDegreeUndominatedNode(const Instance &g) {
+    int best_deg = 999999999, best = -1;
     for (auto v : g.nodes) {
-        int d = undominatedDegree(g, v);
+        if (!g.isDominated(v)) continue;
+        int d = g.deg(v);
         if (d > best_deg) {
             best_deg = d;
             best = v;
@@ -126,7 +127,16 @@ void BranchingSolver::branch(Instance &g, std::vector<int> &best_ds) {
             to_take.push_back(u);
         }
 
-    solve(take(g, to_take), best_ds);
+    if (to_take.empty()) {
+        for (auto [u, _] : g[v].adj) {
+            if (!g.isDisregarded(u))
+                solve(take(g, u), best_ds);
+                g.markDisregarded(v);
+            }
+        }
+    } else {
+        solve(take(g, to_take), best_ds);
+    }
 }
 
 }  // namespace DSHunter
