@@ -28,6 +28,8 @@ std::vector<int> Solver::solve(Instance g) {
         return g.ds;
     }
 
+    auto old_budget = cfg.decomposition_time_budget;
+
     std::vector<int> ds = g.ds;
     auto components = g.split();
     // cfg.logLine(std::format("reduced graph has {} components", components.size()));
@@ -40,6 +42,7 @@ std::vector<int> Solver::solve(Instance g) {
         ds.insert(ds.begin(), component_ds.begin(), component_ds.end());
         // cfg.logLine(std::format("ds_size: {}", ds.size()));
     }
+    cfg.decomposition_time_budget = old_budget;
 
     std::ranges::sort(ds);
 
@@ -58,10 +61,11 @@ std::vector<int> Solver::solveConnected(Instance &g) {
                 return vs.solve(g);
             }
 
-            cfg.logLine("running treewidth solver");
+            cfg.logLine("running treewidth solver locally");
+
             auto ds = TreewidthSolver(&cfg).solve(g);
             if (ds.has_value()) {
-                cfg.logLine("treewidth solver success");
+                cfg.logLine("treewidth solver local success");
                 return *ds;
             }
 

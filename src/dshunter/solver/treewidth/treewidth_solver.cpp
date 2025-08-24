@@ -41,11 +41,15 @@ TreewidthSolver::TreewidthSolver(SolverConfig *cfg) : cfg(cfg), decomposer(getDe
 
 // Returns true if instance was solved. Solution set is stored in given instance.
 std::optional<std::vector<int>> TreewidthSolver::solve(const Instance &instance) {
+    
+    auto start = std::chrono::steady_clock::now();
     auto td = decomposer->decompose(instance);
     if (!td.has_value()) {
         // cfg->logLine("decomposition failed");
         return std::nullopt;
     }
+
+    cfg->decomposition_time_budget -= std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - start);
 
     // cfg->logLine("best found decomposition width: " + std::to_string(td->width));
     if (td->width > cfg->good_enough_treewidth) {
