@@ -12,14 +12,13 @@ struct ReductionRule {
     std::string name;
     std::function<bool(Instance&)> f;
 
-    // complexity = c if the worst case complexity of applying the rule is O(|G|^c).
-    int complexity_dense, complexity_sparse;
+    // rough estimate of the rule complexity in scale from 1 to 3, where 1 denotes the smallest complexity.
+    int complexity;
     int application_count, success_count;
-    ReductionRule(std::string name, std::function<bool(Instance&)> f, int complexity_dense, int complexity_sparse)
+    ReductionRule(std::string name, std::function<bool(Instance&)> f, int complexity)
         : name(std::move(name)),
           f(std::move(f)),
-          complexity_dense(complexity_dense),
-          complexity_sparse(complexity_sparse),
+          complexity(complexity),
           application_count(0),
           success_count(0) {
     }

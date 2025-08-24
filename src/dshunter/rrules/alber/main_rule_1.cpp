@@ -59,6 +59,6 @@ bool alberMainRule1(Instance& g) {
     return reduced;
 }
 
-ReductionRule AlberMainRule1("AlberMainRule1", alberMainRule1, 3, 1);
+ReductionRule AlberMainRule1("AlberMainRule1", alberMainRule1, 2);
 
 }  // namespace DSHunter

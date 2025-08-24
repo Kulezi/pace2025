@@ -13,7 +13,7 @@ bool ReductionRule::apply(Instance& g) const {
 void reduce(Instance& g, std::vector<ReductionRule>& reduction_rules, int complexity) {
 _start:
     for (auto& rule : reduction_rules) {
-        if (rule.complexity_dense > complexity)
+        if (rule.complexity > complexity)
             continue;
         bool reduced = rule.apply(g);
         ++rule.application_count;

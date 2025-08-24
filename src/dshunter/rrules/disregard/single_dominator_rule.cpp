@@ -14,6 +14,6 @@ bool singleDominatorRule(Instance& g) {
     return reduced;
 }
 
-ReductionRule SingleDominatorRule("SingleDominatorRule", singleDominatorRule, 2, 1);
+ReductionRule SingleDominatorRule("SingleDominatorRule", singleDominatorRule, 1);
 
 }  // namespace DSHunter

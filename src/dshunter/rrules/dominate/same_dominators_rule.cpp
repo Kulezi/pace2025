@@ -27,6 +27,6 @@ bool sameDominatorsRule(Instance& g) {
     return reduced;
 }
 
-ReductionRule SameDominatorsRule("SameDominatorsRule", sameDominatorsRule, 3, 2);
+ReductionRule SameDominatorsRule("SameDominatorsRule", sameDominatorsRule, 2);
 
 }  // namespace DSHunter

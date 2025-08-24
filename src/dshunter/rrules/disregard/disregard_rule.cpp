@@ -29,6 +29,6 @@ bool disregardRule(Instance& g) {
     return marked;
 }
 
-ReductionRule DisregardRule("DisregardRule", disregardRule, 2, 1);
+ReductionRule DisregardRule("DisregardRule", disregardRule, 1);
 
 }  // namespace DSHunter

@@ -273,6 +273,6 @@ bool localBruteforceRule(Instance &g) {
     return reduced;
 }
 
-ReductionRule LocalBruteforceRule("localBruteforceRule", localBruteforceRule, 1, 1);
+ReductionRule LocalBruteforceRule("localBruteforceRule", localBruteforceRule, 3);
 
 }  // namespace DSHunter

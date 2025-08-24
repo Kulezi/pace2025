@@ -48,5 +48,5 @@ bool alberSimpleRule4(Instance& g) {
     return reduced;
 }
 
-ReductionRule AlberSimpleRule4("AlberSimpleRule4 (dominated degree 3 vertex removal)", alberSimpleRule4, 2, 1);
+ReductionRule AlberSimpleRule4("AlberSimpleRule4 (dominated degree 3 vertex removal)", alberSimpleRule4, 1);
 }  // namespace DSHunter

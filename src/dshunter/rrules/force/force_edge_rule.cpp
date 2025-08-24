@@ -51,6 +51,6 @@ bool forceEdgeRule(Instance& g) {
     return reduced;
 }
 
-ReductionRule ForceEdgeRule("ForceEdgeRule", forceEdgeRule, 1, 1);
+ReductionRule ForceEdgeRule("ForceEdgeRule", forceEdgeRule, 1);
 
 }  // namespace DSHunter

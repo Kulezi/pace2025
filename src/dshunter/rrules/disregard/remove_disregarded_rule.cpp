@@ -23,6 +23,6 @@ bool removeDisregardedRule(Instance& g) {
     return !to_take.empty();
 }
 
-ReductionRule RemoveDisregardedRule("RemoveDisregardedRule", removeDisregardedRule, 2, 1);
+ReductionRule RemoveDisregardedRule("RemoveDisregardedRule", removeDisregardedRule, 1);
 
 }  // namespace DSHunter
